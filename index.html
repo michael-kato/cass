@@ -13,13 +13,12 @@
   <body data-page="home">
     <a class="skip-link" href="#main">Skip to content</a>
 
-    <header class="topbar">
-      <div class="wrap topbar-inner">
-        <a class="brand" href="index.html">
-          <span class="brand-mark">CASS</span>
-          <span class="brand-copy">
+    <header class="topbar home-topbar">
+      <div class="wrap topbar-inner home-topbar-inner">
+        <a class="brand home-brand" href="index.html">
+          <span class="brand-seal">Cascade Action</span>
+          <span class="brand-copy home-brand-copy">
             <strong>Cascade Action Shooting Sports</strong>
-            <span>Static front-end extraction</span>
           </span>
         </a>
 
@@ -27,126 +26,109 @@
           Menu
         </button>
 
-        <nav class="site-nav" id="site-nav" data-menu>
+        <nav class="site-nav home-nav" id="site-nav" data-menu>
           <a href="index.html">Home</a>
-          <a href="about-us.html">About</a>
-          <a href="matches.html">Matches</a>
+          <a href="matches.html">Events</a>
+          <a href="season-system.html">Seasons</a>
           <a href="faq.html">FAQ</a>
-          <a href="season-system.html">Season</a>
           <a href="partners.html">Partners</a>
+          <a href="#merch">Merch / Swag</a>
+          <a href="about-us.html">About Us</a>
           <a href="contact.html">Contact</a>
         </nav>
+
+        <div class="utility-icons" aria-label="Utility actions">
+          <span class="utility-icon" aria-hidden="true">⌕</span>
+          <span class="utility-icon" aria-hidden="true">◌</span>
+          <span class="utility-icon" aria-hidden="true">◫</span>
+        </div>
       </div>
     </header>
 
-    <main id="main">
-      <section class="hero">
-        <div class="hero-art"></div>
-        <div class="wrap hero-grid">
-          <div class="hero-copy">
-            <p class="eyebrow">Homepage slideshow extracted from Shopify</p>
-            <h1 data-hero-title>Signups for the North Carolina Circuit are live</h1>
-            <p data-hero-text>
-              Original theme structure preserved: rotating hero, mission block, featured media,
-              product collection placeholder, and closing call-to-action banner.
+    <main id="main" class="home-main">
+      <section class="home-hero">
+        <div class="home-hero-media">
+          <video muted autoplay playsinline loop>
+            <source src="https://cdn.shopify.com/videos/c/o/v/78b522bcdbc6455fa48acb9f1b41ae4c.mp4" type="video/mp4">
+          </video>
+          <div class="home-hero-overlay"></div>
+          <div class="home-hero-content">
+            <h1 data-hero-title>Welcome to Cascade Action Shooting Sports</h1>
+            <p data-hero-text class="home-hero-subtitle">
+              Original hero rebuilt as a full-width media banner with overlaid messaging.
             </p>
-            <div class="button-row">
-              <a class="button primary" href="matches.html" data-hero-link>Sign Up Now</a>
-              <a class="button secondary" href="about-us.html">Our Mission</a>
-            </div>
           </div>
+        </div>
 
-          <aside class="info-card">
-            <p class="card-label">Original slides</p>
-            <ol class="plain-list">
-              <li>North Carolina Circuit signup banner</li>
-              <li>Welcome to Cascade Action Shooting Sports</li>
-              <li>Season rewards / membership messaging</li>
-            </ol>
-          </aside>
+        <div class="home-slider-bar">
+          <button class="slider-control" type="button" aria-label="Previous slide" data-hero-prev>&lsaquo;</button>
+          <div class="slider-status">
+            <span data-hero-current>1</span>/<span data-hero-total>3</span>
+          </div>
+          <button class="slider-control" type="button" aria-label="Next slide" data-hero-next>&rsaquo;</button>
+          <button class="slider-control slider-control-pause" type="button" aria-label="Pause slideshow" data-hero-pause>||</button>
         </div>
       </section>
 
-      <section class="section">
-        <div class="wrap split-layout">
-          <div>
-            <p class="eyebrow">Mission block</p>
-            <h2>Competition that helps shooters build real skill</h2>
-          </div>
-          <div class="rich-text">
+      <section class="home-intro">
+        <div class="wrap home-intro-grid">
+          <div class="home-intro-copy">
             <p>
               Our mission at Cascade Action Shooting Sports is to empower shooters of all levels of
               experience to better themselves through both fun and challenging shooting sport
-              events.
-            </p>
-            <p>
-              We strive to provide the shooting community nationwide the opportunity to test their
-              skills and compete with one another through a variety of unique stages and shooting
-              challenges not typically offered elsewhere.
+              events. We strive to provide the shooting community nationwide the opportunity to test
+              their skills and compete with one another through a variety of unique stages and
+              shooting challenges not typically offered elsewhere.
             </p>
             <p>
               Whether you're an old hand at competition shooting looking to elevate your skills to
-              the next level, a new gun owner looking to build competency and familiarity in a
-              safe, welcoming setting, or just looking to have fun with great shooters, CASS is
-              your gateway to action shooting.
+              the next level, a new gun owner looking to build competency and familiarity in a safe,
+              welcoming setting, or just looking to have fun with great shooters, CASS is your
+              gateway to action shooting.
             </p>
           </div>
-        </div>
-      </section>
 
-      <section class="section">
-        <div class="wrap">
-          <div class="panel">
-            <div class="section-heading">
-              <p class="eyebrow">Custom liquid media block</p>
-              <h2>Embedded homepage video</h2>
-            </div>
-            <div class="media-shell">
-              <video muted autoplay playsinline loop controls>
-                <source src="https://cdn.shopify.com/videos/c/o/v/78b522bcdbc6455fa48acb9f1b41ae4c.mp4" type="video/mp4">
-              </video>
+          <div class="home-intro-card">
+            <div class="home-intro-photo">
+              <span>Feature image placeholder</span>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="section">
+      <section class="section home-followup" id="merch">
         <div class="wrap">
-          <div class="section-heading">
-            <p class="eyebrow">Store widget replaced with placeholder</p>
-            <h2>CASS products section</h2>
+          <div class="section-heading home-section-heading">
+            <p class="eyebrow">Merch / Swag Placeholder</p>
+            <h2>Static replacement for the original featured collection area</h2>
           </div>
-          <div class="card-grid">
-            <article class="panel placeholder-card">
-              <h3>Featured collection placeholder</h3>
-              <p>
-                The original site used Shopify's featured collection slider here. This block keeps
-                the layout footprint and can later be replaced with custom cards, a merch feed, or
-                a CMS-driven catalog.
-              </p>
+          <div class="home-product-strip">
+            <article class="home-product-card">
+              <div class="product-thumb"></div>
+              <h3>Featured item slot</h3>
+              <p>Drop custom merch cards here later.</p>
             </article>
-            <article class="panel placeholder-card">
-              <h3>Product card placeholder</h3>
-              <p>Square image area, title, price, and CTA can be added later without Shopify.</p>
+            <article class="home-product-card">
+              <div class="product-thumb"></div>
+              <h3>Featured item slot</h3>
+              <p>Keep the storefront footprint without Shopify.</p>
             </article>
-            <article class="panel placeholder-card">
-              <h3>View-all placeholder</h3>
-              <p>The original section exposed a “view all” link and desktop slider controls.</p>
+            <article class="home-product-card">
+              <div class="product-thumb"></div>
+              <h3>Featured item slot</h3>
+              <p>Replace with real product data or static cards.</p>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="section">
+      <section class="section home-banner-section">
         <div class="wrap">
-          <div class="banner-panel">
-            <div>
-              <p class="eyebrow">Image banner placeholder</p>
+          <div class="home-banner">
+            <div class="home-banner-copy">
+              <p class="eyebrow">Call To Action</p>
               <h2>Find a match near you</h2>
-              <p>
-                This closes out the homepage where the original theme used a dual-image banner with
-                an overlaid CTA.
-              </p>
+              <p>Final homepage banner placeholder based on the original image CTA section.</p>
             </div>
             <a class="button secondary" href="matches.html">Browse Match Info</a>
           </div>

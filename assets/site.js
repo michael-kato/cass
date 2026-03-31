@@ -21,36 +21,76 @@ if (page) {
 const heroSlides = [
   {
     title: 'Signups for the North Carolina Circuit are live',
-    text: 'Original homepage hero promoted the live circuit signup with a direct CTA to the matches page.',
-    label: 'Sign Up Now',
-    href: 'matches.html',
+    text: 'Original homepage hero promoted the live circuit signup with a direct CTA to the events page.',
   },
   {
     title: 'Welcome to Cascade Action Shooting Sports',
     text: 'The second active homepage slide focused on the brand introduction and kept the image dominant.',
-    label: 'Learn More',
-    href: 'about-us.html',
   },
   {
     title: 'Season rewards and membership messaging can plug back in later',
     text: 'Inactive Shopify slides were represented here so the extracted site still communicates the original design intent.',
-    label: 'View Season Info',
-    href: 'season-system.html',
   },
 ];
 
 const heroTitle = document.querySelector('[data-hero-title]');
 const heroText = document.querySelector('[data-hero-text]');
-const heroLink = document.querySelector('[data-hero-link]');
+const heroCurrent = document.querySelector('[data-hero-current]');
+const heroTotal = document.querySelector('[data-hero-total]');
+const heroPrev = document.querySelector('[data-hero-prev]');
+const heroNext = document.querySelector('[data-hero-next]');
+const heroPause = document.querySelector('[data-hero-pause]');
 
-if (heroTitle && heroText && heroLink) {
+if (heroTitle && heroText) {
   let index = 0;
-  window.setInterval(() => {
-    index = (index + 1) % heroSlides.length;
+  let timer = null;
+  let playing = true;
+
+  const renderSlide = () => {
     const slide = heroSlides[index];
     heroTitle.textContent = slide.title;
     heroText.textContent = slide.text;
-    heroLink.textContent = slide.label;
-    heroLink.setAttribute('href', slide.href);
-  }, 6500);
+    if (heroCurrent) heroCurrent.textContent = String(index + 1);
+    if (heroTotal) heroTotal.textContent = String(heroSlides.length);
+  };
+
+  const startRotation = () => {
+    timer = window.setInterval(() => {
+      index = (index + 1) % heroSlides.length;
+      renderSlide();
+    }, 6500);
+  };
+
+  const stopRotation = () => {
+    if (timer) window.clearInterval(timer);
+  };
+
+  renderSlide();
+  startRotation();
+
+  heroPrev?.addEventListener('click', () => {
+    index = (index - 1 + heroSlides.length) % heroSlides.length;
+    renderSlide();
+  });
+
+  heroNext?.addEventListener('click', () => {
+    index = (index + 1) % heroSlides.length;
+    renderSlide();
+  });
+
+  heroPause?.addEventListener('click', () => {
+    playing = !playing;
+    heroPause.textContent = playing ? '||' : '>';
+    heroPause.setAttribute('aria-label', playing ? 'Pause slideshow' : 'Resume slideshow');
+    if (playing) {
+      stopRotation();
+      startRotation();
+    } else {
+      stopRotation();
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    stopRotation();
+  });
 }
