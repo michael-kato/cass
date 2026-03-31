@@ -315,6 +315,9 @@ video {
   display: grid;
   place-items: center;
   color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.84rem;
 }
 
 .home-followup,
@@ -344,6 +347,13 @@ video {
   border: 1px solid rgba(73, 88, 76, 0.12);
   background: rgba(255, 255, 255, 0.42);
   color: #334136;
+}
+
+.home-product-card p,
+.home-banner-copy p {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.84rem;
 }
 
 .product-thumb {
@@ -508,6 +518,13 @@ h1 {
   padding: 1.5rem;
 }
 
+.image-placeholder span,
+.image-placeholder small {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+}
+
 .banner-panel {
   padding: 1.75rem;
   display: flex;
@@ -591,9 +608,65 @@ h1 {
 }
 
 .site-footer {
-  border-top: 1px solid rgba(73, 88, 76, 0.14);
   margin-top: 2rem;
-  background: #ddefd0;
+  background: #121212;
+  color: #f2f0e8;
+}
+
+.site-footer-top {
+  min-height: 12.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2.4rem 0 2.8rem;
+}
+
+.site-footer-newsletter h2 {
+  margin: 0 0 1.4rem;
+  color: #f2f0e8;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.footer-subscribe {
+  width: min(100%, 22.6rem);
+  display: flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+}
+
+.footer-subscribe input {
+  flex: 1;
+  min-height: 2.85rem;
+  border: 0;
+  background: transparent;
+  color: #f2f0e8;
+  padding: 0.85rem 1.1rem;
+  font: inherit;
+}
+
+.footer-subscribe input::placeholder {
+  color: rgba(242, 240, 232, 0.7);
+}
+
+.footer-subscribe button {
+  min-width: 3.5rem;
+  min-height: 2.85rem;
+  border: 0;
+  background: transparent;
+  color: #f2f0e8;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.site-footer-meta {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 3rem;
 }
 
 .footer-links {
@@ -603,7 +676,115 @@ h1 {
 }
 
 .footer-links a {
-  color: #49584c;
+  color: #f2f0e8;
+}
+
+.footer-social {
+  color: #f2f0e8;
+  text-decoration: none;
+  font-size: 1.4rem;
+}
+
+.site-footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.site-footer-bottom-inner {
+  min-height: 4.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.site-footer-bottom-inner p {
+  margin: 0;
+  color: rgba(242, 240, 232, 0.72);
+  font-size: 0.92rem;
+}
+
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.event-card {
+  padding: 1.1rem;
+  border: 1px solid rgba(73, 88, 76, 0.12);
+  background: rgba(255, 255, 255, 0.42);
+  text-align: left;
+  cursor: pointer;
+  color: #233126;
+}
+
+.event-card span,
+.event-card strong {
+  display: block;
+}
+
+.event-card strong {
+  margin: 0.8rem 0 0.45rem;
+}
+
+.event-date {
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #667767;
+}
+
+.event-modal {
+  width: min(52rem, calc(100% - 2rem));
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+
+.event-modal::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.event-modal-inner {
+  position: relative;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  background: #f4f3eb;
+  color: #233126;
+}
+
+.event-modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.7rem;
+  border: 0;
+  background: transparent;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #233126;
+}
+
+.event-modal-media {
+  min-height: 18rem;
+  background:
+    linear-gradient(180deg, rgba(5, 37, 86, 0.16), rgba(0, 0, 0, 0.12)),
+    linear-gradient(135deg, #31568d 0%, #44697f 42%, #cabf9f 42%, #ece5d8 100%);
+  display: grid;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.88);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.82rem;
+}
+
+.event-modal-copy {
+  padding: 2rem;
+}
+
+.event-modal-location {
+  margin-top: 0.4rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 900px) {
@@ -663,7 +844,9 @@ h1 {
   .split-layout.reverse,
   .card-grid,
   .footer-grid,
-  .banner-panel {
+  .banner-panel,
+  .site-footer-top,
+  .event-modal-inner {
     grid-template-columns: 1fr;
     display: grid;
   }
@@ -679,7 +862,8 @@ h1 {
 
   .home-intro-grid,
   .home-product-strip,
-  .home-banner {
+  .home-banner,
+  .events-grid {
     display: grid;
     grid-template-columns: 1fr;
   }

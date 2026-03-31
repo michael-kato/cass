@@ -55,7 +55,7 @@
           <div class="home-hero-content">
             <h1 data-hero-title>Welcome to Cascade Action Shooting Sports</h1>
             <p data-hero-text class="home-hero-subtitle">
-              Original hero rebuilt as a full-width media banner with overlaid messaging.
+              HERO_MESSAGE_STATE
             </p>
           </div>
         </div>
@@ -90,7 +90,7 @@
 
           <div class="home-intro-card">
             <div class="home-intro-photo">
-              <span>Feature image placeholder</span>
+              <span>ACTION_IMAGE_SLOT</span>
             </div>
           </div>
         </div>
@@ -99,24 +99,24 @@
       <section class="section home-followup" id="merch">
         <div class="wrap">
           <div class="section-heading home-section-heading">
-            <p class="eyebrow">Merch / Swag Placeholder</p>
-            <h2>Static replacement for the original featured collection area</h2>
+            <p class="eyebrow">MERCH_SECTION</p>
+            <h2>MERCH_GRID_SLOT</h2>
           </div>
           <div class="home-product-strip">
             <article class="home-product-card">
               <div class="product-thumb"></div>
-              <h3>Featured item slot</h3>
-              <p>Drop custom merch cards here later.</p>
+              <h3>MERCH_ITEM_SLOT</h3>
+              <p>PRODUCT_CARD_SLOT</p>
             </article>
             <article class="home-product-card">
               <div class="product-thumb"></div>
-              <h3>Featured item slot</h3>
-              <p>Keep the storefront footprint without Shopify.</p>
+              <h3>MERCH_ITEM_SLOT</h3>
+              <p>PRODUCT_CARD_SLOT</p>
             </article>
             <article class="home-product-card">
               <div class="product-thumb"></div>
-              <h3>Featured item slot</h3>
-              <p>Replace with real product data or static cards.</p>
+              <h3>MERCH_ITEM_SLOT</h3>
+              <p>PRODUCT_CARD_SLOT</p>
             </article>
           </div>
         </div>
@@ -126,9 +126,9 @@
         <div class="wrap">
           <div class="home-banner">
             <div class="home-banner-copy">
-              <p class="eyebrow">Call To Action</p>
+              <p class="eyebrow">CALL_TO_ACTION</p>
               <h2>Find a match near you</h2>
-              <p>Final homepage banner placeholder based on the original image CTA section.</p>
+              <p>BANNER_MESSAGE_SLOT</p>
             </div>
             <a class="button secondary" href="matches.html">Browse Match Info</a>
           </div>
@@ -137,16 +137,26 @@
     </main>
 
     <footer class="site-footer">
-      <div class="wrap footer-grid">
-        <div>
-          <p class="eyebrow">Stay connected</p>
-          <h2>Cascade Action Shooting Sports</h2>
-          <p>Original newsletter and social footer converted into a simple static footer shell.</p>
+      <div class="wrap site-footer-top">
+        <div class="site-footer-newsletter">
+          <h2>Stay connected on the latest from CASS</h2>
+          <form class="footer-subscribe">
+            <input type="email" placeholder="Email" aria-label="Email">
+            <button type="button" aria-label="Submit email">&#8594;</button>
+          </form>
         </div>
-        <div class="footer-links">
-          <a href="contact.html">Contact</a>
-          <a href="faq.html">FAQ</a>
-          <a href="https://www.instagram.com/cascadeaction/" target="_blank" rel="noreferrer">Instagram</a>
+        <div class="site-footer-meta">
+          <nav class="footer-links">
+            <a href="#">Search</a>
+            <a href="faq.html">FAQ</a>
+            <a href="#">Policies</a>
+          </nav>
+          <a class="footer-social" href="https://www.instagram.com/cascadeaction/" target="_blank" rel="noreferrer" aria-label="Instagram">◎</a>
+        </div>
+      </div>
+      <div class="site-footer-bottom">
+        <div class="wrap site-footer-bottom-inner">
+          <p>&copy; 2026, Cascade Action Shooting Sports</p>
         </div>
       </div>
     </footer>

@@ -50,16 +50,13 @@
           </div>
 
           <div class="panel rich-text">
-            <h2>Form placeholder</h2>
-            <p>
-              The original theme had a disabled Shopify contact form section here. Replace this
-              block later with your preferred form handler, embed, or custom API endpoint.
-            </p>
+            <h2>CONTACT_FORM_SLOT</h2>
+            <p>FORM_HANDLER_SLOT</p>
             <form class="placeholder-form">
-              <input type="text" placeholder="Name" disabled>
-              <input type="email" placeholder="Email" disabled>
-              <textarea rows="5" placeholder="Message" disabled></textarea>
-              <button class="button secondary" type="button" disabled>Submit Placeholder</button>
+              <input type="text" placeholder="NAME_FIELD" disabled>
+              <input type="email" placeholder="EMAIL_FIELD" disabled>
+              <textarea rows="5" placeholder="MESSAGE_FIELD" disabled></textarea>
+              <button class="button secondary" type="button" disabled>SUBMIT_ACTION</button>
             </form>
           </div>
         </div>
@@ -68,17 +65,31 @@
       <section class="section">
         <div class="wrap">
           <div class="image-placeholder tall">
-            <span>Original contact page used an image banner footer</span>
-            <small>Source reference: shopify://shop_images/snowd.png</small>
+            <span>CONTACT_IMAGE_SLOT</span>
+            <small>PHOTO_ASSET_SLOT</small>
           </div>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
-      <div class="wrap footer-grid">
-        <div><p class="eyebrow">Reach out</p><h2>We can wire this page up later</h2><p>The layout is ready for a real form service.</p></div>
-        <div class="footer-links"><a href="faq.html">FAQ</a><a href="partners.html">Partners</a></div>
+      <div class="wrap site-footer-top">
+        <div class="site-footer-newsletter">
+          <h2>Stay connected on the latest from CASS</h2>
+          <form class="footer-subscribe">
+            <input type="email" placeholder="Email" aria-label="Email">
+            <button type="button" aria-label="Submit email">&#8594;</button>
+          </form>
+        </div>
+        <div class="site-footer-meta">
+          <nav class="footer-links"><a href="#">Search</a><a href="faq.html">FAQ</a><a href="#">Policies</a></nav>
+          <a class="footer-social" href="https://www.instagram.com/cascadeaction/" target="_blank" rel="noreferrer" aria-label="Instagram">◎</a>
+        </div>
+      </div>
+      <div class="site-footer-bottom">
+        <div class="wrap site-footer-bottom-inner">
+          <p>&copy; 2026, Cascade Action Shooting Sports</p>
+        </div>
       </div>
     </footer>
     <script src="assets/site.js" defer></script>

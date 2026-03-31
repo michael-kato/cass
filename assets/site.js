@@ -103,3 +103,36 @@ if (heroTitle && heroText) {
     stopRotation();
   });
 }
+
+const eventModal = document.querySelector('[data-event-modal]');
+const eventTitleTarget = document.querySelector('[data-event-title-target]');
+const eventDateTarget = document.querySelector('[data-event-date-target]');
+const eventLocationTarget = document.querySelector('[data-event-location-target]');
+const eventCopyTarget = document.querySelector('[data-event-copy-target]');
+const eventMediaTarget = document.querySelector('[data-event-media-target]');
+
+document.querySelectorAll('[data-event-open]').forEach((button) => {
+  button.addEventListener('click', () => {
+    if (!eventModal) return;
+    if (eventTitleTarget) eventTitleTarget.textContent = button.dataset.eventTitle || 'EVENT_TITLE_SLOT';
+    if (eventDateTarget) eventDateTarget.textContent = button.dataset.eventDate || 'EVENT_DATE_SLOT';
+    if (eventLocationTarget) eventLocationTarget.textContent = button.dataset.eventLocation || 'EVENT_LOCATION_SLOT';
+    if (eventCopyTarget) eventCopyTarget.textContent = button.dataset.eventCopy || 'EVENT_DETAIL_SLOT';
+    if (eventMediaTarget) eventMediaTarget.textContent = button.dataset.eventMedia || 'MATCH_MEDIA_SLOT';
+    eventModal.showModal();
+  });
+});
+
+document.querySelector('[data-event-close]')?.addEventListener('click', () => {
+  eventModal?.close();
+});
+
+eventModal?.addEventListener('click', (event) => {
+  const bounds = eventModal.getBoundingClientRect();
+  const outside =
+    event.clientX < bounds.left ||
+    event.clientX > bounds.right ||
+    event.clientY < bounds.top ||
+    event.clientY > bounds.bottom;
+  if (outside) eventModal.close();
+});
