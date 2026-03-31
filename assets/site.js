@@ -10,10 +10,19 @@ if (menuToggle && menu) {
 
 const page = document.body.dataset.page;
 if (page) {
+  const pageHrefMap = {
+    home: 'index.html',
+    about: 'about-us.html',
+    matches: 'matches.html',
+    faq: 'faq.html',
+    contact: 'contact.html',
+    season: 'season-system.html',
+    partners: 'partners.html',
+    archive: 'match-archive.html',
+  };
+
   document.querySelectorAll('.site-nav a').forEach((link) => {
-    const match =
-      (page === 'home' && link.getAttribute('href') === 'index.html') ||
-      link.getAttribute('href') === `${page}.html`;
+    const match = link.getAttribute('href') === pageHrefMap[page];
     if (match) link.classList.add('is-active');
   });
 }

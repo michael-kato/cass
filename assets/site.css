@@ -25,9 +25,7 @@ body {
   margin: 0;
   color: var(--text);
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background:
-    radial-gradient(circle at top, rgba(214, 240, 211, 0.12), transparent 25%),
-    linear-gradient(180deg, #0a0d0f 0%, var(--bg) 38%, #13191d 100%);
+  background: #ddefd0;
 }
 
 a {
@@ -125,6 +123,12 @@ video {
   font-size: 0.82rem;
 }
 
+.brand-copy strong {
+  color: #f2f0e8;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
 .site-nav {
   display: flex;
   gap: 1rem;
@@ -167,6 +171,7 @@ video {
 .home-nav a.is-active {
   text-decoration: underline;
   text-underline-offset: 0.35rem;
+  color: #f2f0e8;
 }
 
 .utility-icons {
@@ -380,11 +385,12 @@ video {
 
 .page-main {
   padding-bottom: 3rem;
+  background: #ddefd0;
 }
 
 .page-hero.compact .wrap {
   position: relative;
-  padding: 5rem 0 2rem;
+  padding: 4.5rem 0 2.2rem;
 }
 
 h1,
@@ -403,12 +409,13 @@ h1 {
 .page-hero h1 {
   max-width: 14ch;
   font-size: clamp(2.5rem, 6vw, 4.5rem);
+  color: #233126;
 }
 
 .eyebrow,
 .card-label {
   margin: 0 0 0.8rem;
-  color: var(--accent);
+  color: #667767;
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.77rem;
@@ -420,8 +427,11 @@ h1 {
 .details-body p,
 .placeholder-card p,
 .banner-panel p,
-.info-card li {
-  color: var(--muted);
+.info-card li,
+.panel p,
+.image-placeholder,
+.footer-grid p {
+  color: #49584c;
   line-height: 1.7;
 }
 
@@ -486,10 +496,10 @@ h1 {
 .banner-panel,
 .faq-list details,
 .image-placeholder {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(73, 88, 76, 0.12);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .panel,
@@ -581,14 +591,19 @@ h1 {
 }
 
 .site-footer {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid rgba(73, 88, 76, 0.14);
   margin-top: 2rem;
+  background: #ddefd0;
 }
 
 .footer-links {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: #49584c;
 }
 
 @media (max-width: 900px) {
