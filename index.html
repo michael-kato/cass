@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cascade Action Shooting Sports</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -84,6 +83,40 @@
 
     .nav-icons svg { width: 20px; height: 20px; }
 
+    /* ── HAMBURGER ── */
+    .hamburger {
+      display: none;
+      background: none; border: none; cursor: pointer;
+      color: var(--cream); padding: 0.25rem;
+      margin-left: auto;
+    }
+    .hamburger svg { width: 24px; height: 24px; display: block; }
+
+    .mobile-menu {
+      display: none;
+      position: fixed; top: 56px; left: 0; right: 0; z-index: 99;
+      background: var(--dark);
+      flex-direction: column;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      padding: 0.9rem 2rem;
+      color: var(--cream); text-decoration: none;
+      font-family: 'Assistant', sans-serif;
+      font-weight: 600; font-size: 1.05rem; letter-spacing: 0.04em;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.15s;
+    }
+    .mobile-menu a:hover { background: rgba(255,255,255,0.05); }
+    .mobile-menu a.active { color: var(--white); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-icons { display: none; }
+      .hamburger { display: block; }
+    }
+
     /* ── HERO SLIDESHOW ── */
     .hero {
       position: relative;
@@ -105,7 +138,6 @@
       background-size: cover; background-position: center;
       animation: none;
       will-change: transform;
-      animation-fill-mode: forwards;
     }
 
     .slide.active .slide-bg {
@@ -219,8 +251,8 @@
       object-fit: cover; display: block;
     }
 
-    /* Products */
-    .products {
+    /* Merch */
+    .merch {
       padding: 3rem 2rem 4rem;
       max-width: 1200px; margin: 0 auto;
     }
@@ -233,41 +265,42 @@
       margin-bottom: 1.5rem;
     }
 
-    .product-grid {
+    .merch-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 1.25rem;
     }
 
-    .product-card {
+    .merch-card {
       background: var(--sage-light);
       border: 1px solid var(--sage-mid);
       overflow: hidden;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
     }
-    .product-card:hover {
+    .merch-card:hover {
       transform: translateY(-3px);
       box-shadow: 0 8px 24px rgba(0,0,0,0.12);
     }
 
-    .product-img {
+    .merch-img {
       width: 100%; aspect-ratio: 1;
-      background: linear-gradient(135deg, var(--sage-mid), var(--olive) 80%);
-      opacity: 0.6;
+      background: linear-gradient(135deg, var(--sage-mid), var(--olive) 80%) center/cover;
+      background-size: cover;
+      background-position: center;
     }
 
-    .product-info {
+    .merch-info {
       padding: 0.75rem;
     }
 
-    .product-name {
+    .merch-name {
       font-family: 'Assistant', sans-serif;
       font-weight: 600; font-size: 1rem;
       color: var(--text-dark); margin-bottom: 0.25rem;
     }
 
-    .product-price {
+    .merch-price {
       font-size: 0.9rem; color: var(--olive);
       font-weight: 600;
     }
@@ -471,7 +504,7 @@
       .match-cta { grid-template-columns: 1fr; height: 480px; }
       .insta-grid { grid-template-columns: repeat(3, 1fr); }
       .nav-links { display: none; }
-      .product-grid { grid-template-columns: repeat(2, 1fr); }
+      .merch-grid { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
@@ -503,7 +536,22 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       </button>
     </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
   </nav>
+
+  <!-- MOBILE MENU -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="index.html" class="active">Home</a>
+    <a href="events.html">Events</a>
+    <a href="seasons.html">Seasons</a>
+    <a href="faq.html">FAQ</a>
+    <a href="partners.html">Partners</a>
+    <a href="merch.html">Merch / Swag</a>
+    <a href="about.html">About Us</a>
+    <a href="contact.html">Contact</a>
+  </div>
 
   <!-- HERO -->
   <section class="hero" id="hero">
@@ -558,39 +606,11 @@
       <video autoplay muted loop playsinline src="assets/media/promo_video_01.mp4"></video>
     </div>
 
-    <!-- PRODUCTS -->
-    <section class="products">
-      <h2 class="section-title">CASS Products</h2>
-      <div class="product-grid" id="product-grid">
-        <!-- Cards stub — replace with dynamic load from products.json -->
-        <div class="product-card">
-          <div class="product-img"></div>
-          <div class="product-info">
-            <div class="product-name">CASS T-Shirt</div>
-            <div class="product-price">$29.99</div>
-          </div>
-        </div>
-        <div class="product-card">
-          <div class="product-img"></div>
-          <div class="product-info">
-            <div class="product-name">CASS Hat</div>
-            <div class="product-price">$24.99</div>
-          </div>
-        </div>
-        <div class="product-card">
-          <div class="product-img"></div>
-          <div class="product-info">
-            <div class="product-name">Range Bag</div>
-            <div class="product-price">$49.99</div>
-          </div>
-        </div>
-        <div class="product-card">
-          <div class="product-img"></div>
-          <div class="product-info">
-            <div class="product-name">Patch Set</div>
-            <div class="product-price">$14.99</div>
-          </div>
-        </div>
+    <!-- MERCH -->
+    <section class="merch">
+      <h2 class="section-title">CASS Merch</h2>
+      <div class="merch-grid" id="merch-grid">
+        <!-- Populated from data/merch.json -->
       </div>
     </section>
 
@@ -659,19 +679,39 @@
   </footer>
 
   <script>
+    // ── Hamburger menu ──
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    hamburger.addEventListener('click', () => {
+      const open = mobileMenu.classList.toggle('open');
+      hamburger.innerHTML = open
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+    });
+
+    // Close mobile menu when a link is clicked
+    mobileMenu.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburger.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+      });
+    });
+
     // ── Slideshow ──
     let current = 0;
     const slides = document.querySelectorAll('.slide');
     const dots = document.querySelectorAll('.dot');
     let paused = false;
-    let timer;
 
     function goToSlide(n) {
       slides[current].classList.remove('active');
       dots[current].classList.remove('active');
       current = (n + slides.length) % slides.length;
-      slides[current].classList.add('active');
-      dots[current].classList.add('active');
+      requestAnimationFrame(() => {
+        slides[current].classList.add('active');
+        dots[current].classList.add('active');
+      });
     }
 
     function nextSlide() { goToSlide(current + 1); }
@@ -684,33 +724,28 @@
         : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
     }
 
-    function startTimer() {
-      timer = setInterval(() => { if (!paused) nextSlide(); }, 5000);
+    setInterval(() => { if (!paused) nextSlide(); }, 5000);
+
+    // ── merch from JSON ──
+    function rendermerch(merch) {
+      const grid = document.getElementById('merch-grid');
+      grid.innerHTML = merch.map(p => `
+        <div class="merch-card">
+          <div class="merch-img" style="background-image:url('${p.image}')"></div>
+          <div class="merch-info">
+            <div class="merch-name">${p.name}</div>
+            <div class="merch-price">${p.price}</div>
+          </div>
+        </div>`).join('');
     }
-    startTimer();
 
-    // ── Products: lazy load stub (replace with fetch from products.json) ──
-    // Example:
-    // fetch('/data/products.json')
-    //   .then(r => r.json())
-    //   .then(products => renderProducts(products));
-    //
-    // function renderProducts(products) {
-    //   const grid = document.getElementById('product-grid');
-    //   grid.innerHTML = products.map(p => `
-    //     <div class="product-card">
-    //       <img class="product-img" src="${p.image}" alt="${p.name}" loading="lazy" />
-    //       <div class="product-info">
-    //         <div class="product-name">${p.name}</div>
-    //         <div class="product-price">$${p.price}</div>
-    //       </div>
-    //     </div>`).join('');
-    // }
+    fetch('assets/merch.json')
+      .then(r => r.json())
+      .then(merch => rendermerch(merch));
 
-    // ── Instagram load more stub ──
+    // ── Instagram load more (stub) ──
     document.querySelector('.btn-load-more').addEventListener('click', () => {
-      // Replace with real Instagram fetch logic
-      alert('Load more — connect to Instagram API or static JSON cache');
+      alert('Instagram feed — connect to Graph API or static JSON cache');
     });
   </script>
 </body>
