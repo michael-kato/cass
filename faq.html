@@ -4,242 +4,55 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FAQ — Cascade Action Shooting Sports</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="assets/shared.css" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --sage: #c8dfc0;
-      --sage-light: #d8ebd0;
-      --sage-mid: #b8cfb0;
-      --dark: #1a1a18;
-      --dark-mid: #2a2a26;
-      --olive: #4a5e3a;
-      --cream: #f5f0e8;
-      --white: #ffffff;
-      --accent: #7a9e5a;
-      --text-dark: #1a1a18;
-      --text-mid: #3a3a38;
-    }
-
-    body {
-      font-family: 'Assistant', sans-serif;
-      background: var(--sage);
-      color: var(--text-dark);
-    }
-
-    /* ── NAV ── */
-    nav {
-      background: var(--dark);
-      display: flex; align-items: center;
-      padding: 0 2rem; height: 56px; gap: 2rem;
-    }
-    .nav-logo { display: flex; align-items: center; text-decoration: none; flex-shrink: 0; }
-    .logo-placeholder {
-      width: 40px; height: 40px; border-radius: 50%;
-      background: radial-gradient(circle, #6a8a4a, #3a4e2a);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Assistant', sans-serif;
-      font-weight: 800; font-size: 0.65rem; color: var(--cream);
-      text-align: center; line-height: 1.1; border: 2px solid var(--accent);
-    }
-    .nav-links { display: flex; align-items: center; list-style: none; flex: 1; }
-    .nav-links a {
-      display: block; padding: 0 0.85rem;
-      font-family: 'Assistant', sans-serif;
-      font-weight: 600; font-size: 0.9rem; letter-spacing: 0.04em;
-      color: var(--cream); text-decoration: none; line-height: 56px; transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--accent); }
-    .nav-links a.active { text-decoration: underline; color: var(--white); }
-    .nav-icons { display: flex; align-items: center; gap: 1rem; margin-left: auto; }
-    .nav-icons button {
-      background: none; border: none; cursor: pointer;
-      color: var(--cream); padding: 0.25rem; display: flex; align-items: center;
-    }
-    .nav-icons svg { width: 20px; height: 20px; }
-
-    /* ── FAQ ── */
-    .faq-section {
-      max-width: 860px; margin: 0 auto;
-      padding: 3.5rem 2rem 2rem;
-    }
-
+    .faq-section { max-width: 860px; margin: 0 auto; padding: 3.5rem 2rem 2rem; }
     .faq-section h1 {
-      font-family: 'Assistant', sans-serif;
-      font-weight: 700; font-size: 1.8rem;
+      font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1.8rem;
       text-align: center; margin-bottom: 2.5rem;
-      letter-spacing: 0.02em;
     }
-
     .faq-item { margin-bottom: 1.75rem; }
+    .faq-item h2 { font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.5rem; }
+    .faq-item p { font-size: 0.88rem; line-height: 1.7; color: var(--text-mid); margin-bottom: 0.5rem; }
+    .faq-item a { color: var(--olive); text-decoration: underline; }
 
-    .faq-item h2 {
-      font-family: 'Assistant', sans-serif;
-      font-weight: 700; font-size: 0.95rem;
-      margin-bottom: 0.5rem; color: var(--text-dark);
-    }
-
-    .faq-item p {
-      font-size: 0.88rem; line-height: 1.7;
-      color: var(--text-mid); margin-bottom: 0.5rem;
-    }
-
-    .faq-item a {
-      color: var(--olive); text-decoration: underline;
-    }
-
-    /* ── FLIPBOOK ── */
-    .flipbook-section {
-      background: var(--sage);
-      padding: 2rem 1rem 3rem;
-      display: flex; flex-direction: column; align-items: center;
-    }
-
-    .flipbook-outer {
-      position: relative;
-      display: flex; align-items: center; gap: 1rem;
-      width: 100%; max-width: 700px;
-    }
-
-    .flip-arrow {
-      background: none; border: none; cursor: pointer;
-      color: var(--text-dark); padding: 0.5rem; flex-shrink: 0;
-      transition: color 0.2s;
-    }
+    .flipbook-section { background: var(--sage); padding: 2rem 1rem 3rem; display: flex; flex-direction: column; align-items: center; }
+    .flipbook-outer { position: relative; display: flex; align-items: center; gap: 1rem; width: 100%; max-width: 700px; }
+    .flip-arrow { background: none; border: none; cursor: pointer; color: var(--text-dark); padding: 0.5rem; flex-shrink: 0; transition: color 0.2s; }
     .flip-arrow:hover { color: var(--olive); }
     .flip-arrow svg { width: 28px; height: 28px; display: block; }
+    #book-container { flex: 1; }
 
-    #book-container {
-      flex: 1;
-      /* StPageFlip sets dimensions on the canvas — container just needs to flex */
-    }
-
-    /* Toolbar */
     .flipbook-toolbar {
-      display: flex; align-items: center; gap: 0.25rem;
-      margin-top: 0.75rem;
-      background: var(--dark); border-radius: 4px;
-      padding: 0.35rem 0.6rem;
+      display: flex; align-items: center; gap: 0.25rem; margin-top: 0.75rem;
+      background: var(--dark); border-radius: 4px; padding: 0.35rem 0.6rem;
     }
-
     .toolbar-btn {
-      background: none; border: none; cursor: pointer;
-      color: rgba(255,255,255,0.7); padding: 0.3rem 0.4rem;
-      display: flex; align-items: center; border-radius: 3px;
-      transition: background 0.15s, color 0.15s; font-size: 0.8rem;
-      font-family: 'Assistant', sans-serif;
+      background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.7);
+      padding: 0.3rem 0.4rem; display: flex; align-items: center; border-radius: 3px; transition: background 0.15s, color 0.15s;
     }
     .toolbar-btn:hover { background: rgba(255,255,255,0.1); color: var(--white); }
     .toolbar-btn svg { width: 15px; height: 15px; display: block; }
+    .toolbar-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.2); margin: 0 0.15rem; }
+    .toolbar-page { font-family: 'Assistant', sans-serif; font-size: 0.8rem; color: rgba(255,255,255,0.7); padding: 0 0.3rem; white-space: nowrap; }
 
-    .toolbar-divider {
-      width: 1px; height: 18px; background: rgba(255,255,255,0.2); margin: 0 0.15rem;
-    }
-
-    .toolbar-page {
-      font-family: 'Assistant', sans-serif; font-size: 0.8rem;
-      color: rgba(255,255,255,0.7); padding: 0 0.3rem; white-space: nowrap;
-    }
-
-    /* ── FIND A MATCH CTA ── */
-    .find-match {
-      position: relative;
-      height: 340px; overflow: hidden;
-      background: var(--dark-mid);
-    }
-    .find-match-bg {
-      position: absolute; inset: 0;
-      background-image: url('assets/faq_files/find-match.jpg');
-      background-size: cover; background-position: center top;
-      background-color: #2a3020;
-    }
-    .find-match-overlay {
-      position: absolute; inset: 0;
-      background: rgba(0,0,0,0.45);
-    }
-    .find-match-center {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-    }
+    .find-match { position: relative; height: 340px; overflow: hidden; background: var(--dark-mid); }
+    .find-match-bg { position: absolute; inset: 0; background-image: url('assets/faq_files/find-match.jpg'); background-size: cover; background-position: center; background-color: #2a3020; }
+    .find-match-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+    .find-match-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
     .btn-find-match {
-      padding: 0.7rem 2.5rem;
-      background: rgba(255,255,255,0.12);
-      border: 2px solid var(--white);
-      backdrop-filter: blur(4px);
-      color: var(--white);
-      font-family: 'Assistant', sans-serif;
+      padding: 0.7rem 2.5rem; background: rgba(255,255,255,0.12); border: 2px solid var(--white);
+      backdrop-filter: blur(4px); color: var(--white); font-family: 'Assistant', sans-serif;
       font-weight: 600; font-size: 1rem; letter-spacing: 0.08em; text-transform: uppercase;
       text-decoration: none; transition: background 0.2s, color 0.2s;
     }
     .btn-find-match:hover { background: var(--white); color: var(--dark); }
-
-    /* ── FOOTER ── */
-    footer { background: var(--dark); color: rgba(255,255,255,0.6); }
-    .footer-top {
-      display: flex; align-items: center; justify-content: center; gap: 2rem;
-      padding: 1rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.08);
-      font-family: 'Assistant', sans-serif; font-size: 0.85rem; letter-spacing: 0.06em;
-    }
-    .footer-top a { color: rgba(255,255,255,0.6); text-decoration: none; transition: color 0.2s; }
-    .footer-top a:hover { color: var(--white); }
-    .footer-bottom {
-      display: grid; grid-template-columns: 1fr auto;
-      align-items: start; gap: 2rem;
-      padding: 2rem; max-width: 900px; margin: 0 auto;
-    }
-    .footer-newsletter h4 {
-      font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 0.95rem;
-      color: var(--white); margin-bottom: 0.75rem;
-    }
-    .newsletter-form { display: flex; }
-    .newsletter-form input {
-      flex: 1; padding: 0.6rem 0.9rem;
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-right: none;
-      color: var(--white); font-family: 'Assistant', sans-serif; font-size: 0.85rem; outline: none;
-    }
-    .newsletter-form input::placeholder { color: rgba(255,255,255,0.35); }
-    .newsletter-form button {
-      padding: 0.6rem 1rem; background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.2); color: var(--white); cursor: pointer;
-    }
-    .newsletter-form button svg { width: 16px; height: 16px; display: block; }
-    .footer-social { display: flex; align-items: flex-start; padding-top: 1.8rem; }
-    .footer-social a { color: rgba(255,255,255,0.6); text-decoration: none; }
-    .footer-social svg { width: 22px; height: 22px; display: block; }
-
-    @media (max-width: 768px) {
-      .nav-links { display: none; }
-      .footer-bottom { grid-template-columns: 1fr; }
-    }
   </style>
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav>
-    <a href="index.html" class="nav-logo">
-      <div class="logo-placeholder">CASS</div>
-    </a>
-    <ul class="nav-links">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="events.html">Events</a></li>
-      <li><a href="seasons.html">Seasons</a></li>
-      <li><a href="faq.html" class="active">FAQ</a></li>
-      <li><a href="partners.html">Partners</a></li>
-      <li><a href="merch.html">Merch / Swag</a></li>
-      <li><a href="about.html">About Us</a></li>
-      <li><a href="contact.html">Contact</a></li>
-    </ul>
-    <div class="nav-icons">
-      <button aria-label="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
-      <button aria-label="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></button>
-      <button aria-label="Cart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></button>
-    </div>
-  </nav>
+  <div id="site-nav"></div>
 
-  <!-- FAQ -->
   <section class="faq-section">
     <h1>Frequently Asked Questions</h1>
 
@@ -273,7 +86,6 @@
     </div>
   </section>
 
-  <!-- FLIPBOOK -->
   <div class="flipbook-section">
     <div class="flipbook-outer">
       <button class="flip-arrow" id="btn-prev" aria-label="Previous page">
@@ -284,48 +96,20 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
     </div>
-
     <div class="flipbook-toolbar">
-      <!-- Zoom out -->
-      <button class="toolbar-btn" id="tb-zoom-out" aria-label="Zoom out">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="8" y1="11" x2="14" y2="11"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
-      <!-- Zoom in -->
-      <button class="toolbar-btn" id="tb-zoom-in" aria-label="Zoom in">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/><path d="m21 21-4.35-4.35"/></svg>
-      </button>
-      <!-- List view -->
-      <button class="toolbar-btn" id="tb-list" aria-label="List view">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-      </button>
+      <button class="toolbar-btn" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="8" y1="11" x2="14" y2="11"/><path d="m21 21-4.35-4.35"/></svg></button>
+      <button class="toolbar-btn" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/><path d="m21 21-4.35-4.35"/></svg></button>
+      <button class="toolbar-btn" aria-label="List view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
       <div class="toolbar-divider"></div>
-      <!-- Prev -->
-      <button class="toolbar-btn" id="tb-prev" aria-label="Previous">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <!-- Page counter -->
-      <span class="toolbar-page" id="tb-page">8 / 11</span>
-      <!-- Next -->
-      <button class="toolbar-btn" id="tb-next" aria-label="Next">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
+      <button class="toolbar-btn" id="tb-prev" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <span class="toolbar-page" id="tb-page">1 / 11</span>
+      <button class="toolbar-btn" id="tb-next" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
       <div class="toolbar-divider"></div>
-      <!-- Rotate -->
-      <button class="toolbar-btn" aria-label="Rotate">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-      </button>
-      <!-- Fullscreen -->
-      <button class="toolbar-btn" id="tb-fullscreen" aria-label="Fullscreen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-      </button>
-      <!-- More -->
-      <button class="toolbar-btn" aria-label="More options">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
-      </button>
+      <button class="toolbar-btn" id="tb-fullscreen" aria-label="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+      <button class="toolbar-btn" aria-label="More"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
     </div>
   </div>
 
-  <!-- FIND A MATCH -->
   <div class="find-match">
     <div class="find-match-bg"></div>
     <div class="find-match-overlay"></div>
@@ -334,38 +118,12 @@
     </div>
   </div>
 
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-top">
-      <a href="#">Search</a>
-      <a href="faq.html">FAQ</a>
-      <a href="#">Policies</a>
-    </div>
-    <div class="footer-bottom">
-      <div class="footer-newsletter">
-        <h4>Stay connected on the latest from CASS</h4>
-        <div class="newsletter-form">
-          <input type="email" placeholder="Email" />
-          <button aria-label="Subscribe">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="footer-social">
-        <a href="#" aria-label="Instagram">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
-        </a>
-      </div>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 
-  <!-- StPageFlip -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/page-flip/2.0.7/js/page-flip.browser.js"></script>
+  <script src="assets/shared.js"></script>
   <script>
-    // ── Flipbook setup ──
-    // Pages should be images of each booklet page stored in assets/faq_files/booklet/
-    // e.g. page-01.jpg, page-02.jpg ... page-11.jpg
-    // Replace the stub pages array with your real image paths.
+    initPage('faq');
 
     const TOTAL_PAGES = 11;
     const PAGE_PATHS = Array.from({ length: TOTAL_PAGES }, (_, i) =>
@@ -375,64 +133,40 @@
     const container = document.getElementById('book-container');
     const containerWidth = Math.min(container.parentElement.offsetWidth - 80, 620);
     const pageW = Math.floor(containerWidth / 2);
-    const pageH = Math.floor(pageW * 1.294); // approx letter ratio
+    const pageH = Math.floor(pageW * 1.294);
 
     const pageFlip = new St.PageFlip(container, {
-      width: pageW,
-      height: pageH,
-      showCover: true,
-      mobileScrollSupport: false,
-      drawShadow: true,
-      flippingTime: 600,
+      width: pageW, height: pageH,
+      showCover: true, mobileScrollSupport: false, drawShadow: true, flippingTime: 600,
     });
 
-    // Load pages — use image elements
-    // When real images exist, replace with: pageFlip.loadFromImages(PAGE_PATHS);
-    // For now load stub colored divs via HTML items:
-    const stubPages = PAGE_PATHS.map((src, i) => {
-      const div = document.createElement('div');
-      div.style.cssText = `
-        width:100%; height:100%;
-        background: ${i % 2 === 0 ? '#f5f0e8' : '#eee8dc'};
-        display:flex; align-items:center; justify-content:center;
-        font-family:'Assistant',sans-serif; font-size:1.2rem;
-        color:#aaa; border: 1px solid #ddd;
-      `;
-      div.textContent = `Page ${i + 1}`;
-      return div;
-    });
-
-    pageFlip.loadFromHTML(document.querySelectorAll('.page-stub'));
-
-    // Build stub page elements into DOM for StPageFlip HTML mode
+    // When real images exist: pageFlip.loadFromImages(PAGE_PATHS);
     const pagesWrap = document.createElement('div');
     pagesWrap.style.display = 'none';
-    stubPages.forEach(p => {
-      p.classList = 'page-stub';
-      pagesWrap.appendChild(p);
+    PAGE_PATHS.forEach((src, i) => {
+      const div = document.createElement('div');
+      div.className = 'page-stub';
+      div.style.cssText = `width:100%;height:100%;background:${i%2===0?'#f5f0e8':'#eee8dc'};display:flex;align-items:center;justify-content:center;font-family:Assistant,sans-serif;font-size:1.2rem;color:#aaa;border:1px solid #ddd;`;
+      div.textContent = `Page ${i + 1}`;
+      pagesWrap.appendChild(div);
     });
     document.body.appendChild(pagesWrap);
     pageFlip.loadFromHTML(document.querySelectorAll('.page-stub'));
 
-    // Page counter
     function updateCounter() {
-      const p = pageFlip.getCurrentPageIndex() + 1;
-      document.getElementById('tb-page').textContent = `${p} / ${TOTAL_PAGES}`;
+      document.getElementById('tb-page').textContent = `${pageFlip.getCurrentPageIndex() + 1} / ${TOTAL_PAGES}`;
     }
     pageFlip.on('flip', updateCounter);
 
-    // Controls
     document.getElementById('btn-prev').addEventListener('click', () => pageFlip.flipPrev());
     document.getElementById('btn-next').addEventListener('click', () => pageFlip.flipNext());
     document.getElementById('tb-prev').addEventListener('click', () => pageFlip.flipPrev());
     document.getElementById('tb-next').addEventListener('click', () => pageFlip.flipNext());
-
     document.getElementById('tb-fullscreen').addEventListener('click', () => {
       const el = document.querySelector('.flipbook-section');
       if (!document.fullscreenElement) el.requestFullscreen();
       else document.exitFullscreen();
     });
   </script>
-
 </body>
 </html>
