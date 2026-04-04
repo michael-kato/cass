@@ -42,7 +42,17 @@ function buildNav(activePage) {
       <div class="nav-icons">
         <button aria-label="Search">${ICON_SEARCH}</button>
         <button aria-label="Account">${ICON_ACCOUNT}</button>
-        <button aria-label="Cart">${ICON_CART}</button>
+        <button aria-label="Cart" style="position:relative;">
+          ${ICON_CART}
+          <span id="cart-badge" style="
+            display:none;position:absolute;top:-4px;right:-4px;
+            background:#c0392b;color:#fff;
+            width:16px;height:16px;border-radius:50%;
+            font-size:0.6rem;font-weight:700;
+            align-items:center;justify-content:center;
+            font-family:Assistant,sans-serif;line-height:1;
+          ">0</span>
+        </button>
       </div>
       <button class="hamburger" id="hamburger" aria-label="Menu">${ICON_HAMBURGER}</button>
     </nav>
@@ -106,4 +116,10 @@ function initPage(activePage) {
       });
     });
   }
+
+  // Load cart — dynamically so pages work without it if needed
+  const cartScript = document.createElement('script');
+  cartScript.src = 'assets/cart.js';
+  cartScript.onload = () => initCart();
+  document.body.appendChild(cartScript);
 }

@@ -1,2 +1,3 @@
-
 /dl/
+.env
+node_modules/

@@ -60,11 +60,6 @@
   <script>
     initPage('merch');
 
-    function adj(btn, delta) {
-      const input = btn.parentElement.querySelector('input');
-      input.value = Math.max(0, parseInt(input.value || 0) + delta);
-    }
-
     fetch('assets/merch.json')
       .then(r => r.json())
       .then(items => {
@@ -74,8 +69,8 @@
             <div class="product-name">${p.name}</div>
             <div class="product-price">${p.price}</div>
             ${p.type === 'simple'
-              ? `<div class="qty-stepper"><button onclick="adj(this,-1)">−</button><input type="number" value="0" min="0" /><button onclick="adj(this,1)">+</button></div>`
-              : `<button class="btn-options">Choose options</button>`
+              ? `<button class="btn-options" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button>`
+              : `<button class="btn-options" onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button>`
             }
           </div>`).join('');
       });

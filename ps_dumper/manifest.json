@@ -1,0 +1,28 @@
+{
+    "manifest_version": 2,
+    "name": "PSD",
+    "version": "1.0",
+  
+    "description": "Adds ability to dump PS information.",
+  
+    "icons": {
+      "48": "icons/border-48.png"
+    },
+
+    "permissions": ["activeTab"],
+
+    "browser_action": {
+        "default_icon": "icons/beasts-32.png",
+        "default_title": "Rip Scores",
+        "default_popup": "popup/choose_beast.html"
+    },
+
+  
+    "content_scripts": [
+      {
+        "matches": ["*://*.practiscore.com/*"],
+        "js": ["psd.js"]
+      }
+    ]
+  }
+  
