@@ -1,0 +1,23 @@
+name = "cass-scraper"
+main = "index.js"
+compatibility_date = "2026-04-04"
+compatibility_flags = ["nodejs_compat"]
+
+# Browser Rendering binding
+[browser]
+binding = "BROWSER"
+
+# KV namespace — replace with your actual namespace ID after running:
+# npx wrangler kv namespace create MATCH_DATA
+[[kv_namespaces]]
+binding = "MATCH_DATA"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Cron trigger — scrapes every 3 hours
+[triggers]
+crons = ["0 */3 * * *"]
+
+# Match slugs to scrape — add/remove as events are added to the calendar
+# These are the URL slugs from practiscore.com/{slug}/register
+[vars]
+MATCH_SLUGS = '["renton-idpa-2026-april", "svrc-season-kickoff-2026"]'

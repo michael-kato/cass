@@ -2,15 +2,22 @@
 
 ## 🎯 Tech Stack
 - **Languages:** Plain HTML, CSS, vanilla JavaScript
+- **Backend:** Node.js + Express (`server.js` at root)
+- **Payments:** Stripe Checkout (hosted, server-side session creation)
+- **Scraping:** Cloudflare Worker + Browser Rendering (Puppeteer) + KV storage
 - **Fonts:** Assistant (system font, no import needed)
 - **Maps:** Leaflet.js (CDN) for partners page
 - **Flipbook:** StPageFlip (CDN) for FAQ page
-- **Deployment:** Cloudflare Pages (from GitHub repo)
-- **Future:** Node.js backend planned for dynamic features
+- **Deployment:** Cloudflare Pages (static site) + Cloudflare Worker (scraper)
 
-## 🗂 File Structure
+## 🗂 File Structure (Monorepo)
 ```
 /
+├── server.js               ← Express — serves static files + Stripe API
+├── package.json            ← Express, Stripe dependencies
+├── .env                    ← never committed
+├── .env.example
+├── .gitignore              ← excludes .env, node_modules at all levels
 ├── index.html
 ├── events.html
 ├── faq.html
@@ -20,44 +27,110 @@
 ├── policies.html
 ├── partners.html
 ├── seasons.html
-├── css/
-│   └── shared.css          ← CSS variables, nav, hamburger, footer, utilities
-├── js/
-│   └── shared.js           ← Injects nav + footer, wires hamburger. Call initPage('key')
-└── assets/
-    ├── merch.json          ← Product data. Drives both merch.html and home page cards
-    ├── media/              ← Images and video
-    └── merch/              ← Product images
+├── checkout-success.html
+├── assets/
+│   ├── shared.css          ← CSS variables, nav, hamburger, footer, utilities
+│   ├── shared.js           ← Injects nav+footer, hamburger, loads cart.js
+│   ├── cart.js             ← Cart state (localStorage), drawer UI, Stripe redirect
+│   ├── events.json         ← TODO: migrate from hardcoded array in events.html
+│   ├── merch.json          ← Product data — drives merch.html and home merch grid
+│   ├── venues.json         ← TODO: migrate from hardcoded array in partners.html
+│   ├── media/              ← Images and video
+│   └── merch/              ← Product images
+└── scraper-worker/         ← Separate Cloudflare Worker project (same git repo)
+    ├── index.js            ← Worker: scrapes Practiscore, stores in KV
+    ├── wrangler.toml       ← Worker config, KV binding, cron schedule
+    ├── package.json        ← Wrangler, @cloudflare/puppeteer
+    └── README.md
 ```
 
-## 🧩 Shared Components (shared.js / shared.css)
+## 🧩 Shared Components
 Every page uses:
 ```html
 <div id="site-nav"></div>
   <!-- page content -->
 <div id="site-footer"></div>
-<script src="js/shared.js"></script>
+<script src="assets/shared.js"></script>
 <script>initPage('pagekey');</script>
 ```
 Page keys: `home`, `events`, `seasons`, `faq`, `partners`, `merch`, `about`, `contact`, `policies`
 
 `initPage()` handles:
 - Nav injection with active link highlighting
-- Mobile menu injection
-- Hamburger toggle (☰ ↔ ✕)
+- Mobile menu injection + hamburger toggle (☰ ↔ ✕)
 - Footer injection
+- Dynamically loads `assets/cart.js` and calls `initCart()`
 
-## 🎨 Design Tokens (css/shared.css)
+## 🛒 Cart System
+- State stored in `localStorage` under key `cass_cart`
+- `cart.js` exposes: `addToCart(product)`, `removeFromCart(id)`, `updateQuantity(id, qty)`
+- Slide-out drawer injected into every page via `initCart()`
+- Cart icon in nav shows red badge with item count
+- Checkout POSTs to `/api/create-checkout-session` → redirects to Stripe hosted checkout
+- On success: redirects to `checkout-success.html`, clears cart
+- On cancel: returns to `merch.html`
+- `merch.html` uses `window.MERCH_PRODUCTS[id]` lookup to avoid JSON/quote issues in onclick attributes
+- Drawer uses event delegation for qty/remove buttons — no inline onclick handlers
+
+## 💳 Stripe Integration
+- `server.js` exposes `POST /api/create-checkout-session`
+- Takes `{ items: [{ id, name, price, image, quantity }] }`
+- Converts price strings (e.g. `"$35.00 USD"`) to cents via regex
+- Env vars required: `STRIPE_SECRET_KEY`, `SITE_URL`
+- Shipping collection enabled, US only
+- `server.js` uses `extensions: ['html']` so `/merch`, `/events` etc. resolve without extension
+
+## 🕷 Scraper Worker (scraper-worker/)
+Cloudflare Worker that scrapes Practiscore registration pages for spots remaining.
+
+**Architecture:**
+```
+Cron (every 3hrs) → Worker → Puppeteer → practiscore.com/{slug}/register
+                                        → KV store → /data endpoint → events.html
+```
+
+**Key design decisions:**
+- Worker fetches `assets/events.json` from the live site to get slugs dynamically — no hardcoding in wrangler.toml
+- Stores results in KV with 6hr TTL (1hr TTL on failure)
+- Exposes `GET /data` (all matches) and `GET /data?slug=...` (single match)
+- `GET /scrape?slug=...` for manual testing
+- Target selector: `.alert.alert-info.centerText` — may need narrowing, multiple elements possible
+- Falls back gracefully — events.html shows static data if scraper unavailable or blocked
+
+**Setup steps:**
+```bash
+cd scraper-worker
+npm install
+npx wrangler kv namespace create MATCH_DATA
+# paste KV namespace ID into wrangler.toml
+npx wrangler deploy
+```
+
+**In events.html:** after deploying, replace `YOUR-SUBDOMAIN` in `SCRAPER_URL`:
+```javascript
+const SCRAPER_URL = 'https://cass-scraper.YOUR-SUBDOMAIN.workers.dev/data';
+```
+
+**Known risk:** Practiscore is behind Cloudflare and robots.txt disallows scraping.
+Browser Rendering is always identified as bot traffic. May get blocked — treat as
+best-effort. If blocked, events.html silently falls back to static spot counts.
+
+## 🖨 Print-on-Demand (TODO)
+- Confirm with client: Printful or Printify?
+- Plan: Stripe `checkout.session.completed` webhook → Node.js → Printful API
+- Only apparel is POD — towels and sticker packs are physical inventory
+
+## 🎨 Design Tokens (assets/shared.css)
 ```css
---sage: #c8dfc0          /* page background */
+--sage: #c8dfc0
 --sage-light: #d8ebd0
 --sage-mid: #b8cfb0
---dark: #121212          /* nav, footer */
+--dark: #121212
 --dark-mid: #2a2a26
---olive: #4a5e3a         /* accents, prices */
+--olive: #4a5e3a
 --olive-light: #5a7048
 --cream: #f5f0e8
---accent: #7a9e5a        /* hover states */
+--accent: #7a9e5a
 --text-dark: #1a1a18
 --text-mid: #3a3a38
 --text-light: #6a6a68
@@ -68,39 +141,73 @@ Page keys: `home`, `events`, `seasons`, `faq`, `partners`, `merch`, `about`, `co
 | Page | Status | Notes |
 |------|--------|-------|
 | index.html | ✅ Done | Slideshow, mission, video, merch grid, match CTA, Instagram stubs |
-| events.html | ✅ Done | Filter/search/sort, event cards, modal, community events |
+| events.html | ✅ Done | Filter/search/sort, cards, modal, community events, live spots from scraper |
 | faq.html | ✅ Done | FAQ text, StPageFlip flipbook stub, Find a Match CTA |
-| merch.html | ✅ Done | JSON-driven grid, qty stepper / choose options per type |
+| merch.html | ✅ Done | JSON-driven, Add to Cart wired to cart.js |
 | about.html | ✅ Done | Text + image strip stubs |
-| contact.html | ✅ Done | Email address + image strip stub |
+| contact.html | ✅ Done | Email + image strip stub |
 | policies.html | ✅ Done | Three policy items |
-| partners.html | ✅ Done | Leaflet map, searchable venue sidebar, video strip stub |
+| partners.html | ✅ Done | Leaflet map, searchable sidebar, video stub |
 | seasons.html | ✅ Done | Season Overview + Cascade Armory sections |
+| checkout-success.html | ✅ Done | Post-Stripe confirmation page |
 
 ## 📦 Data Files
 
 ### assets/merch.json
-Each product has: `id`, `name`, `price`, `image`, `type`
-- `type: "simple"` → renders qty stepper (±)
-- `type: "options"` → renders "Choose options" button
+Each product: `id`, `name`, `price`, `image`, `type`
+- `type: "simple"` — no variants
+- `type: "options"` — has variants (size etc.) — variants not yet implemented
 
-### Planned data files (not yet created)
-- `assets/events.json` — events.html currently uses hardcoded JS array, should migrate
-- `assets/venues.json` — partners.html currently uses hardcoded JS array, should migrate
-- `assets/instagram.json` — static Instagram image cache (pending customer account setup)
+### assets/events.json (TODO — not yet created)
+Each event should include:
+```json
+{
+  "id": 1,
+  "type": "match",
+  "name": "SVRC Season Kickoff",
+  "month": "APR", "day": "19",
+  "dateSort": "2026-04-19",
+  "date": "April 19, 2026",
+  "time": "7:30 AM – 4:00 PM",
+  "state": "WA",
+  "location": "Snoqualmie Valley Rifle Club, Fall City, WA",
+  "spots": 60, "filled": 44,
+  "desc": "...",
+  "registerUrl": "https://practiscore.com/...",
+  "practiscoreSlug": "svrc-season-kickoff-2026"
+}
+```
+`practiscoreSlug` drives the scraper — omit for events not on Practiscore.
 
-## 🔧 Known Issues / Technical Notes
-- `fetch()` requires a local server — use `python3 -m http.server 8080` or `npx serve .` for local dev
-- Ken Burns slideshow: `animation-fill-mode: forwards` on `.slide-bg` prevents transition stutter
-- Mobile nav dropdown appears at `max-width: 768px`
-- Nav height is 100px (to accommodate large logo image)
-- Mobile menu `top` offset must match nav height (currently 100px)
+### assets/venues.json (TODO — not yet created)
+### assets/instagram.json (TODO — pending account type confirmation)
+
+## 🔧 Running Locally
+```bash
+# Main site
+npm install
+cp .env.example .env   # fill in STRIPE_SECRET_KEY
+node server.js         # http://localhost:3000
+
+# Scraper worker (separate)
+cd scraper-worker
+npm install
+npx wrangler dev       # test locally
+```
+
+## 🔧 Known Issues / Notes
+- Cart `onclick` uses `window.MERCH_PRODUCTS[id]` — avoids JSON/quote issues in HTML attributes
+- Cart drawer uses event delegation for qty/remove buttons
+- Ken Burns: `animation-fill-mode: forwards` on `.slide-bg` prevents stutter
+- Nav height is 100px; mobile menu `top` offset must match
+- `fetch()` requires a server — don't open HTML files directly from disk
+- Scraper worker and main site are separate `npm install` environments in the same repo
 
 ## 🖼 Assets In Use
-- `assets/media/Catheadnobackgroundsmall.png` — logo (nav)
+- `assets/media/Catheadnobackgroundsmall.png` — logo
 - `assets/media/PHADrone.jpg` — hero slide 1
 - `assets/media/DSC_1116.jpg` — hero slide 2
-- `assets/media/lean.png` — mission section image
+- `assets/media/lean.png` — mission image
 - `assets/media/promo_video_01.mp4` — home video strip
 - `assets/media/DSC_0739.jpg` — match CTA panel 1
 - `assets/media/DSC_0719.jpg` — match CTA panel 2
@@ -109,40 +216,36 @@ Each product has: `id`, `name`, `price`, `image`, `type`
 ## 📋 TODO
 
 ### High Priority
-- [ ] Migrate events array to `assets/events.json` and fetch it in events.html
-- [ ] Migrate venues array to `assets/venues.json` and fetch it in partners.html
-- [ ] Replace all image strip stubs in about.html and contact.html with real images
-- [ ] Replace flipbook stub pages with real booklet images (`assets/faq_files/booklet/page-01.jpg` etc.)
-- [ ] Confirm flipbook source — ask customer how original Shopify version was built (StPageFlip? other?)
-- [ ] Add real background images to partners page map panels and find-match CTA on FAQ
+- [ ] Migrate events hardcoded array → `assets/events.json` (update events.html + scraper worker)
+- [ ] Migrate venues hardcoded array → `assets/venues.json`
+- [ ] Update scraper worker to fetch slugs from `assets/events.json` instead of wrangler.toml
+- [ ] Replace `YOUR-SUBDOMAIN` in events.html after deploying scraper worker
+- [ ] Test full Stripe checkout flow end to end with test keys
+- [ ] Implement product size/variant selection for apparel
+- [ ] Confirm POD provider with client (Printful vs Printify)
+
+### Scraper
+- [ ] Deploy scraper worker and confirm it can reach Practiscore at all
+- [ ] Narrow CSS selector if `.alert.alert-info.centerText` returns multiple elements
+- [ ] Handle Cloudflare challenge page response gracefully
+- [ ] Consider parsing spots as integer for "Almost full!" logic
 
 ### Instagram
-- [ ] Confirm cascadeaction Instagram account type (must be Creator or Business for API access)
-- [ ] If Creator/Business: implement Graph API token fetch + server-side cache to `assets/instagram.json`
-- [ ] If staying static: manually populate `assets/instagram.json` with image paths + links
+- [ ] Confirm cascadeaction account type (must be Creator/Business)
+- [ ] Implement Graph API fetch + server-side cache
 
-### Merch / Cart
-- [ ] Decide on cart/checkout approach — Stripe hosted checkout links are simplest
-- [ ] Wire "Choose options" buttons to product detail pages or Stripe links
-- [ ] Wire qty stepper add-to-cart to Stripe or a cart state system
+### Print-on-Demand
+- [ ] Wire Printful/Printify API on Stripe `checkout.session.completed` webhook
 
-### Node.js Backend (future)
-- [ ] Set up Express server to replace `python3 -m http.server` for local dev
-- [ ] Move shared nav/footer to server-side template partials (EJS or Handlebars) to eliminate shared.js injection approach
-- [ ] Add Instagram Graph API token refresh endpoint
-- [ ] Consider server-side events/venues data management
+### Deployment
+- [ ] Decide Node.js API hosting: Cloudflare Workers vs Render/Railway
+- [ ] Set STRIPE_SECRET_KEY + SITE_URL in production environment
+- [ ] Switch Stripe keys test → live before launch
 
 ### Polish
-- [ ] Add hamburger menu to events.html, faq.html, merch.html (currently only index.html has it wired — all pages use shared.js now so it should work, verify)
+- [ ] Replace image stubs in about.html, contact.html
+- [ ] Replace flipbook stubs with real booklet images
 - [ ] Test all pages at mobile breakpoint
 - [ ] Add `<meta description>` to all pages
-- [ ] Verify Leaflet map loads correctly on Cloudflare (CDN dependency)
-- [ ] Verify StPageFlip loads correctly on Cloudflare (CDN dependency)
 - [ ] Add favicon
-
-## 🚀 Deployment
-- Host: Cloudflare Pages
-- Source: GitHub repository
-- Build: none (static files, no build step)
-- No adapter needed — pure static output
-- No overage billing risk on Cloudflare free tier (unlimited bandwidth)
+- [ ] Verify Leaflet + StPageFlip CDN on Cloudflare
