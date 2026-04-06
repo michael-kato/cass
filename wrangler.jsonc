@@ -1,4 +1,5 @@
 {
   "name": "cass",
-  "main": "server.js"
+  "main": "server.js",
+  "compatibility_date":"2026-04-06"
 }
