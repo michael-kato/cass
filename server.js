@@ -1,0 +1,47 @@
+import Stripe from 'stripe';
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+
+    // ── Handle API Routes ──
+    if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
+      try {
+        const { items } = await request.json();
+
+        const line_items = items.map(item => ({
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: item.name,
+              ...(item.image ? { images: [`${env.SITE_URL || 'http://localhost:3000'}/${item.image}`] } : {}),
+            },
+            unit_amount: Math.round(parseFloat(item.price.replace(/[^0-9.]/g, '')) * 100),
+          },
+          quantity: item.quantity,
+        }));
+
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items,
+          mode: 'payment',
+          success_url: `${env.SITE_URL}/checkout-success.html`,
+          cancel_url:  `${env.SITE_URL}/merch.html`,
+          shipping_address_collection: { allowed_countries: ['US'] },
+        });
+
+        return new Response(JSON.stringify({ url: session.url }), {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+      }
+    }
+
+    // ── Fallback: Serve Static Assets ──
+    // In a "Static" project, Cloudflare handles this automatically if 
+    // the file exists in your "assets.directory" (e.g. /public).
+    return env.ASSETS.fetch(request);
+  }
+};

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cascade Action Shooting Sports</title>
+  <link rel="stylesheet" href="assets/shared.css" />
+  <style>
+    .hero {
+      position: relative; height: 60vh; min-height: 400px;
+      overflow: hidden; background: var(--dark);
+    }
+    .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; }
+    .slide.active { opacity: 1; }
+    .slide-bg {
+      position: absolute; inset: -5%;
+      background-size: cover; background-position: center; will-change: transform;
+    }
+    .slide.active .slide-bg { animation: kenburns 10s ease-out forwards; }
+    @keyframes kenburns {
+      from { transform: scale(1.08) translate(0, 0); }
+      to   { transform: scale(1.0) translate(-1%, 1%); }
+    }
+    .slide-1 .slide-bg { background-image: url('assets/media/PHADrone.jpg'); background-color: #3a4e2a; }
+    .slide-2 .slide-bg { background-image: url('assets/media/DSC_1116.jpg'); background-color: #2a3e3a; }
+    .slide-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
+    }
+    .slide-content { position: absolute; bottom: 15%; left: 5%; max-width: 420px; }
+    .slide-content h2 {
+      font-family: 'Assistant', sans-serif; font-weight: 700;
+      font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--white);
+      line-height: 1.1; margin-bottom: 1rem; text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .btn-primary {
+      display: inline-block; padding: 0.6rem 1.4rem;
+      border: 2px solid var(--white); color: var(--white);
+      font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 0.95rem;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      text-decoration: none; background: transparent;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-primary:hover { background: var(--white); color: var(--dark); }
+    .slide-controls {
+      position: absolute; bottom: 1.25rem; left: 5%;
+      display: flex; align-items: center; gap: 0.5rem; z-index: 10;
+    }
+    .slide-controls button {
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,0.7); padding: 0.15rem; transition: color 0.2s;
+    }
+    .slide-controls button:hover { color: var(--white); }
+    .slide-controls svg { width: 18px; height: 18px; display: block; }
+    .slide-dots { display: flex; gap: 0.3rem; align-items: center; }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.4); cursor: pointer; transition: background 0.2s;
+    }
+    .dot.active { background: var(--white); }
+
+    .mission {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 3rem; align-items: center;
+      max-width: 1100px; margin: 0 auto; padding: 4rem 2rem;
+    }
+    .mission p { font-size: 0.95rem; line-height: 1.75; color: var(--text-mid); }
+    .mission-img { width: 100%; aspect-ratio: 3/2; object-fit: cover; display: block; }
+
+    .video-strip { width: 100%; aspect-ratio: 16/6; background: var(--dark-mid); overflow: hidden; }
+    .video-strip video { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .merch { padding: 3rem 2rem 4rem; max-width: 1200px; margin: 0 auto; }
+    .section-title { font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1.4rem; margin-bottom: 1.5rem; }
+    .merch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; }
+    .merch-card {
+      background: var(--sage-light); border: 1px solid var(--sage-mid);
+      overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .merch-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .merch-card a { text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }
+    .merch-img {
+      width: 100%; aspect-ratio: 1;
+      background: linear-gradient(135deg, var(--sage-mid), var(--olive) 80%) center/cover;
+      background-size: cover; background-position: center;
+    }
+    .merch-info { padding: 0.75rem; }
+    .merch-name { font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; }
+    .merch-price { font-size: 0.9rem; color: var(--olive); font-weight: 600; }
+
+    .match-cta { display: grid; grid-template-columns: 1fr 1fr; height: 340px; position: relative; overflow: hidden; }
+    .match-panel { position: relative; overflow: hidden; }
+    .match-panel-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform 0.5s ease; }
+    .match-panel:hover .match-panel-bg { transform: scale(1.03); }
+    .match-panel-1 .match-panel-bg { background-image: url('assets/media/DSC_0739.jpg'); background-color: #2a3a2a; }
+    .match-panel-2 .match-panel-bg { background-image: url('assets/media/DSC_0719.jpg'); background-color: #1a2a3a; }
+    .match-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
+    .match-cta-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; }
+    .btn-match {
+      display: inline-block; padding: 0.7rem 2rem;
+      background: rgba(255,255,255,0.12); border: 2px solid var(--white);
+      backdrop-filter: blur(4px); color: var(--white);
+      font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 1rem;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      text-decoration: none; transition: background 0.2s, color 0.2s;
+    }
+    .btn-match:hover { background: var(--white); color: var(--dark); }
+
+    .instagram { padding: 3rem 2rem; text-align: center; }
+    .instagram h3 { font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1.5rem; margin-bottom: 1.5rem; }
+    .insta-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; max-width: 1100px; margin: 0 auto 0.5rem; }
+    .insta-cell { aspect-ratio: 1; overflow: hidden; background: var(--sage-mid); }
+    .insta-stub { width: 100%; height: 100%; background: linear-gradient(135deg, var(--olive), var(--sage-mid)); opacity: 0.5; }
+    .btn-load-more {
+      display: inline-block; margin-top: 1.5rem; padding: 0.65rem 3rem;
+      border: 1.5px solid var(--text-dark); background: transparent;
+      font-family: 'Assistant', sans-serif; font-size: 0.9rem; cursor: pointer;
+      transition: background 0.2s, color 0.2s; color: var(--text-dark);
+    }
+    .btn-load-more:hover { background: var(--text-dark); color: var(--sage); }
+
+    @media (max-width: 768px) {
+      .mission { grid-template-columns: 1fr; }
+      .match-cta { grid-template-columns: 1fr; height: auto; }
+      .insta-grid { grid-template-columns: repeat(3, 1fr); }
+      .merch-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="site-nav"></div>
+
+  <section class="hero">
+    <div class="slide slide-1 active">
+      <div class="slide-bg"></div>
+      <div class="slide-overlay"></div>
+      <div class="slide-content">
+        <h2>Signups for the North Carolina Circuit are live</h2>
+        <a href="events.html" class="btn-primary">Sign Up Now</a>
+      </div>
+    </div>
+    <div class="slide slide-2">
+      <div class="slide-bg"></div>
+      <div class="slide-overlay"></div>
+      <div class="slide-content">
+        <h2>Compete Nationwide with CASS</h2>
+        <a href="events.html" class="btn-primary">Find a Match</a>
+      </div>
+    </div>
+    <div class="slide-controls">
+      <button onclick="prevSlide()" aria-label="Previous"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <div class="slide-dots">
+        <div class="dot active" onclick="goToSlide(0)"></div>
+        <div class="dot" onclick="goToSlide(1)"></div>
+      </div>
+      <button onclick="nextSlide()" aria-label="Next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+      <button onclick="togglePause(this)" aria-label="Pause"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
+    </div>
+  </section>
+
+  <section class="mission">
+    <div>
+      <p>Our mission at Cascade Action Shooting Sports is to empower shooters of all levels of experience to better themselves through both fun and challenging shooting sport events. We strive to provide the shooting community nationwide the opportunity to test their skills and compete with one another through a variety of unique stages and shooting challenges not typically offered elsewhere. Whether you're an old hand at competition shooting looking to elevate your skills to the next level, a new gun owner looking to build competency and familiarity in a safe, welcoming setting, or just looking to have fun with great shooters, CASS is your new gateway to action shooting.</p>
+    </div>
+    <img class="mission-img" src="assets/media/lean.png" alt="Shooter at CASS event" />
+  </section>
+
+  <div class="video-strip">
+    <video 
+      autoplay 
+      muted 
+      loop 
+      playsinline 
+      preload="metadata"
+      src="https://pub-5f4213a3a6a349339a31ae8faedc5bd4.r2.dev/promo_video_01.mp4"></video>
+  </div>
+
+  <section class="merch">
+    <h2 class="section-title">CASS Merch</h2>
+    <div class="merch-grid" id="merch-grid"></div>
+    <div style="text-align:center; margin-top:1.5rem;">
+      <a href="merch.html" style="font-family:'Assistant',sans-serif; font-weight:600; font-size:0.9rem; color:var(--olive); text-decoration:none; letter-spacing:0.05em;">
+        Shop All Merch →
+      </a>
+    </div>
+  </section>
+
+  <div class="match-cta">
+    <div class="match-panel match-panel-1"><div class="match-panel-bg"></div><div class="match-overlay"></div></div>
+    <div class="match-panel match-panel-2"><div class="match-panel-bg"></div><div class="match-overlay"></div></div>
+    <div class="match-cta-center"><a href="events.html" class="btn-match">Find a match near you</a></div>
+  </div>
+
+  <section class="instagram">
+    <h3>Follow us on Instagram</h3>
+    <div class="insta-grid">
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+    </div>
+    <div class="insta-grid" style="margin-top:0.5rem">
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+      <div class="insta-cell"><div class="insta-stub"></div></div>
+    </div>
+    <button class="btn-load-more">Load more</button>
+  </section>
+
+  <div id="site-footer"></div>
+
+  <script src="assets/shared.js"></script>
+  <script>
+    initPage('home');
+
+    let current = 0, paused = false;
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.dot');
+
+    function goToSlide(n) {
+      slides[current].classList.remove('active'); dots[current].classList.remove('active');
+      current = (n + slides.length) % slides.length;
+      requestAnimationFrame(() => { slides[current].classList.add('active'); dots[current].classList.add('active'); });
+    }
+    function nextSlide() { goToSlide(current + 1); }
+    function prevSlide() { goToSlide(current - 1); }
+    function togglePause(btn) {
+      paused = !paused;
+      btn.innerHTML = paused
+        ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+    }
+    setInterval(() => { if (!paused) nextSlide(); }, 5000);
+
+    fetch('assets/merch.json')
+      .then(r => r.json())
+      .then(items => {
+        document.getElementById('merch-grid').innerHTML = items.map(p => `
+          <div class="merch-card">
+            <a href="merch.html">
+              <div class="merch-img" style="background-image:url('${p.image}')"></div>
+              <div class="merch-info">
+                <div class="merch-name">${p.name}</div>
+                <div class="merch-price">${p.price}</div>
+              </div>
+            </a>
+          </div>`).join('');
+      });
+
+    document.querySelector('.btn-load-more').addEventListener('click', () => {
+      alert('Instagram feed — coming soon');
+    });
+  </script>
+</body>
+</html>

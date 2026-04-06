@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Partners — Cascade Action Shooting Sports</title>
+  <link rel="stylesheet" href="assets/shared.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .partners-intro {
+      max-width: 860px; margin: 0 auto;
+      padding: 3rem 2rem 2rem;
+    }
+    .partners-intro h1 {
+      font-family: 'Assistant', sans-serif;
+      font-weight: 400; font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    .partners-intro p {
+      font-size: 0.9rem; line-height: 1.75; color: var(--text-mid);
+    }
+
+    .map-section {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 0;
+      max-width: 100%;
+      height: 520px;
+    }
+
+    #map { width: 100%; height: 100%; z-index: 1; }
+
+    .venue-sidebar {
+      background: var(--sage-light);
+      border-left: 1px solid var(--sage-mid);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .venue-search {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--sage-mid);
+      position: relative;
+    }
+    .venue-search svg {
+      position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; color: var(--text-light); pointer-events: none;
+    }
+    .venue-search input {
+      width: 100%; padding: 0.5rem 0.5rem 0.5rem 2rem;
+      border: 1px solid var(--sage-mid); background: var(--white);
+      font-family: 'Assistant', sans-serif; font-size: 0.85rem;
+      outline: none; color: var(--text-dark);
+    }
+    .venue-search input:focus { border-color: var(--olive); }
+
+    .venue-list { overflow-y: auto; flex: 1; }
+
+    .venue-item {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--sage-mid);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .venue-item:hover, .venue-item.active { background: var(--sage-mid); }
+    .venue-item-name {
+      font-family: 'Assistant', sans-serif;
+      font-weight: 700; font-size: 0.88rem;
+      color: var(--text-dark); margin-bottom: 0.2rem;
+    }
+    .venue-item-state {
+      font-size: 0.75rem; font-weight: 700;
+      color: var(--olive); text-transform: uppercase;
+      letter-spacing: 0.06em; margin-bottom: 0.2rem;
+    }
+    .venue-item-addr {
+      font-size: 0.78rem; color: var(--text-light); line-height: 1.4;
+    }
+
+    .video-strip {
+      width: 100%; aspect-ratio: 16/6;
+      background: var(--dark-mid); overflow: hidden;
+    }
+    .video-strip video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .video-strip-stub {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.2);
+      font-family: 'Assistant', sans-serif; font-size: 0.9rem; letter-spacing: 0.1em;
+    }
+
+    @media (max-width: 768px) {
+      .map-section { grid-template-columns: 1fr; height: auto; }
+      #map { height: 340px; }
+      .venue-sidebar { border-left: none; border-top: 1px solid var(--sage-mid); max-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="site-nav"></div>
+
+  <div class="partners-intro">
+    <h1>Partners</h1>
+    <p>CASS events are held at venues nationwide. Find a range near you on the map below.</p>
+  </div>
+
+  <div class="map-section">
+    <div id="map"></div>
+    <div class="venue-sidebar">
+      <div class="venue-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="venue-search" placeholder="Search venues…" />
+      </div>
+      <div class="venue-list" id="venue-list"></div>
+    </div>
+  </div>
+
+  <div class="video-strip">
+    <!-- <video autoplay muted loop playsinline src="assets/partners_files/video.mp4"></video> -->
+    <div class="video-strip-stub">[ partners video ]</div>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="assets/shared.js"></script>
+  <script>
+    initPage('partners');
+
+    const map = L.map('map').setView([38.5, -96], 4);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+      maxZoom: 18,
+    }).addTo(map);
+
+    const markerIcon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:12px;height:12px;border-radius:50%;
+        background:#4a5e3a;border:2px solid #fff;
+        box-shadow:0 1px 4px rgba(0,0,0,0.4);
+      "></div>`,
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+    });
+
+    let VENUES = [];
+    // keyed by venue id for O(1) lookup if needed elsewhere
+    const markers = {};
+
+    function renderList(venues) {
+      document.getElementById('venue-list').innerHTML = venues.map(v => `
+        <div class="venue-item" data-id="${v.id}" onclick="selectVenue('${v.id}')">
+          <div class="venue-item-state">${v.state}</div>
+          <div class="venue-item-name">${v.name}</div>
+          <div class="venue-item-addr">${v.address}</div>
+        </div>`).join('');
+    }
+
+    function selectVenue(id) {
+      const v = VENUES.find(x => x.id === id);
+      if (!v) return;
+      map.setView([v.lat, v.lng], 12);
+      markers[id].openPopup();
+      document.querySelectorAll('.venue-item').forEach(el => el.classList.remove('active'));
+      document.querySelector(`.venue-item[data-id="${id}"]`)?.classList.add('active');
+    }
+
+    document.getElementById('venue-search').addEventListener('input', e => {
+      const term = e.target.value.toLowerCase();
+      renderList(VENUES.filter(v =>
+        v.name.toLowerCase().includes(term) ||
+        v.state.toLowerCase().includes(term) ||
+        v.address.toLowerCase().includes(term)
+      ));
+    });
+
+    fetch('assets/venues.json')
+      .then(r => r.json())
+      .then(data => {
+        VENUES = data;
+        VENUES.forEach(v => {
+          markers[v.id] = L.marker([v.lat, v.lng], { icon: markerIcon })
+            .addTo(map)
+            .bindPopup(`<strong>${v.name}</strong><br>${v.address}`);
+        });
+        renderList(VENUES);
+      });
+  </script>
+</body>
+</html>

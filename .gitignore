@@ -1,6 +1,5 @@
-
 /dl/
-
+node_modules/
 # wrangler files
 .wrangler
 .dev.vars*
