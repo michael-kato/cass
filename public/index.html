@@ -78,6 +78,7 @@
       overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
     }
     .merch-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .merch-card a { text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }
     .merch-img {
       width: 100%; aspect-ratio: 1;
       background: linear-gradient(135deg, var(--sage-mid), var(--olive) 80%) center/cover;
@@ -178,6 +179,11 @@
   <section class="merch">
     <h2 class="section-title">CASS Merch</h2>
     <div class="merch-grid" id="merch-grid"></div>
+    <div style="text-align:center; margin-top:1.5rem;">
+      <a href="merch.html" style="font-family:'Assistant',sans-serif; font-weight:600; font-size:0.9rem; color:var(--olive); text-decoration:none; letter-spacing:0.05em;">
+        Shop All Merch →
+      </a>
+    </div>
   </section>
 
   <div class="match-cta">
@@ -235,11 +241,13 @@
       .then(items => {
         document.getElementById('merch-grid').innerHTML = items.map(p => `
           <div class="merch-card">
-            <div class="merch-img" style="background-image:url('${p.image}')"></div>
-            <div class="merch-info">
-              <div class="merch-name">${p.name}</div>
-              <div class="merch-price">${p.price}</div>
-            </div>
+            <a href="merch.html">
+              <div class="merch-img" style="background-image:url('${p.image}')"></div>
+              <div class="merch-info">
+                <div class="merch-name">${p.name}</div>
+                <div class="merch-price">${p.price}</div>
+              </div>
+            </a>
           </div>`).join('');
       });
 
