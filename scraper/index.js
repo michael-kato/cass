@@ -1,15 +1,34 @@
 // scraper-worker/index.js
 // Cloudflare Worker with Browser Rendering + KV storage
-// Deploys separately from the main static site
+//
+// Slugs are now fetched dynamically from the live site's assets/events.json
+// instead of being hardcoded in wrangler.toml. Set SITE_URL in wrangler.toml.
 //
 // Setup:
 //   1. npm install wrangler --save-dev
 //   2. Create KV namespace: npx wrangler kv namespace create MATCH_DATA
 //   3. Add the KV namespace ID to wrangler.toml
-//   4. Set EVENTS in wrangler.toml (list of matches to scrape)
+//   4. Set SITE_URL in wrangler.toml [vars]
 //   5. Deploy: npx wrangler deploy
 
 import puppeteer from "@cloudflare/puppeteer";
+
+// Fetch the list of practiscoreSlugs from the live site's events.json.
+// Returns an array of slug strings (nulls filtered out).
+async function fetchSlugsFromEvents(env) {
+  const url = `${env.SITE_URL}/assets/events.json`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const events = await res.json();
+    return events
+      .map(e => e.practiscoreSlug)
+      .filter(Boolean);
+  } catch (err) {
+    console.error('Failed to fetch events.json:', err.message);
+    return [];
+  }
+}
 
 export default {
   // ── Cron trigger — runs on schedule defined in wrangler.toml ──
@@ -17,7 +36,7 @@ export default {
     ctx.waitUntil(scrapeAll(env));
   },
 
-  // ── HTTP trigger — call /scrape?slug=match-slug to trigger manually ──
+  // ── HTTP trigger ──
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
@@ -32,7 +51,6 @@ export default {
     }
 
     if (url.pathname === '/data') {
-      // Return all stored match data — called by the CASS site
       const slug = url.searchParams.get('slug');
       if (slug) {
         const val = await env.MATCH_DATA.get(slug);
@@ -45,7 +63,6 @@ export default {
         });
       }
 
-      // Return all slugs and their data
       const list = await env.MATCH_DATA.list();
       const all = {};
       for (const key of list.keys) {
@@ -60,14 +77,20 @@ export default {
       });
     }
 
+    // Manual trigger: /scrape-all re-fetches slugs from events.json and scrapes
+    if (url.pathname === '/scrape-all') {
+      ctx.waitUntil(scrapeAll(env));
+      return new Response('Scrape triggered', { status: 202 });
+    }
+
     return new Response('CASS Scraper Worker', { status: 200 });
   }
 };
 
-// ── Scrape all matches listed in env.MATCH_SLUGS ──
+// ── Scrape all matches with a practiscoreSlug in events.json ──
 async function scrapeAll(env) {
-  const slugs = JSON.parse(env.MATCH_SLUGS || '[]');
-  console.log(`Scraping ${slugs.length} matches...`);
+  const slugs = await fetchSlugsFromEvents(env);
+  console.log(`Scraping ${slugs.length} matches:`, slugs);
 
   for (const slug of slugs) {
     try {
@@ -89,7 +112,6 @@ async function scrapeMatch(env, slug) {
 
     const page = await browser.newPage();
 
-    // Set a realistic user agent
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
     );
@@ -99,7 +121,6 @@ async function scrapeMatch(env, slug) {
       timeout: 30000,
     });
 
-    // Extract all alert-info elements and their text
     const alerts = await page.$$eval(
       '.alert.alert-info.centerText',
       els => els.map(el => el.innerText.trim())
@@ -107,8 +128,6 @@ async function scrapeMatch(env, slug) {
 
     console.log('Alert elements found:', alerts);
 
-    // Look for the one containing spots/registration info
-    // Practiscore typically says something like "X spots remaining" or "X of Y registered"
     const spotsText = alerts.find(text =>
       /spot|register|remain|full|waitlist/i.test(text)
     ) || alerts[0] || null;
@@ -122,7 +141,6 @@ async function scrapeMatch(env, slug) {
       success: true,
     };
 
-    // Store in KV with 6 hour TTL
     await env.MATCH_DATA.put(slug, JSON.stringify(result), {
       expirationTtl: 60 * 60 * 6,
     });
@@ -140,7 +158,6 @@ async function scrapeMatch(env, slug) {
       success: false,
     };
 
-    // Store the error too so the site knows the last attempt failed
     await env.MATCH_DATA.put(slug, JSON.stringify(result), {
       expirationTtl: 60 * 60,
     });

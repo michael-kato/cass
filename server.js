@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 // Serve all static site files from the project root
-app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 // ── POST /api/create-checkout-session ──
 // Body: { items: [{ id, name, price, image, quantity }] }
