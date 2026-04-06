@@ -20,7 +20,6 @@
       font-size: 0.9rem; line-height: 1.75; color: var(--text-mid);
     }
 
-    /* Map + list layout */
     .map-section {
       display: grid;
       grid-template-columns: 1fr 340px;
@@ -55,9 +54,7 @@
     }
     .venue-search input:focus { border-color: var(--olive); }
 
-    .venue-list {
-      overflow-y: auto; flex: 1;
-    }
+    .venue-list { overflow-y: auto; flex: 1; }
 
     .venue-item {
       padding: 0.85rem 1rem;
@@ -65,7 +62,6 @@
       cursor: pointer; transition: background 0.15s;
     }
     .venue-item:hover, .venue-item.active { background: var(--sage-mid); }
-
     .venue-item-name {
       font-family: 'Assistant', sans-serif;
       font-weight: 700; font-size: 0.88rem;
@@ -80,14 +76,11 @@
       font-size: 0.78rem; color: var(--text-light); line-height: 1.4;
     }
 
-    /* Video strip */
     .video-strip {
       width: 100%; aspect-ratio: 16/6;
       background: var(--dark-mid); overflow: hidden;
     }
-    .video-strip video {
-      width: 100%; height: 100%; object-fit: cover; display: block;
-    }
+    .video-strip video { width: 100%; height: 100%; object-fit: cover; display: block; }
     .video-strip-stub {
       width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
@@ -134,19 +127,6 @@
   <script>
     initPage('partners');
 
-    // ── Venue data — replace with fetch('data/venues.json') ──
-    const VENUES = [
-      { name: 'Snoqualmie Valley Rifle Club', state: 'WA', address: '38200 SE Reinig Rd, Fall City, WA 98024', lat: 47.562, lng: -121.888 },
-      { name: 'Piedmont Handgunner\'s Association', state: 'NC', address: '5025 Airport Rd, Greensboro, NC 27409', lat: 36.088, lng: -79.944 },
-      { name: 'Belvoir Indoor Shooting Range', state: 'VA', address: '9350 Belvoir Rd, Woodbridge, VA 22060', lat: 38.707, lng: -77.152 },
-      { name: 'Armory Indoor Range', state: 'TX', address: '9515 N Lamar Blvd, Austin, TX 78753', lat: 30.369, lng: -97.703 },
-      { name: 'Nashville Practical Shooters', state: 'TN', address: '2407 Brick Church Pike, Nashville, TN 37207', lat: 36.226, lng: -86.759 },
-      { name: 'Front Range Gun Club', state: 'CO', address: '3736 N El Paso St, Colorado Springs, CO 80907', lat: 38.887, lng: -104.820 },
-      { name: 'PCSL Range West', state: 'CA', address: '3800 Cornucopia Way, Modesto, CA 95358', lat: 37.620, lng: -120.998 },
-      { name: 'Northeast Multigun Club', state: 'PA', address: '1001 Sportsman Rd, Bensalem, PA 19020', lat: 40.104, lng: -74.934 },
-    ];
-
-    // ── Map ──
     const map = L.map('map').setView([38.5, -96], 4);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -165,34 +145,26 @@
       iconAnchor: [6, 6],
     });
 
+    let VENUES = [];
+    // keyed by venue id for O(1) lookup if needed elsewhere
     const markers = {};
 
-    VENUES.forEach((v, i) => {
-      const marker = L.marker([v.lat, v.lng], { icon: markerIcon })
-        .addTo(map)
-        .bindPopup(`<strong>${v.name}</strong><br>${v.address}`);
-      markers[i] = marker;
-    });
-
-    // ── Sidebar list ──
-    let filtered = [...VENUES];
-
     function renderList(venues) {
-      const list = document.getElementById('venue-list');
-      list.innerHTML = venues.map((v, i) => `
-        <div class="venue-item" data-index="${i}" onclick="selectVenue(${i})">
+      document.getElementById('venue-list').innerHTML = venues.map(v => `
+        <div class="venue-item" data-id="${v.id}" onclick="selectVenue('${v.id}')">
           <div class="venue-item-state">${v.state}</div>
           <div class="venue-item-name">${v.name}</div>
           <div class="venue-item-addr">${v.address}</div>
         </div>`).join('');
     }
 
-    function selectVenue(i) {
-      const v = VENUES[i];
+    function selectVenue(id) {
+      const v = VENUES.find(x => x.id === id);
+      if (!v) return;
       map.setView([v.lat, v.lng], 12);
-      markers[i].openPopup();
+      markers[id].openPopup();
       document.querySelectorAll('.venue-item').forEach(el => el.classList.remove('active'));
-      document.querySelector(`.venue-item[data-index="${i}"]`)?.classList.add('active');
+      document.querySelector(`.venue-item[data-id="${id}"]`)?.classList.add('active');
     }
 
     document.getElementById('venue-search').addEventListener('input', e => {
@@ -204,7 +176,17 @@
       ));
     });
 
-    renderList(VENUES);
+    fetch('assets/venues.json')
+      .then(r => r.json())
+      .then(data => {
+        VENUES = data;
+        VENUES.forEach(v => {
+          markers[v.id] = L.marker([v.lat, v.lng], { icon: markerIcon })
+            .addTo(map)
+            .bindPopup(`<strong>${v.name}</strong><br>${v.address}`);
+        });
+        renderList(VENUES);
+      });
   </script>
 </body>
 </html>
