@@ -25,6 +25,9 @@
       border-radius: 4px;
       background: var(--sage-mid);
     }
+    .image-magnifier-wrapper:hover {
+      z-index: 5;
+    }
     .grid-image {
       width: 100%;
       aspect-ratio: 1;
@@ -48,7 +51,7 @@
       background-size: auto;
       box-shadow: 0 0 20px rgba(0,0,0,0.25);
       transition: opacity 0.2s;
-      z-index: 2;
+      z-index: 10;
     }
     .image-magnifier-wrapper:hover .magnifier-lens {
       opacity: 1;
@@ -144,9 +147,10 @@
     }
     .for-you-card:hover { opacity: 0.8; }
     .for-you-img {
-      width: 100%; aspect-ratio: 1;
-      background: var(--sage-mid) center/cover;
+      width: 100%;
+      background-color: var(--sage-mid);
       display: block; margin-bottom: 0.6rem; border-radius: 2px;
+      object-fit: cover;
     }
     .for-you-name {
       font-size: 0.85rem; color: var(--text-dark);
@@ -248,11 +252,11 @@
     let currentImages = [];
 
     const sizeScales = {
-      'S': 0.5,
+      'S': 0.8,
       'M': 1,
-      'L': 1.25,
-      'XL': 1.5,
-      '2XL': 2
+      'L': 1.1,
+      'XL': 1.2,
+      '2XL': 1.5
     };
 
     function formatCurrency(value) {

@@ -81,7 +81,7 @@
     "id": "microfiber-towel-green",
     "name": "Microfiber Towel Green",
     "price": 15,
-    "heroImage": "green-towel.jpg",
+    "images": ["green-towel.jpg"],
     "type": "simple",
     "description": "Premium microfiber towel in classic green. Perfect for the range or gym."
   },
@@ -89,7 +89,7 @@
     "id": "microfiber-towel-fde",
     "name": "Microfiber Towel FDE",
     "price": 15,
-    "heroImage": "fde-towel.jpg",
+    "images": ["fde-towel.jpg"],
     "type": "simple",
     "description": "Premium microfiber towel in FDE (Flat Dark Earth). Perfect for the range or gym."
   },
@@ -102,7 +102,6 @@
       "Tri-Blend Vintage Black": ["low_light_02.webp", "low_light_03.webp", "low_light_04.webp"]
     },
     "type": "options",
-    "sizes": ["S", "M", "L", "XL"],
     "sizes": ["S", "M", "L", "XL"],
     "description": "This high quality regular fit tee has a casually elegant vibe. Additionally, unbelievably soft tri-blend fabric makes it extremely comfortable - once put on, impossible to take off.\n\n.: 50% polyester, 25% combed ringspun cotton, 25% rayon\n.: Light Fabric (4.3 oz/yd² (146 g/m²))\n.: Regular fit\n.: Sewn-in label"
   }
