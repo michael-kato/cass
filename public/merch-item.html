@@ -247,6 +247,14 @@
     let selectedSize = null;
     let currentImages = [];
 
+    const sizeScales = {
+      'S': 0.5,
+      'M': 1,
+      'L': 1.25,
+      'XL': 1.5,
+      '2XL': 2
+    };
+
     function formatCurrency(value) {
       return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
     }
@@ -260,10 +268,11 @@
     }
 
     function renderGallery() {
+      const scale = selectedSize ? sizeScales[selectedSize] || 1 : 1;
       currentImages = getProductImages().map(img => IMAGE_BASE + img);
       const grid = document.getElementById('image-grid');
       grid.innerHTML = currentImages.map(img => `
-        <div class="image-magnifier-wrapper">
+        <div class="image-magnifier-wrapper" style="transform: scale(${scale}); transform-origin: center;">
           <img src="${img}" alt="Product" class="grid-image" />
           <div class="magnifier-lens"></div>
         </div>
@@ -279,8 +288,8 @@
           const y = event.clientY - rect.top;
           const lensX = x;
           const lensY = y;
-          const lensWidth = lens.offsetWidth;
-          const lensHeight = lens.offsetHeight;
+          const lensWidth = 420 * scale;
+          const lensHeight = 420 * scale;
           const zoom = 2;
 
           const naturalWidth = img.naturalWidth;
@@ -295,6 +304,8 @@
 
           lens.style.left = `${lensX}px`;
           lens.style.top = `${lensY}px`;
+          lens.style.width = `${lensWidth}px`;
+          lens.style.height = `${lensHeight}px`;
           lens.style.backgroundImage = `url(${img.src})`;
           lens.style.backgroundSize = `${displayWidth * zoom}px ${displayHeight * zoom}px`;
 
@@ -367,9 +378,10 @@
 
       // Sizes
       if (currentProduct.sizes && currentProduct.sizes.length > 0) {
+        selectedSize = selectedSize || (currentProduct.sizes.includes('M') ? 'M' : currentProduct.sizes[0]);
         document.getElementById('size-section').style.display = 'block';
         document.getElementById('size-grid').innerHTML = currentProduct.sizes.map(s => `
-          <button class="option-btn" data-size="${s}"
+          <button class="option-btn ${s === selectedSize ? 'selected' : ''}" data-size="${s}"
                   onclick="selectSize('${s}')">${s}</button>
         `).join('');
       }
@@ -407,6 +419,7 @@
       document.querySelectorAll('#size-grid .option-btn').forEach(btn => {
         btn.classList.toggle('selected', btn.textContent.trim() === size);
       });
+      renderGallery();
     }
 
     function getQuantity() {
