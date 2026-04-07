@@ -25,6 +25,7 @@ body {
   background: var(--sage);
   color: var(--text-dark);
   overflow-x: hidden;
+  image-rendering: smooth;
 }
 
 /* ── NAV ── */

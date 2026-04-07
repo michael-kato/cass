@@ -236,19 +236,26 @@
     }
     setInterval(() => { if (!paused) nextSlide(); }, 5000);
 
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    }
+
     fetch('assets/merch.json')
       .then(r => r.json())
       .then(items => {
-        document.getElementById('merch-grid').innerHTML = items.map(p => `
-          <div class="merch-card">
-            <a href="merch.html">
-              <div class="merch-img" style="background-image:url('${p.image}')"></div>
-              <div class="merch-info">
-                <div class="merch-name">${p.name}</div>
-                <div class="merch-price">${p.price}</div>
-              </div>
-            </a>
-          </div>`).join('');
+        document.getElementById('merch-grid').innerHTML = items.map(p => {
+          const image = p.images && p.images[0] ? `assets/merch/${p.images[0]}` : '';
+          return `
+            <div class="merch-card">
+              <a href="merch.html">
+                <div class="merch-img" style="background-image:url('${image}')"></div>
+                <div class="merch-info">
+                  <div class="merch-name">${p.name}</div>
+                  <div class="merch-price">${formatCurrency(p.price)}</div>
+                </div>
+              </a>
+            </div>`;
+        }).join('');
       });
 
     document.querySelector('.btn-load-more').addEventListener('click', () => {

@@ -2,57 +2,75 @@
   {
     "id": 1,
     "name": "Cascade Armory 0 Sticker Pack",
-    "price": "$14.99 USD",
-    "image": "assets/merch/sticker-pack.png",
-    "type": "simple"
+    "price": 14.99,
+    "images": ["sticker-pack.png"],
+    "type": "simple",
+    "description": "Turn your favorite rifles and pistols into pocket-sized art with the Cascade Armory 0 sticker pack. Featuring five unique firearm designs from the Cascade Armory collection, this pack is perfect for slapping on ammo cans, water bottles, range cases, or your laptop.\n\nEach sticker is printed on durable, weatherproof vinyl with a matte finish for a clean, tactical look.\n\nIncludes:\n\nACR – Decked out with a red battleworn finish\nAK-104 – Green classic with a rugged vibe\nMP5 – Loaded with subsonic ammo and a sleek two-tone look\nStaccato C2 – Cyberpunk 2077 Trauma Team inspired sidearm\nBeretta M9 – Clean and minimalist\nSpecs:\n\n5 premium vinyl stickers\nMatte finish, water & UV resistant\nSizes range 2\"-4\" (longest dimension)\nDesigned and printed in the USA"
   },
   {
     "id": 2,
     "name": "Cascade Anime Collection - Echo ACR",
-    "price": "$35.00 USD",
-    "image": "assets/merch/echo-acr.jpg",
-    "type": "options"
+    "price": 35,
+    "images": ["Echo ACR_01.webp", "Echo ACR_02.webp", "Echo ACR_03.webp", "Echo ACR_04.webp", "Echo ACR_05.webp"],
+    "type": "options",
+    "colors": ["Tri-Blend Macchiato", "Tri-Blend Vintage Black"],
+    "sizes": ["S", "M", "L", "XL", "2XL"],
+    "description": "Available in two unique colors, Echo sports a custom Templar Precision ACR and is ready for a match win!\n\nThis high quality regular fit tee has a casually elegant vibe. Additionally, unbelievably soft tri-blend fabric makes it extremely comfortable - once put on, impossible to take off.\n\n.: 50% polyester, 25% combed ringspun cotton, 25% rayon\n.: Light Fabric (4.3 oz/yd² (146 g/m²))\n.: Regular fit\n.: Sewn-in label"
   },
   {
     "id": 3,
     "name": "Cascade Action Anime Collection - Sierra G36K",
-    "price": "$35.00 USD",
-    "image": "assets/merch/sierra-g36k.jpg",
-    "type": "options"
+    "price": 35,
+    "images": ["sierra-g36k_01.webp", "sierra-g36k_02.jpg", "sierra-g36k_03.webp", "sierra-g36k_04.webp"],
+    "type": "options",
+    "colors": ["Default"],
+    "sizes": ["S", "M", "L", "XL", "2XL"],
+    "description": "Premium tri-blend t-shirt featuring original anime-inspired artwork."
   },
   {
     "id": 4,
     "name": "\"Delta\" Kitty Tri-Blend T Shirt",
-    "price": "$35.00 USD",
-    "image": "assets/merch/DeltaKittyBack2.jpg",
-    "type": "options"
+    "price": 35,
+    "images": ["delta_kitty_01.webp", "delta_kitty_02.webp", "delta_kitty_03.webp", "delta_kitty_04.webp"],
+    "type": "options",
+    "colors": ["Default"],
+    "sizes": ["S", "M", "L", "XL", "2XL"],
+    "description": "Ultra-soft tri-blend fabric featuring our signature Delta Kitty design."
   },
   {
     "id": 5,
     "name": "\"Bravo\" Kitty Tri-Blend T Shirt",
-    "price": "$35.00 USD",
-    "image": "assets/merch/BravoKittyBack2.jpg",
-    "type": "options"
+    "price": 35,
+    "images": ["bravo_kitty_01.webp", "bravo_kitty_02.webp", "bravo_kitty_03.jpg"],
+    "type": "options",
+    "colors": ["Tri-Blend Military Green", "Tri-Blend Vintage Black", "Tri-Blend Vintage Red", "Tri-Blend Indigo"],
+    "sizes": ["S", "M", "L", "XL", "2XL"],
+    "description": "The Cascade Action Shooting Sports \"Bravo\" Kitty shirt is available in four colors printed on a premium Next Level Apparel T shirt blank.\n\n.: 50% polyester, 25% combed ringspun cotton, 25% rayon\n.: Light Fabric (4.3 oz/yd² (146 g/m²))\n.: Regular fit\n.: Sewn-in label"
   },
   {
     "id": 6,
     "name": "\"Whiskey\" Dog Tri-Blend T Shirt",
-    "price": "$35.00 USD",
-    "image": "assets/merch/whiskey-dog.jpg",
-    "type": "options"
+    "price": 35,
+    "images": ["whiskey_dog_01.webp", "whiskey_dog_02.webp"],
+    "type": "options",
+    "colors": ["Tri-Blend Macchiato", "Tri-Blend Vintage Black", "Tri-Blend Indigo"],
+    "sizes": ["S", "M", "L", "XL", "2XL"],
+    "description": "This high quality regular fit tee has a casually elegant vibe. Additionally, the unbelievably soft tri-blend fabric makes it extremely comfortable - once put on, impossible to take off."
   },
   {
     "id": 7,
     "name": "Microfiber Towel Green",
-    "price": "$15.00 USD",
-    "image": "assets/merch/green-towel.jpg",
-    "type": "simple"
+    "price": 15,
+    "images": ["green-towel.jpg"],
+    "type": "simple",
+    "description": "Premium microfiber towel in classic green. Perfect for the range or gym."
   },
   {
     "id": 8,
     "name": "Microfiber Towel FDE",
-    "price": "$15.00 USD",
-    "image": "assets/merch/fde-towel.jpg",
-    "type": "simple"
+    "price": 15,
+    "images": ["fde-towel.jpg"],
+    "type": "simple",
+    "description": "Premium microfiber towel in FDE (Flat Dark Earth). Perfect for the range or gym."
   }
 ]
