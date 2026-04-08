@@ -51,6 +51,11 @@
 
   <div id="site-footer"></div>
   <script src="shared.js"></script>
-  <script>initPage('');</script>
+  <script>
+    try {
+      localStorage.removeItem('cass_cart');
+    } catch {}
+    initPage('');
+  </script>
 </body>
 </html>

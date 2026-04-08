@@ -32,19 +32,34 @@ function renderMarkdownFields(value, markdownFields) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
     // ── Handle API Routes ──
     if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
       try {
+        if (!env.STRIPE_SECRET_KEY) {
+          return new Response(JSON.stringify({ error: 'Missing STRIPE_SECRET_KEY.' }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
         const { items } = await request.json();
+        if (!Array.isArray(items) || items.length === 0) {
+          return new Response(JSON.stringify({ error: 'Cart is empty.' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        const baseUrl = (env.SITE_URL || url.origin).replace(/\/$/, '');
+        const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
         const line_items = items.map(item => ({
           price_data: {
             currency: 'usd',
             product_data: {
               name: item.name,
-              ...(item.image ? { images: [`${env.SITE_URL || 'http://localhost:3000'}/${item.image}`] } : {}),
+              ...(item.image ? { images: [`${baseUrl}/${item.image.replace(/^\/+/, '')}`] } : {}),
             },
             unit_amount: Math.round(parseFloat(item.price.replace(/[^0-9.]/g, '')) * 100),
           },
@@ -55,8 +70,8 @@ export default {
           payment_method_types: ['card'],
           line_items,
           mode: 'payment',
-          success_url: `${env.SITE_URL}/checkout-success.html`,
-          cancel_url:  `${env.SITE_URL}/merch.html`,
+          success_url: `${baseUrl}/assets/checkout-success.html`,
+          cancel_url:  `${baseUrl}/merch.html`,
           shipping_address_collection: { allowed_countries: ['US'] },
         });
 

@@ -6,6 +6,9 @@
   "observability": {
     "enabled": true
   },
+  "secrets": {
+    "required": ["STRIPE_SECRET_KEY"]
+  },
   "assets": {
     "directory": "./public",
     "binding": "ASSETS"

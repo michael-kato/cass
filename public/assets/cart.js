@@ -236,8 +236,6 @@ async function startCheckout() {
 
     if (!res.ok) throw new Error(data.error || 'Checkout failed');
 
-    // Clear cart then redirect to Stripe
-    clearCart();
     window.location.href = data.url;
 
   } catch (err) {

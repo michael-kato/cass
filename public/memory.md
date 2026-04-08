@@ -47,6 +47,7 @@
 ## Main App
 - [`server.js`](/opt/git/cass/server.js) is a Cloudflare Worker entrypoint, not an Express server.
 - [`wrangler.jsonc`](/opt/git/cass/wrangler.jsonc) binds `./public` as `ASSETS`.
+- [`wrangler.jsonc`](/opt/git/cass/wrangler.jsonc) marks `STRIPE_SECRET_KEY` as a required secret.
 - The worker currently exposes:
   - `POST /api/create-checkout-session`
   - `GET /api/toml?path=assets/<file>.toml`
@@ -124,8 +125,11 @@ Important note:
 - Cart state lives in `localStorage` under `cass_cart`
 - [`public/assets/cart.js`](/opt/git/cass/public/assets/cart.js) owns drawer UI and cart operations
 - Stripe checkout is created by `POST /api/create-checkout-session`
-- Success URL currently points to `/checkout-success.html`, but the actual file in the repo is [`public/assets/checkout-success.html`](/opt/git/cass/public/assets/checkout-success.html)
-- That path mismatch should be verified before production checkout testing
+- Worker now uses `env.SITE_URL || request.url.origin` as the checkout base URL
+- Success URL points to [`public/assets/checkout-success.html`](/opt/git/cass/public/assets/checkout-success.html)
+- Cancel URL points back to [`public/merch.html`](/opt/git/cass/public/merch.html)
+- Cart is intentionally cleared on the success page, not before redirecting to Stripe
+- Local Worker secrets should be supplied through `.dev.vars` during `wrangler dev`
 
 ## Visual / Motion State
 Shared Ken Burns is now reusable across pages.
@@ -171,6 +175,7 @@ Important:
 - `fetch()`-based pages require the worker/static server environment
 - opening files directly from disk will not work for TOML-backed pages
 - the app now depends on `/api/toml` for content loading
+- local Stripe testing should use `.dev.vars` with `STRIPE_SECRET_KEY` and `SITE_URL`
 
 ## Scraper Worker
 Scraper lives in [`/scraper`](/opt/git/cass/scraper).
@@ -199,12 +204,12 @@ Note:
 - `express` is still listed, but the current main app runtime is a Worker-style `fetch()` handler, not an Express app
 
 ## Current Known Issues / Follow-Ups
-- Verify checkout success path versus actual file location
 - Update scraper worker to consume TOML or a derived JSON/API source instead of `assets/events.json`
 - Update scraper README and `scraper/wrangler.toml` so docs/config match reality
 - Replace placeholder `SCRAPER_URL` in [`public/events.html`](/opt/git/cass/public/events.html) if not already deployed
 - Run a consistency pass on page-local layout gutters
 - Test all TOML-backed pages through the real worker/server path after content edits
+- Add Stripe webhook handling before relying on the success page alone for fulfillment or order confirmation state
 
 ## Recent Major Changes
 - Migrated asset data from JSON to TOML
