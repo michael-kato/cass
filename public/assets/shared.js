@@ -126,8 +126,14 @@ function initPage(activePage) {
   initKenBurns();
 }
 
-async function loadToml(path, collectionKey = null) {
-  const response = await fetch(`/api/toml?path=${encodeURIComponent(path)}`);
+async function loadToml(path, collectionKey = null, options = {}) {
+  const params = new URLSearchParams({ path });
+
+  if (options.markdownFields?.length) {
+    params.set('markdown', options.markdownFields.join(','));
+  }
+
+  const response = await fetch(`/api/toml?${params.toString()}`);
 
   if (!response.ok) {
     throw new Error(`Failed to load TOML file: ${path}`);

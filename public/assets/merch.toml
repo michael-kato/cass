@@ -59,7 +59,7 @@ description = "Premium tri-blend t-shirt featuring original anime-inspired artwo
 
 [[products]]
 id = "delta-kitty-tri-blend-t-shirt"
-name = "\"Delta\" Kitty Tri-Blend T Shirt"
+name = """"Delta" Kitty Tri-Blend T Shirt"""
 price = 35
 images = ["delta_kitty_01.webp", "delta_kitty_04.webp", "delta_kitty_03.webp"]
 type = "options"

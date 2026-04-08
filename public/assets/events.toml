@@ -8,7 +8,52 @@ venueId = "pha"
 image = "assets/media/PHADrone.jpg"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Piedmont Handgunner's Association."
+desc = """
+## General Match Info
+
+Contact: [info@cascadeaction.org](mailto:info@cascadeaction.org)  
+FAQ: [cascadeaction.org/pages/faq](https://cascadeaction.org/pages/faq)
+
+## Schedule
+
+- Setup: 8:00
+- New Shooters Meeting: 9:30
+- General Safety Meeting: 10:00
+
+**You will not be allowed to shoot if you miss the safety meeting.**
+
+## Match Details
+
+- **Stages:** 5
+- **Round Count (estimated):** 100 carbine + 100 handgun
+- **Match Fee:** $35
+
+## Divisions
+
+- Competition
+- Practical
+
+New to action shooting or two-gun? Sign up as **Practical** and bring:
+
+- Rifle or PCC with sling, caliber no greater than `.308`
+- Handgun with a safe holster -- No SERPA or Uncle Mike's style fabric holsters
+- 3 magazines for each firearm
+
+**Use of M855 / SS109 or similar ammo is prohibited.**
+
+## Rules & Scoring
+
+PCSL General Rulebook, current revision, using **Hit Factor (Points Per Second)**.
+
+Rulebook: [pcsleague.us](https://www.pcsleague.us/)
+
+## Refund Policy
+
+Full refunds are available for withdrawal requests made through the **Saturday prior to match date**.
+
+Refunds issued will be less Stripe's **3% processing fee**.
+"""
+
 registerUrl = "#"
 
 [[events]]
@@ -21,7 +66,31 @@ venueId = "bellevue-indoor"
 image = "assets/media/bir.jpg"
 spots = 60
 filled = 0
-desc = "PCSL One Gun Low Light match at Bellevue Indoor Range."
+desc = """
+Come out to Bellevue Indoor Range for a 4 stage Low Light PCSL match!
+
+YOU MUST CHECK IN AT RANGE DESK TO FILL OUT WAIVER
+
+Setup at 9, New shooter orientation at 9:45. Safety briefing starts at 10:15. If you arrive after you will not be allowed to shoot.
+
+ANYONE NEW TO BELLEVUE INDOOR RANGE IS REQUIRED TO ATTEND THE NEW SHOOTER ORIENTATION REGARDLESS OF EXPERIENCE LEVEL
+
+Given the reduced lighting conditions we require participants to have attended at least 3 events with CASS to ensure familiarity with action shooting safety rules and match ettiquette. Please email info@cascadeaction.org for more info.
+
+Required equipment:
+Night Vision Division - Night vision device & familiarity
+White light on ALL firearms AND handheld flashlight
+Electronic Hearing Protection
+Rifle with sling and three magazines - Caliber no greater than 7.62x39/300blk
+Handgun with a safe holster and three magazines - No SERPA or Uncle Mikes style fabric holsters
+Muzzle brakes / compensators / ports are prohibited unless used as a suppressor host
+100 rounds for your rifle and handgun - No Steel Core (M855 / SS109) or similar ammunition
+
+BELLEVUE INDOOR RANGE SOP:
+Use of a Sig P320 in any form is prohibited
+No M855 / SS109 / M855A1 allowed on premises - participant will be ejected and prohibited from attending any events
+No food or drink allowed in the action bays
+"""
 registerUrl = "#"
 
 [[events]]
@@ -34,7 +103,29 @@ venueId = "svrc"
 image = "assets/media/DSC_1112.jpg"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Snoqualmie Valley Rifle Club."
+desc = """
+GENERAL MATCH INFO // Contact info@cascadeaction.org
+FAQ // https://cascadeaction.org/pages/faq
+
+SCHEDULE // SETUP 8:00, NEW SHOOTERS MEETING 9:30, GENERAL SAFETY MEETING 10:00. YOU WILL NOT BE ALLOWED TO SHOOT IF YOU MISS THE SAFETY MEETING!
+
+STAGES // 5 Stages
+ROUND COUNT (Estimates) // 100 Carbine + 100 Handgun
+
+DIVISIONS // Competition, Practical
+New to action shooting / two gun? Sign up as "practical" and bring the following:
+Rifle / PCC with sling - Caliber no greater than .308
+Handgun with a safe holster - No SERPA or Uncle Mikes style fabric holsters
+3 Magazines for each firearm
+Use of M855 / SS109 or similar ammo is prohibited
+
+MATCH FEE // $35
+
+RULES & SCORING // PCSL General Rulebook, current revision, Hit Factor (Points Per Second)
+Rulebook can be found at https://www.pcsleague.us/
+
+REFUND POLICY // Full refunds for all withdrawal requests made through Saturday prior to match date. Note: Refunds issued will be less Stripe's 3% processing fee.
+"""
 registerUrl = "#"
 
 [[events]]
@@ -47,7 +138,27 @@ venueId = "jcsa"
 image = "assets/media/jcsaretina-300x297.png"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Jefferson County Sportsman's Association."
+desc = """
+SCHEDULE // NEW SHOOTERS MEETING 9:30, GENERAL SAFETY MEETING 10:00. YOU WILL NOT BE ALLOWED TO SHOOT IF YOU MISS THE SAFETY MEETING!
+
+STAGES // 6 Stages
+ROUND COUNT (Estimates) // 120 Carbine + 120 Handgun
+
+DIVISIONS // Competition, Practical
+New to action shooting / two gun? Sign up as "practical" and bring the following:
+Rifle / PCC with sling - Caliber no greater than .308
+Handgun with a safe holster - No SERPA or Uncle Mikes style fabric holsters
+3 Magazines for each firearm
+Use of M855 / SS109 or similar ammo is prohibited
+
+MATCH FEE // $35
+
+RULES & SCORING // PCSL General Rulebook, current revision, Hit Factor (Points Per Second)
+Rulebook can be found at https://www.pcsleague.us/
+RANGE SOP: Slung rifles may not break the 180 regardless of condition (incl inert PCSL 1.4.2.3); slung rifles are allowed the same 3’ radius exception as handguns.
+
+REFUND POLICY // Full refunds for all withdrawal requests made through Saturday prior to match date. Note: Refunds issued will be less Stripe's 3% processing fee.
+"""
 registerUrl = "#"
 
 [[events]]
@@ -60,7 +171,27 @@ venueId = "bellevue-indoor"
 image = "assets/media/bir.jpg"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Bellevue Indoor Range."
+desc = """
+Come out to Bellevue Indoor Range for a 4 stage PCSL match!
+
+YOU MUST CHECK IN AT RANGE DESK TO FILL OUT WAIVER
+
+Setup at 9, New shooter orientation at 9:45. Safety briefing starts at 10:15. If you arrive after you will not be allowed to shoot.
+
+ANYONE NEW TO BELLEVUE INDOOR RANGE IS REQUIRED TO ATTEND THE NEW SHOOTER ORIENTATION REGARDLESS OF EXPERIENCE LEVEL
+
+Required equipment:
+Electronic Hearing Protection
+Rifle with sling and three magazines - Caliber no greater than 7.62x39/300blk
+Handgun with a safe holster and three magazines - No SERPA or Uncle Mikes style fabric holsters
+Muzzle brakes / compensators / ports are prohibited unless used as a suppressor host
+100 rounds for your rifle and handgun - No Steel Core (M855 / SS109) or similar ammunition
+
+BELLEVUE INDOOR RANGE SOP:
+Use of a Sig P320 in any form is prohibited
+No M855 / SS109 / M855A1 allowed on premises - participant will be ejected and prohibited from attending any events
+No food or drink allowed in the action bays
+"""
 registerUrl = "#"
 
 [[events]]
@@ -73,7 +204,29 @@ venueId = "pha"
 image = "assets/media/PHADrone.jpg"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Piedmont Handgunner's Association."
+desc = """
+GENERAL MATCH INFO // Contact info@cascadeaction.org
+FAQ // https://cascadeaction.org/pages/faq
+
+SCHEDULE // SETUP 8:00, NEW SHOOTERS MEETING 9:30, GENERAL SAFETY MEETING 10:00. YOU WILL NOT BE ALLOWED TO SHOOT IF YOU MISS THE SAFETY MEETING!
+
+STAGES // 5 Stages
+ROUND COUNT (Estimates) // 100 Carbine + 100 Handgun
+
+DIVISIONS // Competition, Practical
+New to action shooting / two gun? Sign up as "practical" and bring the following:
+Rifle / PCC with sling - Caliber no greater than .308
+Handgun with a safe holster - No SERPA or Uncle Mikes style fabric holsters
+3 Magazines for each firearm
+Use of M855 / SS109 or similar ammo is prohibited
+
+MATCH FEE // $35
+
+RULES & SCORING // PCSL General Rulebook, current revision, Hit Factor (Points Per Second)
+Rulebook can be found at https://www.pcsleague.us/
+
+REFUND POLICY // Full refunds for all withdrawal requests made through Saturday prior to match date. Note: Refunds issued will be less Stripe's 3% processing fee.
+"""
 registerUrl = "#"
 
 [[events]]
@@ -86,7 +239,29 @@ venueId = "svrc"
 image = "assets/media/DSC_1112.jpg"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Snoqualmie Valley Rifle Club."
+desc = """
+GENERAL MATCH INFO // Contact info@cascadeaction.org
+FAQ // https://cascadeaction.org/pages/faq
+
+SCHEDULE // SETUP 8:00, NEW SHOOTERS MEETING 9:30, GENERAL SAFETY MEETING 10:00. YOU WILL NOT BE ALLOWED TO SHOOT IF YOU MISS THE SAFETY MEETING!
+
+STAGES // 5 Stages
+ROUND COUNT (Estimates) // 100 Carbine + 100 Handgun
+
+DIVISIONS // Competition, Practical
+New to action shooting / two gun? Sign up as "practical" and bring the following:
+Rifle / PCC with sling - Caliber no greater than .308
+Handgun with a safe holster - No SERPA or Uncle Mikes style fabric holsters
+3 Magazines for each firearm
+Use of M855 / SS109 or similar ammo is prohibited
+
+MATCH FEE // $35
+
+RULES & SCORING // PCSL General Rulebook, current revision, Hit Factor (Points Per Second)
+Rulebook can be found at https://www.pcsleague.us/
+
+REFUND POLICY // Full refunds for all withdrawal requests made through Saturday prior to match date. Note: Refunds issued will be less Stripe's 3% processing fee.
+"""
 registerUrl = "#"
 
 [[events]]
@@ -99,7 +274,47 @@ venueId = "bellevue-indoor"
 image = "assets/media/bir.jpg"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Bellevue Indoor Range."
+desc = """
+Come out to Bellevue Indoor Range for a 4 stage PCSL match!
+
+YOU MUST CHECK IN AT RANGE DESK TO FILL OUT WAIVER
+
+Setup at 9, New shooter orientation at 9:45. Safety briefing starts at 10:15. If you arrive after you will not be allowed to shoot.
+
+ANYONE NEW TO BELLEVUE INDOOR RANGE IS REQUIRED TO ATTEND THE NEW SHOOTER ORIENTATION REGARDLESS OF EXPERIENCE LEVEL
+
+Required equipment:
+Electronic Hearing Protection
+Rifle with sling and three magazines - Caliber no greater than 7.62x39/300blk
+Handgun with a safe holster and three magazines - No SERPA or Uncle Mikes style fabric holsters
+Muzzle brakes / compensators / ports are prohibited unless used as a suppressor host
+100 rounds for your rifle and handgun - No Steel Core (M855 / SS109) or similar ammunition
+
+BELLEVUE INDOOR RANGE SOP:
+Use of a Sig P320 in any form is prohibited
+No M855 / SS109 / M855A1 allowed on premises - participant will be ejected and prohibited from attending any events
+No food or drink allowed in the action bays
+Come out to Bellevue Indoor Range for a 4 stage PCSL match!
+
+YOU MUST CHECK IN AT RANGE DESK TO FILL OUT WAIVER
+
+Setup at 9, New shooter orientation at 9:45. Safety briefing starts at 10:15. If you arrive after you will not be allowed to shoot.
+
+ANYONE NEW TO BELLEVUE INDOOR RANGE IS REQUIRED TO ATTEND THE NEW SHOOTER ORIENTATION REGARDLESS OF EXPERIENCE LEVEL
+
+Required equipment:
+Electronic Hearing Protection
+Rifle with sling and three magazines - Caliber no greater than 7.62x39/300blk
+Handgun with a safe holster and three magazines - No SERPA or Uncle Mikes style fabric holsters
+Muzzle brakes / compensators / ports are prohibited unless used as a suppressor host
+100 rounds for your rifle and handgun - No Steel Core (M855 / SS109) or similar ammunition
+
+BELLEVUE INDOOR RANGE SOP:
+Use of a Sig P320 in any form is prohibited
+No M855 / SS109 / M855A1 allowed on premises - participant will be ejected and prohibited from attending any events
+No food or drink allowed in the action bays
+
+"""
 registerUrl = "#"
 
 [[events]]
@@ -112,7 +327,29 @@ venueId = "svrc"
 image = "assets/media/DSC_1112.jpg"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Snoqualmie Valley Rifle Club."
+desc = """
+GENERAL MATCH INFO // Contact info@cascadeaction.org
+FAQ // https://cascadeaction.org/pages/faq
+
+SCHEDULE // SETUP 8:00, NEW SHOOTERS MEETING 9:30, GENERAL SAFETY MEETING 10:00. YOU WILL NOT BE ALLOWED TO SHOOT IF YOU MISS THE SAFETY MEETING!
+
+STAGES // 5 Stages
+ROUND COUNT (Estimates) // 100 Carbine + 100 Handgun
+
+DIVISIONS // Competition, Practical
+New to action shooting / two gun? Sign up as "practical" and bring the following:
+Rifle / PCC with sling - Caliber no greater than .308
+Handgun with a safe holster - No SERPA or Uncle Mikes style fabric holsters
+3 Magazines for each firearm
+Use of M855 / SS109 or similar ammo is prohibited
+
+MATCH FEE // $35
+
+RULES & SCORING // PCSL General Rulebook, current revision, Hit Factor (Points Per Second)
+Rulebook can be found at https://www.pcsleague.us/
+
+REFUND POLICY // Full refunds for all withdrawal requests made through Saturday prior to match date. Note: Refunds issued will be less Stripe's 3% processing fee.
+"""
 registerUrl = "#"
 
 [[events]]
@@ -125,5 +362,25 @@ venueId = "jcsa"
 image = "assets/media/jcsaretina-300x297.png"
 spots = 60
 filled = 0
-desc = "PCSL Two Gun match at Jefferson County Sportsman's Association."
+desc = """
+SCHEDULE // NEW SHOOTERS MEETING 9:30, GENERAL SAFETY MEETING 10:00. YOU WILL NOT BE ALLOWED TO SHOOT IF YOU MISS THE SAFETY MEETING!
+
+STAGES // 6 Stages
+ROUND COUNT (Estimates) // 120 Carbine + 120 Handgun
+
+DIVISIONS // Competition, Practical
+New to action shooting / two gun? Sign up as "practical" and bring the following:
+Rifle / PCC with sling - Caliber no greater than .308
+Handgun with a safe holster - No SERPA or Uncle Mikes style fabric holsters
+3 Magazines for each firearm
+Use of M855 / SS109 or similar ammo is prohibited
+
+MATCH FEE // $35
+
+RULES & SCORING // PCSL General Rulebook, current revision, Hit Factor (Points Per Second)
+Rulebook can be found at https://www.pcsleague.us/
+RANGE SOP: Slung rifles may not break the 180 regardless of condition (incl inert PCSL 1.4.2.3); slung rifles are allowed the same 3’ radius exception as handguns.
+
+REFUND POLICY // Full refunds for all withdrawal requests made through Saturday prior to match date. Note: Refunds issued will be less Stripe's 3% processing fee.
+"""
 registerUrl = "#"

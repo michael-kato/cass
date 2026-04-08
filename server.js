@@ -1,5 +1,33 @@
 import Stripe from 'stripe';
 import TOML from '@iarna/toml';
+import { marked } from 'marked';
+
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+});
+
+function renderMarkdownFields(value, markdownFields) {
+  if (Array.isArray(value)) {
+    return value.map(item => renderMarkdownFields(item, markdownFields));
+  }
+
+  if (!value || typeof value !== 'object') {
+    return value;
+  }
+
+  const next = {};
+
+  for (const [key, child] of Object.entries(value)) {
+    next[key] = renderMarkdownFields(child, markdownFields);
+
+    if (markdownFields.has(key) && typeof child === 'string') {
+      next[`${key}Html`] = marked.parse(child);
+    }
+  }
+
+  return next;
+}
 
 export default {
   async fetch(request, env) {
@@ -43,6 +71,12 @@ export default {
     if (url.pathname === '/api/toml' && request.method === 'GET') {
       try {
         const requestedPath = url.searchParams.get('path');
+        const markdownFields = new Set(
+          (url.searchParams.get('markdown') || '')
+            .split(',')
+            .map(field => field.trim())
+            .filter(Boolean)
+        );
 
         if (!requestedPath || !requestedPath.startsWith('assets/') || !requestedPath.endsWith('.toml')) {
           return new Response(JSON.stringify({ error: 'Invalid TOML path.' }), {
@@ -61,7 +95,7 @@ export default {
           });
         }
 
-        const parsed = TOML.parse(await assetResponse.text());
+        const parsed = renderMarkdownFields(TOML.parse(await assetResponse.text()), markdownFields);
         return new Response(JSON.stringify(parsed), {
           headers: { 'Content-Type': 'application/json' },
         });

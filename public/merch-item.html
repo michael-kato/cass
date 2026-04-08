@@ -131,6 +131,15 @@
       font-size: 0.9rem; line-height: 1.75;
       color: var(--text-mid); margin-bottom: 1rem;
     }
+    .item-description ul,
+    .item-description ol {
+      margin: 0 0 1rem;
+      padding-left: 1.25rem;
+      color: var(--text-mid);
+    }
+    .item-description li { margin-bottom: 0.35rem; }
+    .item-description a { color: var(--olive); }
+    .item-description strong { color: var(--text-dark); }
     .item-description p:last-child { margin-bottom: 0; }
 
     .for-you {
@@ -227,7 +236,7 @@
 
       <!-- Description -->
       <div id="description-section" class="item-description" style="display: none;">
-        <p id="product-description"></p>
+        <div id="product-description"></div>
       </div>
 
       <!-- For You section -->
@@ -341,7 +350,7 @@
       }
 
       try {
-        allMerch = await loadToml('assets/merch.toml', 'products');
+        allMerch = await loadToml('assets/merch.toml', 'products', { markdownFields: ['description'] });
 
         currentProduct = allMerch.find(p => p.id === productId);
         if (!currentProduct) {
@@ -393,7 +402,7 @@
       if (currentProduct.description) {
         document.getElementById('description-section').style.display = 'block';
         if (currentProduct.description) {
-          document.getElementById('product-description').textContent = currentProduct.description;
+          document.getElementById('product-description').innerHTML = currentProduct.descriptionHtml || '';
         }
       }
 
