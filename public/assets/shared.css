@@ -193,6 +193,20 @@ footer { background: var(--dark); color: rgba(255,255,255,0.6); }
   margin: 0 auto;
 }
 
+.mission > *,
+.events-grid > *,
+.community-grid > *,
+.product-grid > *,
+.for-you-grid > *,
+.item-container > *,
+.item-image-grid > *,
+.season-overview-body > *,
+.season-armory > *,
+.map-section > *,
+.flipbook-outer > * {
+  min-width: 0;
+}
+
 .page-content {
   padding-top: var(--section-pad-y);
   padding-bottom: 4rem;
@@ -430,6 +444,7 @@ img,
 video,
 canvas {
   image-rendering: auto;
+  max-width: 100%;
 }
 
 /* Full-width image strip */
@@ -466,10 +481,21 @@ canvas {
 
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
+  :root {
+    --section-pad-y: 2.25rem;
+    --section-pad-y-lg: 3rem;
+    --heading-xl: 1.75rem;
+    --heading-lg: 1.3rem;
+    --heading-md: 1.15rem;
+  }
   .nav-links { display: none; }
   .nav-icons { display: none; }
   .hamburger { display: block; }
   .footer-bottom { grid-template-columns: 1fr; }
+  .footer-top { flex-wrap: wrap; gap: 1rem 1.5rem; }
+  .footer-social { padding-top: 0; }
+  .newsletter-form { flex-direction: column; }
+  .newsletter-form input { border-right: 1px solid rgba(255,255,255,0.2); border-bottom: none; }
   .content-narrow,
   .page-content,
   .partners-intro { padding-left: 1rem; padding-right: 1rem; }

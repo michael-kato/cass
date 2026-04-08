@@ -50,6 +50,14 @@
     .find-match-bg { background-color: #2a3020; }
     .find-match-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
     .find-match-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+
+    @media (max-width: 768px) {
+      .flipbook-outer { gap: 0.5rem; }
+      .flip-arrow { padding: 0.25rem; }
+      .flip-arrow svg { width: 22px; height: 22px; }
+      .flipbook-toolbar { flex-wrap: wrap; justify-content: center; }
+      .find-match { height: 300px; }
+    }
   </style>
 </head>
 <body>

@@ -101,10 +101,18 @@
     .btn-load-more { display: inline-block; margin-top: 1.5rem; padding: 0.65rem 3rem; }
 
     @media (max-width: 768px) {
+      .hero { min-height: 360px; }
+      .slide-content,
+      .slide-controls { left: var(--site-gutter); right: var(--site-gutter); }
+      .slide-content { bottom: 20%; max-width: min(420px, calc(100vw - (var(--site-gutter) * 2))); }
       .mission { grid-template-columns: 1fr; }
       .match-cta { grid-template-columns: 1fr; height: auto; }
-      .insta-grid { grid-template-columns: repeat(3, 1fr); }
       .merch-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 520px) {
+      .merch-grid { grid-template-columns: 1fr; }
+      .slide-content h2 { font-size: clamp(1.4rem, 8vw, 2rem); }
     }
   </style>
 </head>
