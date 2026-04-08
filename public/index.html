@@ -12,9 +12,12 @@
     }
     .slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1s ease; z-index: 1; }
     .slide.active { opacity: 1; }
-    #hero-bg {
+    .hero-bg-layer {
       z-index: 0;
+      opacity: 0;
+      transition: opacity 1.4s ease;
     }
+    .hero-bg-layer.is-visible { opacity: 1; }
     .slide-overlay {
       position: absolute; inset: 0;
       background: linear-gradient(to right, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.2) 60%, transparent 100%);
@@ -142,10 +145,15 @@
 
   <section class="hero ken-burns-frame">
     <div
-      id="hero-bg"
-      class="slide-bg ken-burns-layer"
+      id="hero-bg-a"
+      class="slide-bg ken-burns-layer hero-bg-layer is-visible"
       data-ken-burns
       data-bg-image="assets/media/PHADrone.jpg"></div>
+    <div
+      id="hero-bg-b"
+      class="slide-bg ken-burns-layer hero-bg-layer"
+      data-ken-burns
+      data-bg-image="assets/media/DSC_1116.jpg"></div>
     <div class="slide slide-1 active">
       <div class="slide-overlay"></div>
       <div class="slide-content">
@@ -289,7 +297,11 @@
       'assets/media/DSC_1116.jpg',
     ];
 
-    const heroBg = document.getElementById('hero-bg');
+    const heroBackgrounds = [
+      document.getElementById('hero-bg-a'),
+      document.getElementById('hero-bg-b'),
+    ];
+    let visibleHeroBgIndex = 0;
 
     function goToSlide(n) {
       slides[current].classList.remove('active'); dots[current].classList.remove('active');
@@ -297,7 +309,15 @@
       requestAnimationFrame(() => {
         slides[current].classList.add('active');
         dots[current].classList.add('active');
-        setLayerBackgroundImage(heroBg, SLIDE_IMAGES[current]);
+
+        const nextHeroBgIndex = (visibleHeroBgIndex + 1) % heroBackgrounds.length;
+        const nextHeroBg = heroBackgrounds[nextHeroBgIndex];
+        const currentHeroBg = heroBackgrounds[visibleHeroBgIndex];
+
+        setLayerBackgroundImage(nextHeroBg, SLIDE_IMAGES[current]);
+        nextHeroBg.classList.add('is-visible');
+        currentHeroBg.classList.remove('is-visible');
+        visibleHeroBgIndex = nextHeroBgIndex;
       });
     }
     
