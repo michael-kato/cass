@@ -16,6 +16,10 @@
   --text-dark: #1a1a18;
   --text-mid: #3a3a38;
   --text-light: #6a6a68;
+  --site-gutter: clamp(10rem, 4vw, 3.5rem);
+  --content-narrow: 860px;
+  --content-standard: 1100px;
+  --content-wide: 1200px;
 }
 
 html { scroll-behavior: smooth; }
@@ -32,7 +36,7 @@ body {
 nav {
   background: var(--dark);
   display: flex; align-items: center;
-  padding: 0 2rem; height: 100px; gap: 2rem;
+  padding: 0 var(--site-gutter); height: 100px; gap: 2rem;
 }
 
 .nav-logo {
@@ -87,7 +91,7 @@ nav {
 }
 .mobile-menu.open { display: flex; }
 .mobile-menu a {
-  padding: 0.9rem 2rem;
+  padding: 0.9rem var(--site-gutter);
   color: var(--cream); text-decoration: none;
   font-family: 'Assistant', sans-serif;
   font-weight: 600; font-size: 1.05rem;
@@ -102,7 +106,7 @@ footer { background: var(--dark); color: rgba(255,255,255,0.6); }
 
 .footer-top {
   display: flex; align-items: center; justify-content: center;
-  gap: 2rem; padding: 1rem 2rem;
+  gap: 2rem; padding: 1rem var(--site-gutter);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   font-family: 'Assistant', sans-serif;
   font-size: 0.85rem; letter-spacing: 0.06em;
@@ -116,7 +120,9 @@ footer { background: var(--dark); color: rgba(255,255,255,0.6); }
 .footer-bottom {
   display: grid; grid-template-columns: 1fr auto;
   align-items: start; gap: 2rem;
-  padding: 2rem; max-width: 900px; margin: 0 auto;
+  padding: 2rem var(--site-gutter);
+  max-width: min(calc(var(--content-standard) + (var(--site-gutter) * 2)), 100%);
+  margin: 0 auto;
 }
 
 .footer-newsletter h4 {
@@ -152,8 +158,8 @@ footer { background: var(--dark); color: rgba(255,255,255,0.6); }
 
 /* ── UTILITIES ── */
 .page-content {
-  max-width: 860px; margin: 0 auto;
-  padding: 3rem 2rem 4rem;
+  max-width: var(--content-wide); margin: 0 auto;
+  padding: 3rem var(--site-gutter) 4rem;
 }
 
 .page-content h1 {
