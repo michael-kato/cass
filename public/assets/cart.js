@@ -22,22 +22,23 @@ function saveCart(cart) {
 function addToCart(product) {
   const cart = getCart();
   const existing = cart.find(i => i.id === product.id);
+  const quantityToAdd = Math.max(1, Number(product.quantity) || 1);
   if (existing) {
-    existing.quantity += 1;
+    existing.quantity += quantityToAdd;
   } else {
-    cart.push({ ...product, quantity: 1 });
+    cart.push({ ...product, quantity: quantityToAdd });
   }
   saveCart(cart);
   openDrawer();
 }
 
 function removeFromCart(id) {
-  saveCart(getCart().filter(i => i.id !== id));
+  saveCart(getCart().filter(i => String(i.id) !== String(id)));
 }
 
 function updateQuantity(id, quantity) {
   const cart = getCart();
-  const item = cart.find(i => i.id === id);
+  const item = cart.find(i => String(i.id) === String(id));
   if (!item) return;
   if (quantity <= 0) { removeFromCart(id); return; }
   item.quantity = quantity;
@@ -138,6 +139,7 @@ function buildDrawer() {
   document.getElementById('cart-close').addEventListener('click', closeDrawer);
   document.getElementById('cart-backdrop').addEventListener('click', closeDrawer);
   document.getElementById('cart-checkout-btn').addEventListener('click', startCheckout);
+  document.getElementById('cart-items').addEventListener('click', handleDrawerClick);
 }
 
 function renderDrawerItems() {
@@ -169,16 +171,16 @@ function renderDrawerItems() {
         <div style="font-family:Assistant,sans-serif;font-weight:600;font-size:0.85rem;color:#1a1a18;line-height:1.3;margin-bottom:0.35rem;">${item.name}</div>
         <div style="font-size:0.82rem;color:#4a5e3a;font-weight:600;margin-bottom:0.5rem;">${item.price}</div>
         <div style="display:flex;align-items:center;gap:0.5rem;">
-          <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" style="
+          <button type="button" data-cart-action="decrease" data-cart-id="${escapeCartAttr(item.id)}" style="
             width:24px;height:24px;border:1px solid #1a1a18;background:transparent;
             cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;
           ">−</button>
           <span style="font-family:Assistant,sans-serif;font-size:0.85rem;min-width:20px;text-align:center;">${item.quantity}</span>
-          <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" style="
+          <button type="button" data-cart-action="increase" data-cart-id="${escapeCartAttr(item.id)}" style="
             width:24px;height:24px;border:1px solid #1a1a18;background:transparent;
             cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;
           ">+</button>
-          <button onclick="removeFromCart(${item.id})" style="
+          <button type="button" data-cart-action="remove" data-cart-id="${escapeCartAttr(item.id)}" style="
             margin-left:auto;background:none;border:none;cursor:pointer;
             color:#6a6a68;padding:0.1rem;
           ">
@@ -191,6 +193,31 @@ function renderDrawerItems() {
     </div>`).join('');
 
   if (totalEl) totalEl.textContent = `$${cartTotal().toFixed(2)}`;
+}
+
+function escapeCartAttr(value) {
+  return String(value).replace(/"/g, '&quot;');
+}
+
+function handleDrawerClick(event) {
+  const actionButton = event.target.closest('[data-cart-action]');
+  if (!actionButton) return;
+
+  const id = actionButton.dataset.cartId;
+  if (!id) return;
+
+  const cart = getCart();
+  const item = cart.find(cartItem => String(cartItem.id) === String(id));
+  if (!item) return;
+
+  const action = actionButton.dataset.cartAction;
+  if (action === 'increase') {
+    updateQuantity(id, item.quantity + 1);
+  } else if (action === 'decrease') {
+    updateQuantity(id, item.quantity - 1);
+  } else if (action === 'remove') {
+    removeFromCart(id);
+  }
 }
 
 function openDrawer() {
