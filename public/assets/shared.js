@@ -23,6 +23,9 @@ const ICON_HAMBURGER = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 const ICON_CLOSE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const ICON_ARROW = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`;
 const ICON_INSTAGRAM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>`;
+const CART_BADGE_HTML = `
+  <span class="cart-badge" data-cart-badge="true">0</span>
+`;
 
 function buildNav(activePage) {
   const links = NAV_LINKS.map(l =>
@@ -42,21 +45,25 @@ function buildNav(activePage) {
       <div class="nav-icons">
         <button aria-label="Search">${ICON_SEARCH}</button>
         <button aria-label="Account">${ICON_ACCOUNT}</button>
-        <button aria-label="Cart" style="position:relative;">
+        <button class="cart-trigger" aria-label="Cart">
           ${ICON_CART}
-          <span id="cart-badge" style="
-            display:none;position:absolute;top:-4px;right:-4px;
-            background:#c0392b;color:#fff;
-            width:16px;height:16px;border-radius:50%;
-            font-size:0.6rem;font-weight:700;
-            align-items:center;justify-content:center;
-            font-family:Assistant,sans-serif;line-height:1;
-          ">0</span>
+          ${CART_BADGE_HTML}
         </button>
       </div>
       <button class="hamburger" id="hamburger" aria-label="Menu">${ICON_HAMBURGER}</button>
     </nav>
-    <div class="mobile-menu" id="mobile-menu">${mobileLinks}</div>
+    <div class="mobile-menu" id="mobile-menu">
+      <div class="mobile-menu-actions">
+        <button aria-label="Search">${ICON_SEARCH}<span>Search</span></button>
+        <button aria-label="Account">${ICON_ACCOUNT}<span>Account</span></button>
+        <button class="cart-trigger" aria-label="Cart">
+          ${ICON_CART}
+          <span>Cart</span>
+          ${CART_BADGE_HTML}
+        </button>
+      </div>
+      ${mobileLinks}
+    </div>
   `;
 }
 

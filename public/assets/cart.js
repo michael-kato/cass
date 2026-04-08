@@ -64,11 +64,11 @@ function cartCount() {
 // ── Badge ──────────────────────────────────────────────
 
 function updateBadge() {
-  const badge = document.getElementById('cart-badge');
-  if (!badge) return;
   const count = cartCount();
-  badge.textContent = count;
-  badge.style.display = count > 0 ? 'flex' : 'none';
+  document.querySelectorAll('[data-cart-badge="true"]').forEach(badge => {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+  });
 }
 
 // ── Drawer ─────────────────────────────────────────────
@@ -255,6 +255,7 @@ function initCart() {
   updateBadge();
 
   // Wire the nav cart icon to open the drawer
-  const cartBtn = document.querySelector('[aria-label="Cart"]');
-  if (cartBtn) cartBtn.addEventListener('click', openDrawer);
+  document.querySelectorAll('.cart-trigger').forEach(cartBtn => {
+    cartBtn.addEventListener('click', openDrawer);
+  });
 }

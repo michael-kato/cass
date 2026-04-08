@@ -81,6 +81,10 @@ Page keys:
 - `loadToml(path, collectionKey, options)`
 - shared Ken Burns initialization for any element marked with `data-ken-burns`
 
+Nav note:
+- desktop and mobile nav both include search, account, and cart actions
+- the account button may no longer be needed and could be removed in a future cleanup pass
+
 [`public/assets/shared.css`](/opt/git/cass/public/assets/shared.css) currently holds:
 - shared color tokens
 - shared layout gutter/content-width tokens
