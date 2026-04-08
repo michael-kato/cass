@@ -49,8 +49,8 @@
     .toolbar-divider { width: 1px; height: 18px; background: rgba(255,255,255,0.2); margin: 0 0.15rem; }
     .toolbar-page { font-family: 'Assistant', sans-serif; font-size: 0.8rem; color: rgba(255,255,255,0.7); padding: 0 0.3rem; white-space: nowrap; }
 
-    .find-match { position: relative; height: 340px; overflow: hidden; background: var(--dark-mid); }
-    .find-match-bg { position: absolute; inset: 0; background-image: url('assets/merch/bravo_kitty_02.webp'); background-size: cover; background-position: center; background-color: #2a3020; }
+    .find-match { position: relative; height: 340px; background: var(--dark-mid); }
+    .find-match-bg { background-color: #2a3020; }
     .find-match-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
     .find-match-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
     .btn-find-match {
@@ -123,8 +123,11 @@
     </div>
   </div>
 
-  <div class="find-match">
-    <div class="find-match-bg"></div>
+  <div class="find-match ken-burns-frame">
+    <div
+      class="find-match-bg ken-burns-layer"
+      data-ken-burns
+      data-bg-image="assets/merch/bravo_kitty_02.webp"></div>
     <div class="find-match-overlay"></div>
     <div class="find-match-center">
       <a href="events.html" class="btn-find-match">Find a Match</a>

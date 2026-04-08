@@ -122,4 +122,53 @@ function initPage(activePage) {
   cartScript.src = 'assets/cart.js';
   cartScript.onload = () => initCart();
   document.body.appendChild(cartScript);
+
+  initKenBurns();
+}
+
+
+// Ken Burns — true circular pan
+const KB_RADIUS = 1;   // pan radius in %
+const KB_SCALE_START = 1.08;
+const KB_SCALE_END   = 1.0;
+const KB_DURATION    = 20000; // ms
+
+function startKenBurns(el) {
+  if (!el || el.dataset.kenBurnsStarted === 'true') return;
+
+  el.dataset.kenBurnsStarted = 'true';
+
+  const startAngle = Math.random() * Math.PI * 2;
+  const startTime = performance.now();
+
+  function tick(ts) {
+    const t = ((ts - startTime) % KB_DURATION) / KB_DURATION; // loops 0→1 forever
+
+    const angle = startAngle + t * Math.PI * 2;
+    const scale = KB_SCALE_START + (KB_SCALE_END - KB_SCALE_START) * t;
+    const tx = Math.cos(angle) * KB_RADIUS;
+    const ty = Math.sin(angle) * KB_RADIUS;
+
+    el.style.transform = `scale(${scale}) translate(${tx}%, ${ty}%)`;
+    requestAnimationFrame(tick);
+  }
+
+  requestAnimationFrame(tick);
+}
+
+function setLayerBackgroundImage(el, image) {
+  if (!el || !image) return;
+
+  el.dataset.bgImage = image;
+  const resolvedImage = new URL(image, document.baseURI).href;
+  el.style.setProperty('--bg-image', `url('${resolvedImage}')`);
+}
+
+function initKenBurns(root = document) {
+  root.querySelectorAll('[data-bg-image]').forEach(el => {
+    const image = el.dataset.bgImage;
+    setLayerBackgroundImage(el, image);
+  });
+
+  root.querySelectorAll('[data-ken-burns]').forEach(startKenBurns);
 }

@@ -185,6 +185,26 @@ footer { background: var(--dark); color: rgba(255,255,255,0.6); }
   background: linear-gradient(160deg, #1a2a1a, #2a3a2a);
 }
 
+/* Shared animated background layers */
+.ken-burns-frame {
+  position: relative;
+  overflow: hidden;
+}
+
+.ken-burns-layer {
+  position: absolute;
+  inset: -5%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform;
+  transform-origin: center center;
+}
+
+.ken-burns-layer[data-bg-image] {
+  background-image: var(--bg-image);
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .nav-links { display: none; }
