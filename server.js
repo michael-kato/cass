@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import TOML from '@iarna/toml';
 
 export default {
   async fetch(request, env) {
@@ -36,6 +37,39 @@ export default {
         });
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+      }
+    }
+
+    if (url.pathname === '/api/toml' && request.method === 'GET') {
+      try {
+        const requestedPath = url.searchParams.get('path');
+
+        if (!requestedPath || !requestedPath.startsWith('assets/') || !requestedPath.endsWith('.toml')) {
+          return new Response(JSON.stringify({ error: 'Invalid TOML path.' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        const assetUrl = new URL(`/${requestedPath}`, url);
+        const assetResponse = await env.ASSETS.fetch(new Request(assetUrl.toString(), { method: 'GET' }));
+
+        if (!assetResponse.ok) {
+          return new Response(JSON.stringify({ error: `Asset not found: ${requestedPath}` }), {
+            status: assetResponse.status,
+            headers: { 'Content-Type': 'application/json' },
+          });
+        }
+
+        const parsed = TOML.parse(await assetResponse.text());
+        return new Response(JSON.stringify(parsed), {
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
       }
     }
 

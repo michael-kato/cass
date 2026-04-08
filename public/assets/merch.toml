@@ -4,7 +4,8 @@ name = "Cascade Armory 0 Sticker Pack"
 price = 14.99
 images = ["sticker-pack.png"]
 type = "simple"
-description = """Turn your favorite rifles and pistols into pocket-sized art with the Cascade Armory 0 sticker pack. Featuring five unique firearm designs from the Cascade Armory collection, this pack is perfect for slapping on ammo cans, water bottles, range cases, or your laptop.
+description = """
+Turn your favorite rifles and pistols into pocket-sized art with the Cascade Armory 0 sticker pack. Featuring five unique firearm designs from the Cascade Armory collection, this pack is perfect for slapping on ammo cans, water bottles, range cases, or your laptop.
 
 Each sticker is printed on durable, weatherproof vinyl with a matte finish for a clean, tactical look.
 
@@ -29,7 +30,8 @@ price = 35
 images = ["Echo ACR_01.webp"]
 type = "options"
 sizes = ["S", "M", "L", "XL", "2XL"]
-description = """Available in two unique colors, Echo sports a custom Templar Precision ACR and is ready for a match win!
+description = """
+Available in two unique colors, Echo sports a custom Templar Precision ACR and is ready for a match win!
 
 This high quality regular fit tee has a casually elegant vibe. Additionally, unbelievably soft tri-blend fabric makes it extremely comfortable - once put on, impossible to take off.
 
@@ -62,7 +64,8 @@ price = 35
 images = ["delta_kitty_01.webp", "delta_kitty_04.webp", "delta_kitty_03.webp"]
 type = "options"
 sizes = ["S", "M", "L", "XL", "2XL"]
-description = """The Cascade Action Shooting Sports "Delta" Kitty shirt is available in four colors printed on a premium Next Level Apparel T shirt blank.
+description = """
+The Cascade Action Shooting Sports "Delta" Kitty shirt is available in four colors printed on a premium Next Level Apparel T shirt blank.
 .: 50% polyester, 25% combed ringspun cotton, 25% rayon
 .: Light Fabric (4.3 oz/yd² (146 g/m²))
 .: Regular fit
@@ -81,7 +84,8 @@ price = 35
 images = ["bravo_kitty_01.webp", "bravo_kitty_02.webp", "bravo_kitty_03.jpg"]
 type = "options"
 sizes = ["S", "M", "L", "XL", "2XL"]
-description = """The Cascade Action Shooting Sports "Bravo" Kitty shirt is available in four colors printed on a premium Next Level Apparel T shirt blank.
+description = """
+The Cascade Action Shooting Sports "Bravo" Kitty shirt is available in four colors printed on a premium Next Level Apparel T shirt blank.
 
 .: 50% polyester, 25% combed ringspun cotton, 25% rayon
 .: Light Fabric (4.3 oz/yd² (146 g/m²))

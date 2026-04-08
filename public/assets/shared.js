@@ -126,42 +126,14 @@ function initPage(activePage) {
   initKenBurns();
 }
 
-let tomlLibraryPromise = null;
-
-function ensureTomlLibrary() {
-  if (window.TOML?.parse) return Promise.resolve(window.TOML);
-  if (tomlLibraryPromise) return tomlLibraryPromise;
-
-  tomlLibraryPromise = new Promise((resolve, reject) => {
-    const existing = document.querySelector('script[data-toml-library="true"]');
-    if (existing) {
-      existing.addEventListener('load', () => resolve(window.TOML), { once: true });
-      existing.addEventListener('error', () => reject(new Error('Failed to load TOML library.')), { once: true });
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'assets/toml.js';
-    script.dataset.tomlLibrary = 'true';
-    script.onload = () => resolve(window.TOML);
-    script.onerror = () => reject(new Error('Failed to load TOML library.'));
-    document.head.appendChild(script);
-  });
-
-  return tomlLibraryPromise;
-}
-
 async function loadToml(path, collectionKey = null) {
-  const [{ parse }, response] = await Promise.all([
-    ensureTomlLibrary(),
-    fetch(path),
-  ]);
+  const response = await fetch(`/api/toml?path=${encodeURIComponent(path)}`);
 
   if (!response.ok) {
     throw new Error(`Failed to load TOML file: ${path}`);
   }
 
-  const data = parse(await response.text());
+  const data = await response.json();
   return collectionKey ? (data[collectionKey] || []) : data;
 }
 
