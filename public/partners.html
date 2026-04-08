@@ -8,16 +8,7 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     .partners-intro {
-      max-width: 860px; margin: 0 auto;
-      padding: 3rem 2rem 2rem;
-    }
-    .partners-intro h1 {
-      font-family: 'Assistant', sans-serif;
-      font-weight: 400; font-size: 2rem;
-      margin-bottom: 0.75rem;
-    }
-    .partners-intro p {
-      font-size: 0.9rem; line-height: 1.75; color: var(--text-mid);
+      padding: 3rem var(--site-gutter) 2rem;
     }
 
     .map-section {
@@ -48,7 +39,7 @@
     .venue-search input {
       width: 100%; padding: 0.5rem 0.5rem 0.5rem 2rem;
       border: 1px solid var(--sage-mid); background: var(--white);
-      font-family: 'Assistant', sans-serif; font-size: 0.85rem;
+      font-size: 0.85rem;
       outline: none; color: var(--text-dark);
     }
     .venue-search input:focus { border-color: var(--olive); }
@@ -61,14 +52,10 @@
       cursor: pointer; transition: background 0.15s;
     }
     .venue-item:hover, .venue-item.active { background: var(--sage-mid); }
-    .venue-item-name {
-      font-family: 'Assistant', sans-serif;
-      font-weight: 700; font-size: 0.88rem;
-      color: var(--text-dark); margin-bottom: 0.2rem;
-    }
+    .venue-item-name { font-weight: 700; font-size: 0.88rem; color: var(--text-dark); margin-bottom: 0.2rem; }
     .venue-item-state {
       font-size: 0.75rem; font-weight: 700;
-      color: var(--olive); text-transform: uppercase;
+      color: var(--olive);
       letter-spacing: 0.06em; margin-bottom: 0.2rem;
     }
     .venue-item-addr {
@@ -84,7 +71,7 @@
       width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
       color: rgba(255,255,255,0.2);
-      font-family: 'Assistant', sans-serif; font-size: 0.9rem; letter-spacing: 0.1em;
+      font-size: 0.9rem; letter-spacing: 0.1em;
     }
 
     @media (max-width: 768px) {

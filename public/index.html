@@ -24,19 +24,9 @@
     }
     .slide-content { position: absolute; bottom: 15%; left: 10%; max-width: 420px; }
     .slide-content h2 {
-      font-family: 'Assistant', sans-serif; font-weight: 700;
       font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--white);
       line-height: 1.1; margin-bottom: 1rem; text-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
-    .btn-primary {
-      display: inline-block; padding: 0.6rem 1.4rem;
-      border: 2px solid var(--white); color: var(--white);
-      font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 0.95rem;
-      letter-spacing: 0.05em; text-transform: uppercase;
-      text-decoration: none; background: transparent;
-      transition: background 0.2s, color 0.2s;
-    }
-    .btn-primary:hover { background: var(--white); color: var(--dark); }
     .slide-controls {
       position: absolute; bottom: 1.25rem; left: 10%;
       display: flex; align-items: center; gap: 0.5rem; z-index: 10;
@@ -57,22 +47,20 @@
     .mission {
       display: grid; grid-template-columns: 1fr 1fr;
       gap: 3rem; align-items: center;
-      max-width: var(--content-standard); margin: 0 auto; padding: 4rem var(--site-gutter);
+      padding: var(--section-pad-y-lg) var(--site-gutter);
     }
-    .mission p { font-size: 0.95rem; line-height: 1.75; color: var(--text-mid); }
     .mission-img { width: 100%; aspect-ratio: 3/2; object-fit: cover; display: block; }
 
     .video-strip { width: 100%; aspect-ratio: 16/6; background: var(--dark-mid); overflow: hidden; }
     .video-strip video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .merch { padding: 3rem var(--site-gutter) 4rem; max-width: var(--content-wide); margin: 0 auto; }
-    .section-title { font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1.4rem; margin-bottom: 1.5rem; }
+    .merch { padding: var(--section-pad-y) var(--site-gutter) 4rem; }
     .merch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; }
     .merch-card {
       background: var(--sage-light); border: 1px solid var(--sage-mid);
-      overflow: hidden; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+      overflow: hidden; cursor: pointer;
     }
-    .merch-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .merch-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
     .merch-card a { text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }
     .merch-img {
       width: 100%; aspect-ratio: 1;
@@ -80,7 +68,7 @@
       background-size: cover; background-position: center;
     }
     .merch-info { padding: 0.75rem; }
-    .merch-name { font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; }
+    .merch-name { font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; }
     .merch-price { font-size: 0.9rem; color: var(--olive); font-weight: 600; }
 
     .match-cta { display: grid; grid-template-columns: 1fr 1fr; height: 340px; position: relative; overflow: hidden; }
@@ -91,19 +79,9 @@
     .match-panel-2 .match-panel-bg { background-image: url('assets/media/DSC_0719.jpg'); background-color: #1a2a3a; }
     .match-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
     .match-cta-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 10; }
-    .btn-match {
-      display: inline-block; padding: 0.7rem 2rem;
-      background: rgba(255,255,255,0.12); border: 2px solid var(--white);
-      backdrop-filter: blur(4px); color: var(--white);
-      font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 1rem;
-      letter-spacing: 0.08em; text-transform: uppercase;
-      text-decoration: none; transition: background 0.2s, color 0.2s;
-    }
-    .btn-match:hover { background: var(--white); color: var(--dark); }
-
-    .instagram { padding: 3rem var(--site-gutter); text-align: center; }
-    .instagram h3 { font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1.5rem; margin-bottom: 1.5rem; }
-    .instagram-widget { max-width: var(--content-standard); width: 100%; margin: 0 auto; }
+    .instagram { padding: var(--section-pad-y) var(--site-gutter); text-align: center; }
+    .instagram h3 { margin-bottom: 1.5rem; }
+    .instagram-widget { width: 100%; }
     .instagram-widget blockquote.instagram-media {
       background: transparent !important;
       border: none !important;
@@ -120,16 +98,7 @@
       max-width: 100% !important;
       height: auto !important;
     }
-    .instagram-widget iframe,
-
-    .btn-load-more {
-      display: inline-block; margin-top: 1.5rem; padding: 0.65rem 3rem;
-      border: 1.5px solid var(--text-dark); background: transparent;
-      font-family: 'Assistant', sans-serif; font-size: 0.9rem; cursor: pointer;
-      transition: background 0.2s, color 0.2s; color: var(--text-dark);
-      text-decoration: none;
-    }
-    .btn-load-more:hover { background: var(--text-dark); color: var(--sage); }
+    .btn-load-more { display: inline-block; margin-top: 1.5rem; padding: 0.65rem 3rem; }
 
     @media (max-width: 768px) {
       .mission { grid-template-columns: 1fr; }

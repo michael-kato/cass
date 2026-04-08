@@ -16,10 +16,16 @@
   --text-dark: #1a1a18;
   --text-mid: #3a3a38;
   --text-light: #6a6a68;
-  --site-gutter: clamp(10rem, 4vw, 3.5rem);
+  --site-gutter: clamp(1.25rem, 4vw, 3.5rem);
   --content-narrow: 860px;
   --content-standard: 1100px;
   --content-wide: 1200px;
+  --section-pad-y: 3rem;
+  --section-pad-y-lg: 4rem;
+  --heading-xl: 2rem;
+  --heading-lg: 1.5rem;
+  --heading-md: 1.3rem;
+  --btn-transition: background 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s, box-shadow 0.2s, transform 0.2s;
 }
 
 html { scroll-behavior: smooth; }
@@ -29,6 +35,10 @@ body {
   background: var(--sage);
   color: var(--text-dark);
   overflow-x: hidden;
+}
+
+a {
+  color: inherit;
 }
 
 /* ── NAV ── */
@@ -156,26 +166,264 @@ footer { background: var(--dark); color: rgba(255,255,255,0.6); }
 /* ── SHARED NAV/FOOTER HTML (JS) ── */
 
 /* ── UTILITIES ── */
+.content-narrow,
+.page-content,
+.partners-intro {
+  max-width: var(--content-narrow);
+  margin: 0 auto;
+  padding-left: var(--site-gutter);
+  padding-right: var(--site-gutter);
+}
+
+.content-standard,
+.faq-section,
+.merch-main,
+.seasons-content,
+.mission,
+.instagram-widget {
+  max-width: var(--content-standard);
+  margin: 0 auto;
+}
+
+.content-wide,
+.events-section,
+.community-section,
+.merch {
+  max-width: var(--content-wide);
+  margin: 0 auto;
+}
+
 .page-content {
-  max-width: var(--content-wide); margin: 0 auto;
-  padding: 3rem var(--site-gutter) 4rem;
+  padding-top: var(--section-pad-y);
+  padding-bottom: 4rem;
 }
 
-.page-content h1 {
+.page-title,
+.page-content h1,
+.partners-intro h1,
+.merch-main h1,
+.seasons-content h1,
+.faq-section h1 {
   font-family: 'Assistant', sans-serif;
-  font-weight: 400; font-size: 2rem;
-  margin-bottom: 2rem; color: var(--text-dark);
+  font-weight: 400;
+  font-size: var(--heading-xl);
+  color: var(--text-dark);
 }
 
-.page-content h2 {
+.page-content h1,
+.seasons-content h1 {
+  margin-bottom: 2rem;
+}
+
+.partners-intro h1,
+.merch-main h1 {
+  margin-bottom: 0.75rem;
+}
+
+.faq-section h1 {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.section-heading,
+.section-title,
+.section-divider h2,
+.for-you-title,
+.season-overview h2,
+.season-armory-text h2,
+.instagram h3 {
   font-family: 'Assistant', sans-serif;
-  font-weight: 700; font-size: 1.2rem;
-  margin-bottom: 0.5rem; color: var(--text-dark);
+  font-weight: 700;
+  color: var(--text-dark);
 }
 
-.page-content p {
+.section-title,
+.section-divider h2,
+.for-you-title {
+  font-size: var(--heading-md);
+}
+
+.season-overview h2,
+.season-armory-text h2,
+.instagram h3 {
+  font-size: var(--heading-lg);
+}
+
+.copy,
+.page-content p,
+.partners-intro p,
+.faq-item p,
+.season-overview-text p,
+.season-armory-text p,
+.mission p {
   font-size: 0.9rem; line-height: 1.75;
-  color: var(--text-mid); margin-bottom: 0.75rem;
+  color: var(--text-mid);
+}
+
+.page-content p,
+.faq-item p,
+.season-overview-text p,
+.season-armory-text p {
+  margin-bottom: 0.75rem;
+}
+
+.link-inline,
+.faq-item a,
+.contact-email a,
+.modal-desc a,
+.item-description a {
+  color: var(--olive);
+  text-decoration: underline;
+}
+
+.btn,
+.btn-primary,
+.btn-match,
+.btn-find-match,
+.btn-load-more,
+.btn-view-product,
+.btn-register,
+.btn-secondary,
+.btn-add-cart,
+.btn-shop-pay,
+.btn-signup {
+  font-family: 'Assistant', sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--btn-transition);
+}
+
+.btn-cta-light,
+.btn-primary,
+.btn-match,
+.btn-find-match {
+  display: inline-block;
+  color: var(--white);
+  border: 2px solid var(--white);
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(4px);
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  padding: 0.6rem 1.4rem;
+  background: transparent;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+}
+
+.btn-match,
+.btn-find-match {
+  padding: 0.7rem 2rem;
+}
+
+.btn-find-match {
+  padding-left: 2.5rem;
+  padding-right: 2.5rem;
+}
+
+.btn-cta-light:hover,
+.btn-primary:hover,
+.btn-match:hover,
+.btn-find-match:hover {
+  background: var(--white);
+  color: var(--dark);
+}
+
+.btn-outline-dark,
+.btn-load-more,
+.btn-view-product,
+.btn-secondary {
+  background: transparent;
+  color: var(--text-dark);
+  border: 1.5px solid var(--text-dark);
+}
+
+.btn-load-more,
+.btn-view-product,
+.btn-secondary {
+  font-size: 0.9rem;
+}
+
+.btn-load-more:hover,
+.btn-view-product:hover,
+.btn-secondary:hover {
+  background: var(--text-dark);
+  color: var(--white);
+}
+
+.btn-register,
+.btn-signup,
+.btn-add-cart,
+.btn-shop-pay {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.card-lift,
+.merch-card,
+.event-card {
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.card-lift:hover,
+.merch-card:hover,
+.event-card:hover {
+  transform: translateY(-3px);
+}
+
+.rich-text p,
+.rich-text ul,
+.rich-text ol {
+  margin-bottom: 0.9rem;
+}
+
+.rich-text p:last-child,
+.rich-text ul:last-child,
+.rich-text ol:last-child {
+  margin-bottom: 0;
+}
+
+.rich-text ul,
+.rich-text ol {
+  padding-left: 1.25rem;
+}
+
+.rich-text strong {
+  color: var(--text-dark);
+}
+
+.caps-label,
+.event-type-tag,
+.community-meta,
+.item-section-label,
+.modal-tag,
+.modal-detail-text label,
+.venue-item-state,
+.results-bar {
+  text-transform: uppercase;
+}
+
+.event-type-tag,
+.community-meta,
+.item-section-label,
+.modal-tag,
+.modal-detail-text label,
+.venue-item-state {
+  letter-spacing: 0.08em;
+}
+
+.display-title,
+.event-card h3,
+.community-card h4,
+.venue-item-name,
+.item-header h1 {
+  font-family: 'Assistant', sans-serif;
+  color: var(--text-dark);
 }
 
 img,
@@ -222,4 +470,7 @@ canvas {
   .nav-icons { display: none; }
   .hamburger { display: block; }
   .footer-bottom { grid-template-columns: 1fr; }
+  .content-narrow,
+  .page-content,
+  .partners-intro { padding-left: 1rem; padding-right: 1rem; }
 }

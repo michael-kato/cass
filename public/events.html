@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="assets/shared.css" />
   <style>
     .filters {
-      background: var(--dark-mid); padding: 1rem 10rem;
+      background: var(--dark-mid); padding: 1rem var(--site-gutter);
       display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
       border-bottom: 1px solid rgba(255,255,255,0.06);
     }
@@ -19,7 +19,7 @@
     .search-wrap input {
       width: 100%; padding: 0.55rem 0.75rem 0.55rem 2.25rem;
       background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
-      color: var(--white); font-family: 'Assistant', sans-serif; font-size: 0.88rem; outline: none;
+      color: var(--white); font-size: 0.88rem; outline: none;
     }
     .search-wrap input::placeholder { color: rgba(255,255,255,0.3); }
     .search-wrap input:focus { border-color: var(--accent); }
@@ -27,35 +27,35 @@
     .filter-btn {
       padding: 0.45rem 1rem; background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.65);
-      font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 0.82rem;
+      font-weight: 600; font-size: 0.82rem;
       letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
     }
     .filter-btn:hover, .filter-btn.active { background: var(--accent); border-color: var(--accent); color: var(--white); }
     .sort-select {
       padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.08);
       border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.8);
-      font-family: 'Assistant', sans-serif; font-size: 0.85rem; outline: none; cursor: pointer; margin-left: auto;
+      font-size: 0.85rem; outline: none; cursor: pointer; margin-left: auto;
     }
     .sort-select option { background: var(--dark-mid); color: var(--white); }
 
     .results-bar {
-      padding: 0.9rem 10rem; font-family: 'Assistant', sans-serif;
+      padding: 0.9rem var(--site-gutter);
       font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase;
       color: var(--text-light); border-bottom: 1px solid var(--sage-mid);
     }
     .results-bar span { color: var(--olive); font-weight: 700; }
 
-    .events-section { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    .events-section { padding: 2rem var(--site-gutter); }
     .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
 
     /* ── Event card ── */
     .event-card {
       border-radius: 10px;
       overflow: hidden; display: flex; flex-direction: column;
-      cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
       box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     }
-    .event-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
+    .event-card:hover { box-shadow: 0 12px 32px rgba(0,0,0,0.25); }
 
     /* Image area */
     .event-card-img {
@@ -94,7 +94,7 @@
       border-radius: 4px;
     }
     .event-date-badge .month { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.7); }
-    .event-date-badge .day   { font-family: 'Assistant', sans-serif; font-size: 1.5rem; font-weight: 800; line-height: 1; }
+    .event-date-badge .day   { font-size: 1.5rem; font-weight: 800; line-height: 1; }
     .event-date-badge .dow   { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-top: 1px; }
 
     /* Body — colored by venue */
@@ -105,10 +105,10 @@
     }
     .event-type-tag {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
-      text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 0.25rem;
+      color: rgba(255,255,255,0.7); margin-bottom: 0.25rem;
     }
     .event-card h3 {
-      font-family: 'Assistant', sans-serif; font-weight: 800; font-size: 1.15rem;
+      font-weight: 800; font-size: 1.15rem;
       line-height: 1.15; margin-bottom: 0.5rem; color: #fff;
     }
     .event-meta { display: flex; flex-direction: column; gap: 0.2rem; margin-bottom: 0.75rem; }
@@ -130,17 +130,16 @@
     .btn-signup {
       padding: 0.4rem 1rem;
       background: rgba(0,0,0,0.35); color: #fff;
-      font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 0.78rem;
+      font-size: 0.78rem;
       letter-spacing: 0.07em; text-transform: uppercase;
       border: 1px solid rgba(255,255,255,0.25); border-radius: 3px;
-      cursor: pointer; transition: background 0.2s;
     }
     .btn-signup:hover { background: rgba(0,0,0,0.55); }
 
     /* Community section */
-    .community-section { max-width: 1200px; margin: 0 auto; padding: 0 2rem 4rem; }
+    .community-section { padding: 0 var(--site-gutter) 4rem; }
     .section-divider { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-    .section-divider h2 { font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1.3rem; white-space: nowrap; }
+    .section-divider h2 { white-space: nowrap; }
     .section-divider::after { content: ''; flex: 1; height: 1px; background: var(--sage-mid); }
     .section-divider .divider-note { font-size: 0.8rem; color: var(--text-light); white-space: nowrap; }
     .community-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
@@ -149,7 +148,7 @@
       padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; transition: box-shadow 0.2s;
     }
     .community-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); }
-    .community-card h4 { font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1.05rem; }
+    .community-card h4 { font-weight: 700; font-size: 1.05rem; }
     .community-card p { font-size: 0.82rem; color: var(--text-light); line-height: 1.5; }
     .community-meta { font-size: 0.78rem; color: var(--olive); font-weight: 600; letter-spacing: 0.04em; }
 
@@ -182,40 +181,26 @@
     }
     .modal-close svg { width: 18px; height: 18px; }
     .modal-body { padding: 1.5rem; }
-    .modal-tag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--olive); margin-bottom: 0.5rem; }
-    .modal-body h2 { font-family: 'Assistant', sans-serif; font-weight: 800; font-size: 1.6rem; line-height: 1.15; margin-bottom: 1rem; }
+    .modal-tag { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; color: var(--olive); margin-bottom: 0.5rem; }
+    .modal-body h2 { font-weight: 800; font-size: 1.6rem; line-height: 1.15; margin-bottom: 1rem; }
     .modal-details { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 1.25rem; }
     .modal-detail { display: flex; align-items: flex-start; gap: 0.5rem; }
     .modal-detail svg { width: 15px; height: 15px; color: var(--olive); flex-shrink: 0; margin-top: 2px; }
-    .modal-detail-text label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-light); margin-bottom: 0.1rem; }
+    .modal-detail-text label { display: block; font-size: 0.7rem; color: var(--text-light); margin-bottom: 0.1rem; }
     .modal-detail-text span { font-size: 0.9rem; font-weight: 600; }
     .modal-desc { font-size: 0.9rem; line-height: 1.7; color: var(--text-mid); margin-bottom: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--sage-mid); }
-    .modal-desc p,
-    .modal-desc ul,
-    .modal-desc ol { margin-bottom: 0.9rem; }
-    .modal-desc p:last-child,
-    .modal-desc ul:last-child,
-    .modal-desc ol:last-child { margin-bottom: 0; }
-    .modal-desc ul,
-    .modal-desc ol { padding-left: 1.25rem; }
-    .modal-desc a { color: var(--olive); }
-    .modal-desc strong { color: var(--text-dark); }
     .modal-actions { display: flex; gap: 0.75rem; }
     .btn-register {
       flex: 1; padding: 0.75rem; background: var(--dark); color: var(--white);
-      font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1rem;
-      letter-spacing: 0.06em; text-transform: uppercase; border: none; cursor: pointer;
-      text-align: center; text-decoration: none; display: block; transition: background 0.2s;
+      font-size: 1rem; border: none; text-align: center; display: block;
       border-radius: 3px;
     }
     .btn-register:hover { background: var(--olive); }
     .btn-secondary {
       padding: 0.75rem 1.25rem; background: transparent; border: 1.5px solid var(--dark);
-      font-family: 'Assistant', sans-serif; font-weight: 600; font-size: 0.9rem;
-      letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;
+      font-weight: 600; font-size: 0.9rem;
       border-radius: 3px;
     }
-    .btn-secondary:hover { background: var(--dark); color: var(--white); }
 
     @media (max-width: 768px) {
       .filters { gap: 0.5rem; }
@@ -237,8 +222,6 @@
       <button class="filter-btn active" data-type="all">All</button>
       <button class="filter-btn" data-type="two-gun">Two Gun</button>
       <button class="filter-btn" data-type="low-light">Low Light</button>
-      <button class="filter-btn" data-type="training">Training</button>
-      <button class="filter-btn" data-type="championship">Championship</button>
     </div>
     <select class="sort-select" id="sort-select">
       <option value="date">Sort: Date</option>
@@ -256,7 +239,7 @@
   <section class="community-section">
     <div class="section-divider">
       <h2>Community Events</h2>
-      <span class="divider-note">Related but not official CASS events</span>
+      <span class="divider-note">Hosted by friends and partners of CASS</span>
     </div>
     <div class="community-grid" id="community-grid"></div>
   </section>
@@ -290,7 +273,7 @@
             <div class="modal-detail-text"><label>Capacity</label><span id="modal-capacity"></span></div>
           </div>
         </div>
-        <div class="modal-desc" id="modal-desc"></div>
+        <div class="modal-desc rich-text" id="modal-desc"></div>
         <div class="modal-actions">
           <a href="#" class="btn-register" id="modal-register">Register Now</a>
           <button class="btn-secondary" onclick="closeModal()">Close</button>
@@ -323,10 +306,7 @@
 
     // ── Community events (static, not in JSON yet) ────────────────
     const COMMUNITY = [
-      { name:"Belvoir Indoor Tactical Series", meta:"Monthly · Woodbridge, VA", desc:"Monthly indoor tactical pistol match. CASS members get a $5 discount." },
-      { name:"Cascade Valley Open", meta:"June 28, 2026 · Monroe, WA", desc:"An independent three-gun match organized by CASS members." },
-      { name:"Texas Lone Star Multigun", meta:"July 12, 2026 · San Antonio, TX", desc:"Community-run multigun event with proceeds benefiting youth shooting programs." },
-      { name:"Armory League Night", meta:"Weekly Fridays · Austin, TX", desc:"Weekly drop-in pistol league. Great for skill building between CASS matches." },
+      { name:"SVRC - Cascade Action Shooting Sports Range Officer Training", meta:"Sept 17th · Fall City, WA", desc:"Want to learn how to RO action matches? Contact info@cascadeaction.org to sign up" },
     ];
 
     const SCRAPER_URL = 'https://cass-scraper.YOUR-SUBDOMAIN.workers.dev/data';
@@ -340,7 +320,7 @@
     }
 
     function typeLabel(type) {
-      return { 'two-gun': 'PCSL TWO GUN', 'low-light': 'PCSL ONE GUN — LOW LIGHT', 'training': 'TRAINING', 'championship': 'CHAMPIONSHIP' }[type] || type.toUpperCase();
+      return { 'two-gun': 'PCSL TWO GUN', 'low-light': 'PCSL ONE GUN — LOW LIGHT'}[type] || type.toUpperCase();
     }
 
     function renderEvents() {

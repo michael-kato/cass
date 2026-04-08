@@ -6,8 +6,7 @@
   <title>Merch / Swag — Cascade Action Shooting Sports</title>
   <link rel="stylesheet" href="assets/shared.css" />
   <style>
-    .merch-main { padding: 2.5rem 2rem 4rem; max-width: 1100px; margin: 0 auto; }
-    .merch-main h1 { font-family: 'Assistant', sans-serif; font-weight: 400; font-size: 2rem; margin-bottom: 1.5rem; }
+    .merch-main { padding: 2.5rem var(--site-gutter) 4rem; }
 
     .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
     .product-card { display: flex; flex-direction: column; }
@@ -26,13 +25,7 @@
 
     .product-card:hover { opacity: 0.85; }
 
-    .btn-view-product {
-      width: 100%; padding: 0.65rem; background: transparent;
-      border: 1px solid var(--text-dark); color: var(--text-dark);
-      font-family: 'Assistant', sans-serif; font-size: 0.85rem; cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-    .btn-view-product:hover { background: var(--text-dark); color: var(--white); }
+    .btn-view-product { width: 100%; padding: 0.65rem; font-size: 0.85rem; border-width: 1px; }
 
     @media (max-width: 900px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
   </style>

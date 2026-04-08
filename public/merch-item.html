@@ -6,7 +6,7 @@
   <title>Product — Cascade Action Shooting Sports</title>
   <link rel="stylesheet" href="assets/shared.css" />
   <style>
-    .item-main { padding: 2.5rem 2rem 4rem; max-width: 1100px; margin: 0 auto; }
+    .item-main { padding: 2.5rem var(--site-gutter) 4rem; max-width: var(--content-standard); margin: 0 auto; }
 
     .item-container {
       display: grid; grid-template-columns: 1fr 1fr;
@@ -60,7 +60,6 @@
     .item-details { display: flex; flex-direction: column; }
 
     .item-header h1 {
-      font-family: 'Assistant', sans-serif;
       font-weight: 400; font-size: 1.8rem;
       margin-bottom: 0.5rem; color: var(--text-dark);
     }
@@ -71,8 +70,8 @@
 
     .item-section { margin-bottom: 1.5rem; }
     .item-section-label {
-      font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 0.78rem;
-      letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-light);
+      font-weight: 700; font-size: 0.78rem;
+      letter-spacing: 0.08em; color: var(--text-light);
       margin-bottom: 0.75rem;
     }
 
@@ -83,7 +82,7 @@
       padding: 0.5rem 1rem;
       border: 1.5px solid var(--sage-mid);
       background: transparent;
-      font-family: 'Assistant', sans-serif; font-size: 0.9rem; font-weight: 500;
+      font-size: 0.9rem; font-weight: 500;
       cursor: pointer; transition: all 0.15s; color: var(--text-dark);
       border-radius: 2px;
     }
@@ -98,57 +97,29 @@
     .quantity-input {
       width: 3.5rem; padding: 0.5rem 0.75rem;
       border: 1px solid var(--sage-mid);
-      font-family: 'Assistant', sans-serif; font-size: 0.9rem;
+      font-size: 0.9rem;
       text-align: center;
     }
 
     .item-actions { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem; }
-    .btn-add-cart {
-      width: 100%; padding: 0.9rem;
-      background: var(--sage); color: var(--text-dark);
-      font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 0.95rem;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      border: 1px solid var(--sage-mid); cursor: pointer;
-      transition: background 0.2s;
-    }
+    .btn-add-cart { width: 100%; padding: 0.9rem; background: var(--sage); color: var(--text-dark); border: 1px solid var(--sage-mid); font-size: 0.95rem; }
     .btn-add-cart:hover { background: var(--sage-light); }
 
-    .btn-shop-pay {
-      width: 100%; padding: 0.9rem;
-      background: #5469d4; color: var(--white);
-      font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 0.95rem;
-      letter-spacing: 0.06em; text-transform: uppercase;
-      border: none; cursor: pointer;
-      transition: background 0.2s;
-    }
+    .btn-shop-pay { width: 100%; padding: 0.9rem; background: #5469d4; color: var(--white); font-size: 0.95rem; border: none; }
     .btn-shop-pay:hover { background: #4552b8; }
 
     .item-description {
       padding-top: 2rem; border-top: 1px solid var(--sage-mid);
       margin-bottom: 2rem;
     }
-    .item-description p {
-      font-size: 0.9rem; line-height: 1.75;
-      color: var(--text-mid); margin-bottom: 1rem;
-    }
-    .item-description ul,
-    .item-description ol {
-      margin: 0 0 1rem;
-      padding-left: 1.25rem;
-      color: var(--text-mid);
-    }
+    .item-description p { font-size: 0.9rem; line-height: 1.75; color: var(--text-mid); margin-bottom: 1rem; }
     .item-description li { margin-bottom: 0.35rem; }
-    .item-description a { color: var(--olive); }
-    .item-description strong { color: var(--text-dark); }
     .item-description p:last-child { margin-bottom: 0; }
 
     .for-you {
       margin-top: 4rem; padding-top: 3rem; border-top: 1px solid var(--sage-mid);
     }
-    .for-you-title {
-      font-family: 'Assistant', sans-serif; font-weight: 700; font-size: 1.3rem;
-      margin-bottom: 1.5rem; color: var(--text-dark);
-    }
+    .for-you-title { margin-bottom: 1.5rem; }
     .for-you-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
     .for-you-card {
       display: flex; flex-direction: column;
@@ -235,7 +206,7 @@
       </div>
 
       <!-- Description -->
-      <div id="description-section" class="item-description" style="display: none;">
+      <div id="description-section" class="item-description rich-text" style="display: none;">
         <div id="product-description"></div>
       </div>
 
