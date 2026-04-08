@@ -1,251 +1,212 @@
 # Project Memory: CASS Website
 
-## 🎯 Tech Stack
-- **Languages:** Plain HTML, CSS, vanilla JavaScript
-- **Backend:** Node.js + Express (`server.js` at root)
-- **Payments:** Stripe Checkout (hosted, server-side session creation)
-- **Scraping:** Cloudflare Worker + Browser Rendering (Puppeteer) + KV storage
-- **Fonts:** Assistant (system font, no import needed)
-- **Maps:** Leaflet.js (CDN) for partners page
-- **Flipbook:** StPageFlip (CDN) for FAQ page
-- **Deployment:** Cloudflare Pages (static site) + Cloudflare Worker (scraper)
+## Tech Stack
+- Frontend: plain HTML, CSS, and vanilla JavaScript
+- Main runtime: Cloudflare Worker in [server.js](/opt/git/cass/server.js) with static assets served from `public/`
+- Payments: Stripe Checkout via `POST /api/create-checkout-session`
+- Data format: TOML in `public/assets/*.toml`
+- TOML parsing: `@iarna/toml` on the server
+- Markdown rendering: `marked` on the server for trusted content fields
+- Maps: Leaflet via CDN on the partners page
+- PDF/flipbook: PDF.js on the FAQ page
+- Scraper: separate Cloudflare Worker in [`/scraper`](/opt/git/cass/scraper)
 
-## 🗂 File Structure (Monorepo)
-```
-/
-├── server.js               ← Express — serves static files + Stripe API
-├── package.json            ← Express, Stripe dependencies
-├── .env                    ← never committed
-├── .env.example
-├── .gitignore              ← excludes .env, node_modules at all levels
-├── index.html
-├── events.html
-├── faq.html
-├── merch.html
-├── about.html
-├── contact.html
-├── policies.html
-├── partners.html
-├── seasons.html
-├── checkout-success.html
-├── assets/
-│   ├── shared.css          ← CSS variables, nav, hamburger, footer, utilities
-│   ├── shared.js           ← Injects nav+footer, hamburger, loads cart.js
-│   ├── cart.js             ← Cart state (localStorage), drawer UI, Stripe redirect
-│   ├── events.json         ← TODO: migrate from hardcoded array in events.html
-│   ├── merch.json          ← Product data — drives merch.html and home merch grid
-│   ├── venues.json         ← TODO: migrate from hardcoded array in partners.html
-│   ├── media/              ← Images and video
-│   └── merch/              ← Product images
-└── scraper-worker/         ← Separate Cloudflare Worker project (same git repo)
-    ├── index.js            ← Worker: scrapes Practiscore, stores in KV
-    ├── wrangler.toml       ← Worker config, KV binding, cron schedule
-    ├── package.json        ← Wrangler, @cloudflare/puppeteer
-    └── README.md
+## Repo Shape
+```text
+/opt/git/cass
+├── server.js
+├── package.json
+├── package-lock.json
+├── wrangler.jsonc
+├── public/
+│   ├── index.html
+│   ├── events.html
+│   ├── faq.html
+│   ├── partners.html
+│   ├── merch.html
+│   ├── merch-item.html
+│   ├── about.html
+│   ├── contact.html
+│   ├── policies.html
+│   ├── seasons.html
+│   ├── assets/
+│   │   ├── shared.css
+│   │   ├── shared.js
+│   │   ├── cart.js
+│   │   ├── events.toml
+│   │   ├── venues.toml
+│   │   ├── merch.toml
+│   │   └── checkout-success.html
+│   └── memory.md
+└── scraper/
+    ├── index.js
+    ├── README.md
+    └── wrangler.toml
 ```
 
-## 🧩 Shared Components
-Every page uses:
+## Main App
+- [`server.js`](/opt/git/cass/server.js) is a Cloudflare Worker entrypoint, not an Express server.
+- [`wrangler.jsonc`](/opt/git/cass/wrangler.jsonc) binds `./public` as `ASSETS`.
+- The worker currently exposes:
+  - `POST /api/create-checkout-session`
+  - `GET /api/toml?path=assets/<file>.toml`
+- `/api/toml` can also render trusted Markdown fields when `markdown=field1,field2` is supplied.
+
+## Shared Frontend
+Every page follows this pattern:
 ```html
 <div id="site-nav"></div>
-  <!-- page content -->
+<!-- page content -->
 <div id="site-footer"></div>
 <script src="assets/shared.js"></script>
 <script>initPage('pagekey');</script>
 ```
-Page keys: `home`, `events`, `seasons`, `faq`, `partners`, `merch`, `about`, `contact`, `policies`
 
-`initPage()` handles:
-- Nav injection with active link highlighting
-- Mobile menu injection + hamburger toggle (☰ ↔ ✕)
-- Footer injection
-- Dynamically loads `assets/cart.js` and calls `initCart()`
+Page keys:
+- `home`
+- `events`
+- `seasons`
+- `faq`
+- `partners`
+- `merch`
+- `about`
+- `contact`
+- `policies`
 
-## 🛒 Cart System
-- State stored in `localStorage` under key `cass_cart`
-- `cart.js` exposes: `addToCart(product)`, `removeFromCart(id)`, `updateQuantity(id, qty)`
-- Slide-out drawer injected into every page via `initCart()`
-- Cart icon in nav shows red badge with item count
-- Checkout POSTs to `/api/create-checkout-session` → redirects to Stripe hosted checkout
-- On success: redirects to `checkout-success.html`, clears cart
-- On cancel: returns to `merch.html`
-- `merch.html` uses `window.MERCH_PRODUCTS[id]` lookup to avoid JSON/quote issues in onclick attributes
-- Drawer uses event delegation for qty/remove buttons — no inline onclick handlers
+[`public/assets/shared.js`](/opt/git/cass/public/assets/shared.js) currently handles:
+- nav injection
+- footer injection
+- mobile menu toggle
+- loading `assets/cart.js`
+- `loadToml(path, collectionKey, options)`
+- shared Ken Burns initialization for any element marked with `data-ken-burns`
 
-## 💳 Stripe Integration
-- `server.js` exposes `POST /api/create-checkout-session`
-- Takes `{ items: [{ id, name, price, image, quantity }] }`
-- Converts price strings (e.g. `"$35.00 USD"`) to cents via regex
-- Env vars required: `STRIPE_SECRET_KEY`, `SITE_URL`
-- Shipping collection enabled, US only
-- `server.js` uses `extensions: ['html']` so `/merch`, `/events` etc. resolve without extension
+[`public/assets/shared.css`](/opt/git/cass/public/assets/shared.css) currently holds:
+- shared color tokens
+- shared layout gutter/content-width tokens
+- nav/footer styles
+- utility page content styles
+- shared Ken Burns frame/layer styles
 
-## 🕷 Scraper Worker (scraper-worker/)
-Cloudflare Worker that scrapes Practiscore registration pages for spots remaining.
+## Data Layer
+The old JSON asset files are gone. Current sources are:
+- [`public/assets/events.toml`](/opt/git/cass/public/assets/events.toml)
+- [`public/assets/venues.toml`](/opt/git/cass/public/assets/venues.toml)
+- [`public/assets/merch.toml`](/opt/git/cass/public/assets/merch.toml)
 
-**Architecture:**
-```
-Cron (every 3hrs) → Worker → Puppeteer → practiscore.com/{slug}/register
-                                        → KV store → /data endpoint → events.html
-```
+Current page usage:
+- [`public/index.html`](/opt/git/cass/public/index.html): loads merch from `merch.toml`
+- [`public/events.html`](/opt/git/cass/public/events.html): loads events from `events.toml` and venues from `venues.toml`
+- [`public/partners.html`](/opt/git/cass/public/partners.html): loads venues from `venues.toml`
+- [`public/merch.html`](/opt/git/cass/public/merch.html): loads merch from `merch.toml`
+- [`public/merch-item.html`](/opt/git/cass/public/merch-item.html): loads merch from `merch.toml`
 
-**Key design decisions:**
-- Worker fetches `assets/events.json` from the live site to get slugs dynamically — no hardcoding in wrangler.toml
-- Stores results in KV with 6hr TTL (1hr TTL on failure)
-- Exposes `GET /data` (all matches) and `GET /data?slug=...` (single match)
-- `GET /scrape?slug=...` for manual testing
-- Target selector: `.alert.alert-info.centerText` — may need narrowing, multiple elements possible
-- Falls back gracefully — events.html shows static data if scraper unavailable or blocked
+## Markdown Rendering
+Trusted Markdown is rendered server-side in `/api/toml` using `marked`.
 
-**Setup steps:**
-```bash
-cd scraper-worker
-npm install
-npx wrangler kv namespace create MATCH_DATA
-# paste KV namespace ID into wrangler.toml
-npx wrangler deploy
-```
+Current Markdown-enabled fields:
+- `desc` in events data, exposed to the client as `descHtml`
+- `description` in merch data, exposed to the client as `descriptionHtml`
 
-**In events.html:** after deploying, replace `YOUR-SUBDOMAIN` in `SCRAPER_URL`:
-```javascript
-const SCRAPER_URL = 'https://cass-scraper.YOUR-SUBDOMAIN.workers.dev/data';
-```
+Current consumers:
+- [`public/events.html`](/opt/git/cass/public/events.html): modal description uses `innerHTML` with `descHtml`
+- [`public/merch-item.html`](/opt/git/cass/public/merch-item.html): product description uses `innerHTML` with `descriptionHtml`
 
-**Known risk:** Practiscore is behind Cloudflare and robots.txt disallows scraping.
-Browser Rendering is always identified as bot traffic. May get blocked — treat as
-best-effort. If blocked, events.html silently falls back to static spot counts.
+Important note:
+- This currently assumes all TOML content is trusted.
+- If user-generated content is ever introduced, sanitization must be added before rendering HTML.
 
-## 🖨 Print-on-Demand (TODO)
-- Confirm with client: Printful or Printify?
-- Plan: Stripe `checkout.session.completed` webhook → Node.js → Printful API
-- Only apparel is POD — towels and sticker packs are physical inventory
+## Cart / Checkout
+- Cart state lives in `localStorage` under `cass_cart`
+- [`public/assets/cart.js`](/opt/git/cass/public/assets/cart.js) owns drawer UI and cart operations
+- Stripe checkout is created by `POST /api/create-checkout-session`
+- Success URL currently points to `/checkout-success.html`, but the actual file in the repo is [`public/assets/checkout-success.html`](/opt/git/cass/public/assets/checkout-success.html)
+- That path mismatch should be verified before production checkout testing
 
-## 🎨 Design Tokens (assets/shared.css)
-```css
---sage: #c8dfc0
---sage-light: #d8ebd0
---sage-mid: #b8cfb0
---dark: #121212
---dark-mid: #2a2a26
---olive: #4a5e3a
---olive-light: #5a7048
---cream: #f5f0e8
---accent: #7a9e5a
---text-dark: #1a1a18
---text-mid: #3a3a38
---text-light: #6a6a68
-```
+## Visual / Motion State
+Shared Ken Burns is now reusable across pages.
 
-## 📄 Pages Status
+Current usage:
+- Home hero backgrounds in [`public/index.html`](/opt/git/cass/public/index.html)
+- FAQ bottom CTA image in [`public/faq.html`](/opt/git/cass/public/faq.html)
+- About image strip in [`public/about.html`](/opt/git/cass/public/about.html)
+- Contact image strip in [`public/contact.html`](/opt/git/cass/public/contact.html)
 
+Home page specifics:
+- Hero uses two layered backgrounds to crossfade between slide images
+- Shared helper updates the active background image while Ken Burns continues underneath
+
+## Layout State
+- Shared spacing tokens now live in [`public/assets/shared.css`](/opt/git/cass/public/assets/shared.css)
+- `--site-gutter`, `--content-narrow`, `--content-standard`, and `--content-wide` are in use
+- Nav, footer, page content, FAQ content, and several home sections now use those shared spacing values
+- Some page-local sections still use hardcoded padding and may need a consistency pass later
+
+## Page Status
 | Page | Status | Notes |
 |------|--------|-------|
-| index.html | ✅ Done | Slideshow, mission, video, merch grid, match CTA, Instagram stubs |
-| events.html | ✅ Done | Filter/search/sort, cards, modal, community events, live spots from scraper |
-| faq.html | ✅ Done | FAQ text, StPageFlip flipbook stub, Find a Match CTA |
-| merch.html | ✅ Done | JSON-driven, Add to Cart wired to cart.js |
-| about.html | ✅ Done | Text + image strip stubs |
-| contact.html | ✅ Done | Email + image strip stub |
-| policies.html | ✅ Done | Three policy items |
-| partners.html | ✅ Done | Leaflet map, searchable sidebar, video stub |
-| seasons.html | ✅ Done | Season Overview + Cascade Armory sections |
-| checkout-success.html | ✅ Done | Post-Stripe confirmation page |
+| `index.html` | Active | Hero slideshow, shared Ken Burns, merch feed, CTA panels |
+| `events.html` | Active | TOML-driven events, modal, scraper merge, Markdown descriptions |
+| `faq.html` | Active | FAQ text, PDF.js matchbook, shared Ken Burns CTA |
+| `partners.html` | Active | Leaflet map, searchable venue list, TOML-driven venues |
+| `merch.html` | Active | TOML-driven product list |
+| `merch-item.html` | Active | TOML-driven detail page, Markdown descriptions |
+| `about.html` | Active | Shared page shell plus Ken Burns image strip |
+| `contact.html` | Active | Shared page shell plus Ken Burns image strip |
+| `policies.html` | Active | Shared shell, static content |
+| `seasons.html` | Active | Shared shell, static content |
 
-## 📦 Data Files
-
-### assets/merch.json
-Each product: `id`, `name`, `price`, `image`, `type`
-- `type: "simple"` — no variants
-- `type: "options"` — has variants (size etc.) — variants not yet implemented
-
-### assets/events.json (TODO — not yet created)
-Each event should include:
-```json
-{
-  "id": 1,
-  "type": "match",
-  "name": "SVRC Season Kickoff",
-  "month": "APR", "day": "19",
-  "dateSort": "2026-04-19",
-  "date": "April 19, 2026",
-  "time": "7:30 AM – 4:00 PM",
-  "state": "WA",
-  "location": "Snoqualmie Valley Rifle Club, Fall City, WA",
-  "spots": 60, "filled": 44,
-  "desc": "...",
-  "registerUrl": "https://practiscore.com/...",
-  "practiscoreSlug": "svrc-season-kickoff-2026"
-}
-```
-`practiscoreSlug` drives the scraper — omit for events not on Practiscore.
-
-### assets/venues.json (TODO — not yet created)
-### assets/instagram.json (TODO — pending account type confirmation)
-
-## 🔧 Running Locally
+## Local Run Notes
+Likely local workflow:
 ```bash
-# Main site
 npm install
-cp .env.example .env   # fill in STRIPE_SECRET_KEY
-node server.js         # http://localhost:3000
-
-# Scraper worker (separate)
-cd scraper-worker
-npm install
-npx wrangler dev       # test locally
+npx wrangler dev
 ```
 
-## 🔧 Known Issues / Notes
-- Cart `onclick` uses `window.MERCH_PRODUCTS[id]` — avoids JSON/quote issues in HTML attributes
-- Cart drawer uses event delegation for qty/remove buttons
-- Ken Burns: `animation-fill-mode: forwards` on `.slide-bg` prevents stutter
-- Nav height is 100px; mobile menu `top` offset must match
-- `fetch()` requires a server — don't open HTML files directly from disk
-- Scraper worker and main site are separate `npm install` environments in the same repo
+Important:
+- `fetch()`-based pages require the worker/static server environment
+- opening files directly from disk will not work for TOML-backed pages
+- the app now depends on `/api/toml` for content loading
 
-## 🖼 Assets In Use
-- `assets/media/Catheadnobackgroundsmall.png` — logo
-- `assets/media/PHADrone.jpg` — hero slide 1
-- `assets/media/DSC_1116.jpg` — hero slide 2
-- `assets/media/lean.png` — mission image
-- `assets/media/promo_video_01.mp4` — home video strip
-- `assets/media/DSC_0739.jpg` — match CTA panel 1
-- `assets/media/DSC_0719.jpg` — match CTA panel 2
-- `assets/merch/*.jpg` — product images (filenames in merch.json)
+## Scraper Worker
+Scraper lives in [`/scraper`](/opt/git/cass/scraper).
 
-## 📋 TODO
+Current code in [`scraper/index.js`](/opt/git/cass/scraper/index.js):
+- says it fetches slugs dynamically from the live site
+- still points to `assets/events.json`
+- exposes `/data`, `/scrape`, and `/scrape-all`
+- stores match results in KV under `MATCH_DATA`
 
-### High Priority
-- [ ] Migrate events hardcoded array → `assets/events.json` (update events.html + scraper worker)
-- [ ] Migrate venues hardcoded array → `assets/venues.json`
-- [ ] Update scraper worker to fetch slugs from `assets/events.json` instead of wrangler.toml
-- [ ] Replace `YOUR-SUBDOMAIN` in events.html after deploying scraper worker
-- [ ] Test full Stripe checkout flow end to end with test keys
-- [ ] Implement product size/variant selection for apparel
-- [ ] Confirm POD provider with client (Printful vs Printify)
+Current mismatch to note:
+- scraper code comments mention dynamic slug loading from `events.json`
+- scraper README and `scraper/wrangler.toml` still describe hardcoded `MATCH_SLUGS`
+- main site has already migrated to `events.toml`
 
-### Scraper
-- [ ] Deploy scraper worker and confirm it can reach Practiscore at all
-- [ ] Narrow CSS selector if `.alert.alert-info.centerText` returns multiple elements
-- [ ] Handle Cloudflare challenge page response gracefully
-- [ ] Consider parsing spots as integer for "Almost full!" logic
+This area still needs alignment before treating scraper behavior as current.
 
-### Instagram
-- [ ] Confirm cascadeaction account type (must be Creator/Business)
-- [ ] Implement Graph API fetch + server-side cache
+## Dependencies
+Current app dependencies in [`package.json`](/opt/git/cass/package.json):
+- `@iarna/toml`
+- `marked`
+- `express`
+- `stripe`
 
-### Print-on-Demand
-- [ ] Wire Printful/Printify API on Stripe `checkout.session.completed` webhook
+Note:
+- `express` is still listed, but the current main app runtime is a Worker-style `fetch()` handler, not an Express app
 
-### Deployment
-- [ ] Decide Node.js API hosting: Cloudflare Workers vs Render/Railway
-- [ ] Set STRIPE_SECRET_KEY + SITE_URL in production environment
-- [ ] Switch Stripe keys test → live before launch
+## Current Known Issues / Follow-Ups
+- Verify checkout success path versus actual file location
+- Update scraper worker to consume TOML or a derived JSON/API source instead of `assets/events.json`
+- Update scraper README and `scraper/wrangler.toml` so docs/config match reality
+- Replace placeholder `SCRAPER_URL` in [`public/events.html`](/opt/git/cass/public/events.html) if not already deployed
+- Run a consistency pass on page-local layout gutters
+- Test all TOML-backed pages through the real worker/server path after content edits
 
-### Polish
-- [ ] Replace image stubs in about.html, contact.html
-- [ ] Replace flipbook stubs with real booklet images
-- [ ] Test all pages at mobile breakpoint
-- [ ] Add `<meta description>` to all pages
-- [ ] Add favicon
-- [ ] Verify Leaflet + StPageFlip CDN on Cloudflare
+## Recent Major Changes
+- Migrated asset data from JSON to TOML
+- Added server-side TOML parsing through `/api/toml`
+- Added trusted Markdown rendering for selected TOML fields
+- Refactored Ken Burns behavior into shared JS/CSS
+- Applied Ken Burns to home, FAQ, about, and contact
+- Added hero background crossfade on the home page
+- Tightened shared site gutters and content width handling
