@@ -318,7 +318,7 @@
           const image = p.images && p.images[0] ? `assets/merch/${p.images[0]}` : '';
           return `
             <div class="merch-card">
-              <a href="merch.html">
+              <a href="merch-item.html?id=${p.id}">
                 <div class="merch-img" style="background-image:url('${image}')"></div>
                 <div class="merch-info">
                   <div class="merch-name">${p.name}</div>

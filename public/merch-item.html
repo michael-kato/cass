@@ -19,6 +19,9 @@
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
     }
+    .item-image-grid.is-single .image-magnifier-wrapper {
+      grid-column: 1 / -1;
+    }
     .image-magnifier-wrapper {
       position: relative;
       overflow: visible;
@@ -259,6 +262,7 @@
       const scale = selectedSize ? sizeScales[selectedSize] || 1 : 1;
       currentImages = getProductImages().map(img => IMAGE_BASE + img);
       const grid = document.getElementById('image-grid');
+      grid.classList.toggle('is-single', currentImages.length === 1);
       grid.innerHTML = currentImages.map(img => `
         <div class="image-magnifier-wrapper" style="transform: scale(${scale}); transform-origin: center;">
           <img src="${img}" alt="Product" class="grid-image" />
