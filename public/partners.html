@@ -177,8 +177,7 @@
       ));
     });
 
-    fetch('assets/venues.json')
-      .then(r => r.json())
+    loadToml('assets/venues.toml', 'venues')
       .then(data => {
         VENUES = data;
         VENUES.forEach(v => {

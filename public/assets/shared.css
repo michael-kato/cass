@@ -29,7 +29,6 @@ body {
   background: var(--sage);
   color: var(--text-dark);
   overflow-x: hidden;
-  image-rendering: smooth;
 }
 
 /* ── NAV ── */
@@ -177,6 +176,12 @@ footer { background: var(--dark); color: rgba(255,255,255,0.6); }
 .page-content p {
   font-size: 0.9rem; line-height: 1.75;
   color: var(--text-mid); margin-bottom: 0.75rem;
+}
+
+img,
+video,
+canvas {
+  image-rendering: auto;
 }
 
 /* Full-width image strip */

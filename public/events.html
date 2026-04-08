@@ -387,18 +387,22 @@
                     </div>` : ''}
                   </div>
                   <div class="event-card-footer">
-                    <div class="event-spots">
-                      ${e.liveSpotsText
-                        ? `<span title="Live from Practiscore">${e.liveSpotsText}</span>`
-                        : `<strong>${spotsLeft}</strong> spots left${almostFull ? '<span style="color:#ffaaaa;font-weight:700;margin-left:0.3rem">· Almost full!</span>' : ''}`
-                      }
-                    </div>
+                    
                     <button class="btn-signup" onclick="event.stopPropagation();openModal(${e.id})">Event Signup</button>
                   </div>
                 </div>
               </div>`;
           }).join('');
     }
+
+    /* SPOTS
+                        <div class="event-spots">
+                      ${e.liveSpotsText
+                        ? `<span title="Live from Practiscore">${e.liveSpotsText}</span>`
+                        : `<strong>${spotsLeft}</strong> spots left${almostFull ? '<span style="color:#ffaaaa;font-weight:700;margin-left:0.3rem">· Almost full!</span>' : ''}`
+                      }
+                    </div>
+    */
 
     function renderCommunity() {
       document.getElementById('community-grid').innerHTML = COMMUNITY.map(c => `
@@ -459,8 +463,8 @@
 
     // Load both files in parallel, join, derive date fields, then render
     Promise.all([
-      fetch('assets/events.json').then(r => r.json()),
-      fetch('assets/venues.json').then(r => r.json()),
+      loadToml('assets/events.toml', 'events'),
+      loadToml('assets/venues.toml', 'venues'),
     ]).then(([events, venues]) => {
       const venueMap = Object.fromEntries(venues.map(v => [v.id, v]));
       EVENTS = events.map(e => {

@@ -1,0 +1,129 @@
+[[events]]
+id = 1
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-04-18"
+time = "TBD"
+venueId = "pha"
+image = "assets/media/PHADrone.jpg"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Piedmont Handgunner's Association."
+registerUrl = "#"
+
+[[events]]
+id = 2
+type = "low-light"
+name = "PCSL One Gun — Low Light"
+date = "2026-04-19"
+time = "TBD"
+venueId = "bellevue-indoor"
+image = "assets/media/bir.jpg"
+spots = 60
+filled = 0
+desc = "PCSL One Gun Low Light match at Bellevue Indoor Range."
+registerUrl = "#"
+
+[[events]]
+id = 3
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-04-25"
+time = "TBD"
+venueId = "svrc"
+image = "assets/media/DSC_1112.jpg"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Snoqualmie Valley Rifle Club."
+registerUrl = "#"
+
+[[events]]
+id = 4
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-05-16"
+time = "TBD"
+venueId = "jcsa"
+image = "assets/media/jcsaretina-300x297.png"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Jefferson County Sportsman's Association."
+registerUrl = "#"
+
+[[events]]
+id = 5
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-05-17"
+time = "TBD"
+venueId = "bellevue-indoor"
+image = "assets/media/bir.jpg"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Bellevue Indoor Range."
+registerUrl = "#"
+
+[[events]]
+id = 6
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-05-23"
+time = "TBD"
+venueId = "pha"
+image = "assets/media/PHADrone.jpg"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Piedmont Handgunner's Association."
+registerUrl = "#"
+
+[[events]]
+id = 7
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-05-30"
+time = "TBD"
+venueId = "svrc"
+image = "assets/media/DSC_1112.jpg"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Snoqualmie Valley Rifle Club."
+registerUrl = "#"
+
+[[events]]
+id = 8
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-06-07"
+time = "TBD"
+venueId = "bellevue-indoor"
+image = "assets/media/bir.jpg"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Bellevue Indoor Range."
+registerUrl = "#"
+
+[[events]]
+id = 9
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-06-27"
+time = "TBD"
+venueId = "svrc"
+image = "assets/media/DSC_1112.jpg"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Snoqualmie Valley Rifle Club."
+registerUrl = "#"
+
+[[events]]
+id = 10
+type = "two-gun"
+name = "PCSL Two Gun"
+date = "2026-07-11"
+time = "TBD"
+venueId = "jcsa"
+image = "assets/media/jcsaretina-300x297.png"
+spots = 60
+filled = 0
+desc = "PCSL Two Gun match at Jefferson County Sportsman's Association."
+registerUrl = "#"

@@ -341,8 +341,7 @@
       }
 
       try {
-        const res = await fetch('assets/merch.json');
-        allMerch = await res.json();
+        allMerch = await loadToml('assets/merch.toml', 'products');
 
         currentProduct = allMerch.find(p => p.id === productId);
         if (!currentProduct) {

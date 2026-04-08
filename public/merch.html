@@ -56,8 +56,7 @@
       return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
     }
 
-    fetch('assets/merch.json')
-      .then(r => r.json())
+    loadToml('assets/merch.toml', 'products')
       .then(items => {
         document.getElementById('product-grid').innerHTML = items.map(p => {
           const image = p.images && p.images[0] ? `assets/merch/${p.images[0]}` : '';
