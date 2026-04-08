@@ -7,6 +7,10 @@ marked.setOptions({
   breaks: true,
 });
 
+function normalizePrice(value) {
+  return Number.isFinite(value) ? value : 0;
+}
+
 function renderMarkdownFields(value, markdownFields) {
   if (Array.isArray(value)) {
     return value.map(item => renderMarkdownFields(item, markdownFields));
@@ -61,7 +65,7 @@ export default {
               name: item.name,
               ...(item.image ? { images: [`${baseUrl}/${item.image.replace(/^\/+/, '')}`] } : {}),
             },
-            unit_amount: Math.round(parseFloat(item.price.replace(/[^0-9.]/g, '')) * 100),
+            unit_amount: Math.round(normalizePrice(item.price) * 100),
           },
           quantity: item.quantity,
         }));

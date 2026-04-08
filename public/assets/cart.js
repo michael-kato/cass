@@ -8,6 +8,14 @@ const CART_KEY = 'cass_cart';
 
 // ── State ──────────────────────────────────────────────
 
+function normalizePrice(value) {
+  return Number.isFinite(value) ? value : 0;
+}
+
+function formatPrice(value) {
+  return `$${normalizePrice(value).toFixed(2)}`;
+}
+
 function getCart() {
   try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
   catch { return []; }
@@ -53,8 +61,7 @@ function clearCart() {
 
 function cartTotal() {
   return getCart().reduce((sum, i) => {
-    const price = parseFloat(i.price.replace(/[^0-9.]/g, ''));
-    return sum + price * i.quantity;
+    return sum + normalizePrice(i.price) * i.quantity;
   }, 0);
 }
 
@@ -169,7 +176,7 @@ function renderDrawerItems() {
       "></div>
       <div style="flex:1;min-width:0;">
         <div style="font-family:Assistant,sans-serif;font-weight:600;font-size:0.85rem;color:#1a1a18;line-height:1.3;margin-bottom:0.35rem;">${item.name}</div>
-        <div style="font-size:0.82rem;color:#4a5e3a;font-weight:600;margin-bottom:0.5rem;">${item.price}</div>
+        <div style="font-size:0.82rem;color:#4a5e3a;font-weight:600;margin-bottom:0.5rem;">${formatPrice(item.price)}</div>
         <div style="display:flex;align-items:center;gap:0.5rem;">
           <button type="button" data-cart-action="decrease" data-cart-id="${escapeCartAttr(item.id)}" style="
             width:24px;height:24px;border:1px solid #1a1a18;background:transparent;
