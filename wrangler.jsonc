@@ -7,7 +7,10 @@
     "enabled": true
   },
   "secrets": {
-    "required": ["STRIPE_SECRET_KEY"]
+    "required": ["STRIPE_SECRET_KEY", "PAYPAL_CLIENT_ID", "PAYPAL_CLIENT_SECRET"]
+  },
+  "vars": {
+    "PAYPAL_API_BASE": "https://api-m.sandbox.paypal.com"
   },
   "assets": {
     "directory": "./public",

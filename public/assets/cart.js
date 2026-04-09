@@ -130,9 +130,18 @@ function buildDrawer() {
           background:#121212;color:#fff;
           font-family:Assistant,sans-serif;font-weight:700;font-size:0.95rem;
           letter-spacing:0.06em;text-transform:uppercase;
-          border:none;cursor:pointer;
+          border:none;cursor:pointer;margin-bottom:0.5rem;
           transition:background 0.2s;
-        ">Checkout</button>
+        ">Checkout with Card</button>
+        <button id="cart-paypal-btn" style="
+          width:100%;padding:0.85rem;
+          background:#ffc439;color:#111;
+          font-family:Assistant,sans-serif;font-weight:700;font-size:0.95rem;
+          letter-spacing:0.06em;text-transform:uppercase;
+          border:none;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;gap:0.5rem;
+          transition:background 0.2s;
+        ">Pay with PayPal</button>
         <div id="cart-checkout-error" style="
           display:none;margin-top:0.6rem;
           font-size:0.8rem;color:#c0392b;text-align:center;
@@ -146,6 +155,7 @@ function buildDrawer() {
   document.getElementById('cart-close').addEventListener('click', closeDrawer);
   document.getElementById('cart-backdrop').addEventListener('click', closeDrawer);
   document.getElementById('cart-checkout-btn').addEventListener('click', startCheckout);
+  document.getElementById('cart-paypal-btn').addEventListener('click', startPaypalCheckout);
   document.getElementById('cart-items').addEventListener('click', handleDrawerClick);
 }
 
@@ -276,6 +286,34 @@ async function startCheckout() {
     errEl.textContent = err.message;
     errEl.style.display = 'block';
     btn.textContent = 'Checkout';
+    btn.disabled = false;
+  }
+}
+
+async function startPaypalCheckout() {
+  const btn = document.getElementById('cart-paypal-btn');
+  const errEl = document.getElementById('cart-checkout-error');
+  const cart = getCart();
+
+  if (cart.length === 0) return;
+
+  btn.textContent = 'Opening PayPal…';
+  btn.disabled = true;
+  errEl.style.display = 'none';
+
+  try {
+    const res = await fetch('/api/create-paypal-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items: cart }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'PayPal initialization failed');
+    window.location.href = data.url;
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    btn.textContent = 'Pay with PayPal';
     btn.disabled = false;
   }
 }

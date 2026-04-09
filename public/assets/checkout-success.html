@@ -52,10 +52,22 @@
   <div id="site-footer"></div>
   <script src="shared.js"></script>
   <script>
-    try {
+    async function handlePostCheckout() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paypalToken = urlParams.get('token'); // PayPal Order ID
+
+      if (paypalToken) {
+        try {
+          const res = await fetch(`/api/capture-paypal-order?orderId=${paypalToken}`, { method: 'POST' });
+          if (!res.ok) throw new Error('Failed to capture PayPal payment');
+        } catch (err) {
+          console.error(err);
+        }
+      }
       localStorage.removeItem('cass_cart');
-    } catch {}
-    initPage('');
+      initPage('');
+    }
+    handlePostCheckout();
   </script>
 </body>
 </html>

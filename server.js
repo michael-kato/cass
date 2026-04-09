@@ -54,6 +54,104 @@ function renderMarkdownFields(value, markdownFields) {
   return next;
 }
 
+/**
+ * PayPal Helpers
+ */
+async function getPaypalAccessToken(env) {
+  const auth = btoa(`${env.PAYPAL_CLIENT_ID}:${env.PAYPAL_CLIENT_SECRET}`);
+  const res = await fetch(`${env.PAYPAL_API_BASE}/v1/oauth2/token`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: 'grant_type=client_credentials',
+  });
+  if (!res.ok) throw new Error('Failed to get PayPal access token');
+  const data = await res.json();
+  return data.access_token;
+}
+
+async function handleCreatePaypalOrder(request, env) {
+  const { items } = await request.json();
+  const baseUrl = getBaseUrl(env.SITE_URL, request.url);
+  const accessToken = await getPaypalAccessToken(env);
+
+  let totalValue = 0;
+  const paypalItems = items.map(item => {
+    const price = normalizePrice(item.price);
+    const qty = Math.max(1, Number(item.quantity) || 1);
+    totalValue += price * qty;
+    return {
+      name: item.name,
+      quantity: qty.toString(),
+      unit_amount: {
+        currency_code: 'USD',
+        value: price.toFixed(2),
+      }
+    };
+  });
+
+  const orderBody = {
+    intent: 'CAPTURE',
+    purchase_units: [{
+      amount: {
+        currency_code: 'USD',
+        value: totalValue.toFixed(2),
+        breakdown: {
+          item_total: {
+            currency_code: 'USD',
+            value: totalValue.toFixed(2),
+          }
+        }
+      },
+      items: paypalItems,
+    }],
+    application_context: {
+      return_url: toAbsoluteUrl('/assets/checkout-success.html', baseUrl),
+      cancel_url: toAbsoluteUrl('/merch.html', baseUrl),
+      shipping_preference: 'GET_FROM_FILE',
+      user_action: 'PAY_NOW',
+    }
+  };
+
+  const res = await fetch(`${env.PAYPAL_API_BASE}/v2/checkout/orders`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(orderBody),
+  });
+
+  const order = await res.json();
+  const approveLink = order.links?.find(l => l.rel === 'approve');
+
+  if (!approveLink) {
+    return json({ error: 'Failed to create PayPal order', details: order }, 500);
+  }
+
+  return json({ url: approveLink.href });
+}
+
+async function handleCapturePaypalOrder(request, env) {
+  const url = new URL(request.url);
+  const orderId = url.searchParams.get('orderId');
+  if (!orderId) return json({ error: 'Missing orderId' }, 400);
+
+  const accessToken = await getPaypalAccessToken(env);
+  const res = await fetch(`${env.PAYPAL_API_BASE}/v2/checkout/orders/${orderId}/capture`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const result = await res.json();
+  return json({ success: res.ok, status: result.status });
+}
+
 async function handleCreateCheckoutSession(request, env) {
   if (!env.STRIPE_SECRET_KEY) {
     return json({ error: 'Missing STRIPE_SECRET_KEY.' }, 500);
@@ -82,13 +180,12 @@ async function handleCreateCheckoutSession(request, env) {
   }));
 
   const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
     line_items: lineItems,
     mode: 'payment',
     success_url: toAbsoluteUrl('/assets/checkout-success.html', baseUrl),
     cancel_url: toAbsoluteUrl('/merch.html', baseUrl),
     shipping_address_collection: { allowed_countries: ['US'] },
-    billing_address_collection: 'auto',
+    billing_address_collection: 'auto'
   });
 
   return json({ url: session.url });
@@ -101,6 +198,14 @@ export default {
     try {
       if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
         return await handleCreateCheckoutSession(request, env);
+      }
+
+      if (url.pathname === '/api/create-paypal-order' && request.method === 'POST') {
+        return await handleCreatePaypalOrder(request, env);
+      }
+
+      if (url.pathname === '/api/capture-paypal-order' && request.method === 'POST') {
+        return await handleCapturePaypalOrder(request, env);
       }
 
       if (url.pathname === '/api/toml' && request.method === 'GET') {

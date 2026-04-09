@@ -3,7 +3,7 @@
 ## Tech Stack
 - Frontend: plain HTML, CSS, and vanilla JavaScript
 - Main runtime: Cloudflare Worker in [server.js](/opt/git/cass/server.js) with static assets served from `public/`
-- Payments: Stripe Checkout via `POST /api/create-checkout-session`
+- Payments: Dual gateway support (Stripe for Cards/Link, PayPal Direct REST API)
 - Data format: TOML in `public/assets/*.toml`
 - TOML parsing: `@iarna/toml` on the server
 - Markdown rendering: `marked` on the server for trusted content fields
@@ -205,6 +205,7 @@ Note:
 - `express` is still listed, but the current main app runtime is a Worker-style `fetch()` handler, not an Express app
 
 ## Current Known Issues / Follow-Ups
+- Update `public/assets/merch.toml` to include `shopifyVariantId` for every product.
 - Update scraper worker to consume TOML or a derived JSON/API source instead of `assets/events.json`
 - Update scraper README and `scraper/wrangler.toml` so docs/config match reality
 - Replace placeholder `SCRAPER_URL` in [`public/events.html`](/opt/git/cass/public/events.html) if not already deployed
