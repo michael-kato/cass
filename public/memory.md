@@ -130,6 +130,7 @@ Important note:
 - Cancel URL points back to [`public/merch.html`](/opt/git/cass/public/merch.html)
 - Cart is intentionally cleared on the success page, not before redirecting to Stripe
 - Local Worker secrets should be supplied through `.dev.vars` during `wrangler dev`
+- There is currently no server-side order database or webhook persistence layer
 
 ## Visual / Motion State
 Shared Ken Burns is now reusable across pages.
@@ -209,7 +210,7 @@ Note:
 - Replace placeholder `SCRAPER_URL` in [`public/events.html`](/opt/git/cass/public/events.html) if not already deployed
 - Run a consistency pass on page-local layout gutters
 - Test all TOML-backed pages through the real worker/server path after content edits
-- Add Stripe webhook handling before relying on the success page alone for fulfillment or order confirmation state
+- Add webhook handling and order persistence later if the merch flow needs fulfillment tracking
 
 ## Recent Major Changes
 - Migrated asset data from JSON to TOML

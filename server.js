@@ -7,8 +7,29 @@ marked.setOptions({
   breaks: true,
 });
 
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 function normalizePrice(value) {
   return Number.isFinite(value) ? value : 0;
+}
+
+function getBaseUrl(envSiteUrl, requestUrl) {
+  if (envSiteUrl) {
+    try {
+      return new URL(envSiteUrl).toString();
+    } catch {}
+  }
+
+  return new URL(requestUrl).origin;
+}
+
+function toAbsoluteUrl(path, baseUrl) {
+  return new URL(path, baseUrl).toString();
 }
 
 function renderMarkdownFields(value, markdownFields) {
@@ -33,62 +54,56 @@ function renderMarkdownFields(value, markdownFields) {
   return next;
 }
 
+async function handleCreateCheckoutSession(request, env) {
+  if (!env.STRIPE_SECRET_KEY) {
+    return json({ error: 'Missing STRIPE_SECRET_KEY.' }, 500);
+  }
+
+  const { items } = await request.json();
+  if (!Array.isArray(items) || items.length === 0) {
+    return json({ error: 'Cart is empty.' }, 400);
+  }
+
+  const baseUrl = getBaseUrl(env.SITE_URL, request.url);
+  const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+
+  const lineItems = items.map(item => ({
+    price_data: {
+      currency: 'usd',
+      product_data: {
+        name: item.name,
+        ...(item.image && baseUrl.startsWith('https://')
+          ? { images: [toAbsoluteUrl(item.image, baseUrl)] }
+          : {}),
+      },
+      unit_amount: Math.round(normalizePrice(item.price) * 100),
+    },
+    quantity: Math.max(1, Number(item.quantity) || 1),
+  }));
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    line_items: lineItems,
+    mode: 'payment',
+    success_url: toAbsoluteUrl('/assets/checkout-success.html', baseUrl),
+    cancel_url: toAbsoluteUrl('/merch.html', baseUrl),
+    shipping_address_collection: { allowed_countries: ['US'] },
+    billing_address_collection: 'auto',
+  });
+
+  return json({ url: session.url });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // ── Handle API Routes ──
-    if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
-      try {
-        if (!env.STRIPE_SECRET_KEY) {
-          return new Response(JSON.stringify({ error: 'Missing STRIPE_SECRET_KEY.' }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
-
-        const { items } = await request.json();
-        if (!Array.isArray(items) || items.length === 0) {
-          return new Response(JSON.stringify({ error: 'Cart is empty.' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          });
-        }
-
-        const baseUrl = (env.SITE_URL || url.origin).replace(/\/$/, '');
-        const stripe = new Stripe(env.STRIPE_SECRET_KEY);
-
-        const line_items = items.map(item => ({
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: item.name,
-              ...(item.image ? { images: [`${baseUrl}/${item.image.replace(/^\/+/, '')}`] } : {}),
-            },
-            unit_amount: Math.round(normalizePrice(item.price) * 100),
-          },
-          quantity: item.quantity,
-        }));
-
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          line_items,
-          mode: 'payment',
-          success_url: `${baseUrl}/assets/checkout-success.html`,
-          cancel_url:  `${baseUrl}/merch.html`,
-          shipping_address_collection: { allowed_countries: ['US'] },
-        });
-
-        return new Response(JSON.stringify({ url: session.url }), {
-          headers: { 'Content-Type': 'application/json' }
-        });
-      } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    try {
+      if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
+        return await handleCreateCheckoutSession(request, env);
       }
-    }
 
-    if (url.pathname === '/api/toml' && request.method === 'GET') {
-      try {
+      if (url.pathname === '/api/toml' && request.method === 'GET') {
         const requestedPath = url.searchParams.get('path');
         const markdownFields = new Set(
           (url.searchParams.get('markdown') || '')
@@ -98,37 +113,23 @@ export default {
         );
 
         if (!requestedPath || !requestedPath.startsWith('assets/') || !requestedPath.endsWith('.toml')) {
-          return new Response(JSON.stringify({ error: 'Invalid TOML path.' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-          });
+          return json({ error: 'Invalid TOML path.' }, 400);
         }
 
         const assetUrl = new URL(`/${requestedPath}`, url);
         const assetResponse = await env.ASSETS.fetch(new Request(assetUrl.toString(), { method: 'GET' }));
 
         if (!assetResponse.ok) {
-          return new Response(JSON.stringify({ error: `Asset not found: ${requestedPath}` }), {
-            status: assetResponse.status,
-            headers: { 'Content-Type': 'application/json' },
-          });
+          return json({ error: `Asset not found: ${requestedPath}` }, assetResponse.status);
         }
 
         const parsed = renderMarkdownFields(TOML.parse(await assetResponse.text()), markdownFields);
-        return new Response(JSON.stringify(parsed), {
-          headers: { 'Content-Type': 'application/json' },
-        });
-      } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return json(parsed);
       }
-    }
 
-    // ── Fallback: Serve Static Assets ──
-    // In a "Static" project, Cloudflare handles this automatically if 
-    // the file exists in your "assets.directory" (e.g. /public).
-    return env.ASSETS.fetch(request);
+      return env.ASSETS.fetch(request);
+    } catch (err) {
+      return json({ error: err.message }, 500);
+    }
   }
 };
