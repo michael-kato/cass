@@ -129,8 +129,13 @@ Important note:
 - Success URL points to [`public/assets/checkout-success.html`](/opt/git/cass/public/assets/checkout-success.html)
 - Cancel URL points back to [`public/merch.html`](/opt/git/cass/public/merch.html)
 - Cart is intentionally cleared on the success page, not before redirecting to Stripe
+- Success URL points to [`public/assets/checkout-success.html`](/opt/git/cass/public/assets/checkout-success.html)
+- Cancel URL points back to `public/merch.html`
+- Cart is cleared on the success page after a successful `POST /api/capture-paypal-order`
+- Fulfillment automated via Printify API calls triggered by verified payment events.
+- Stripe uses `POST /api/stripe-webhook` for fulfillment to handle async payments.
 - Local Worker secrets should be supplied through `.dev.vars` during `wrangler dev`
-- There is currently no server-side order database or webhook persistence layer
+- **TODO:** Implement Cloudflare D1 for unified order history and reconciliation.
 
 ## Visual / Motion State
 Shared Ken Burns is now reusable across pages.

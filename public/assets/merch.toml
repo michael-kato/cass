@@ -29,6 +29,8 @@ name = "Cascade Anime Collection - Echo ACR"
 price = 35
 images = ["Echo ACR_01.webp"]
 type = "options"
+printifyBlueprintId = 1234
+printifyVariantId = 5678
 sizes = ["S", "M", "L", "XL", "2XL"]
 description = """
 Available in two unique colors, Echo sports a custom Templar Precision ACR and is ready for a match win!

@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS error_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    environment TEXT,
+    message TEXT NOT NULL,
+    details TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

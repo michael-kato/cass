@@ -32,6 +32,30 @@ function toAbsoluteUrl(path, baseUrl) {
   return new URL(path, baseUrl).toString();
 }
 
+async function logError(message, env, details = {}) {
+  const environment = env.ENVIRONMENT || 'development'; // Default to 'development' if not set
+  console.error(`[${environment.toUpperCase()} ERROR] ${message}`, details);
+
+  if (env.DB) {
+    try {
+      await env.DB.prepare(
+        'INSERT INTO error_logs (environment, message, details) VALUES (?, ?, ?)'
+      ).bind(
+        environment,
+        message,
+        JSON.stringify(details)
+      ).run();
+    } catch (e) {
+      console.error('Failed to log error to D1:', e.message);
+    }
+  }
+}
+
+function logInfo(message, env, details = {}) {
+  const environment = env.ENVIRONMENT || 'development';
+  console.log(`[${environment.toUpperCase()} INFO] ${message}`, details);
+}
+
 function renderMarkdownFields(value, markdownFields) {
   if (Array.isArray(value)) {
     return value.map(item => renderMarkdownFields(item, markdownFields));
@@ -52,6 +76,95 @@ function renderMarkdownFields(value, markdownFields) {
   }
 
   return next;
+}
+
+/**
+ * Normalizes name splitting for Printify's first_name/last_name fields.
+ */
+function splitName(fullName) {
+  const parts = (fullName || '').trim().split(/\s+/);
+  return {
+    first_name: parts[0] || '',
+    last_name: parts.slice(1).join(' ') || ''
+  };
+}
+
+/**
+ * Maps Stripe Shipping Details to Printify Address Format
+ */
+function mapStripeAddress(session) {
+  const { name, address } = session.shipping_details || {};
+  const { first_name, last_name } = splitName(name);
+  return {
+    first_name,
+    last_name,
+    email: session.customer_details?.email || '',
+    address1: address?.line1 || '',
+    address2: address?.line2 || '',
+    city: address?.city || '',
+    state: address?.state || '',
+    country: address?.country || '',
+    zip: address?.postal_code || ''
+  };
+}
+
+/**
+ * Maps PayPal Order Details to Printify Address Format
+ */
+function mapPaypalAddress(order) {
+  const shipping = order.purchase_units[0].shipping;
+  const { first_name, last_name } = splitName(shipping.name.full_name);
+  const addr = shipping.address;
+  return {
+    first_name,
+    last_name,
+    email: order.payer?.email_address || '',
+    address1: addr.address_line_1 || '',
+    address2: addr.address_line_2 || '',
+    city: addr.admin_area_2 || '',
+    state: addr.admin_area_1 || '',
+    country: addr.country_code || '',
+    zip: addr.postal_code || ''
+  };
+}
+
+/**
+ * Printify Fulfillment Helper
+ */
+async function fulfillPrintifyOrder(orderData, env) {
+  if (!env.PRINTIFY_API_KEY || !env.PRINTIFY_SHOP_ID) {
+    await logError('Printify config missing.', env);
+    return;
+  }
+
+  const printifyPayload = {
+    external_id: orderData.internalOrderId, // Your DB ID
+    label: 'CASS Website Order',
+    line_items: orderData.items.map(item => ({
+      blueprint_id: item.printifyBlueprintId,
+      variant_id: item.printifyVariantId,
+      quantity: item.quantity
+    })),
+    shipping_method: 1,
+    send_shipping_notification: true,
+    address_to: orderData.shippingAddress // Format: first_name, last_name, address1, city, zip, country, state
+  };
+
+  const res = await fetch(`https://api.printify.com/v1/shops/${env.PRINTIFY_SHOP_ID}/orders.json`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${env.PRINTIFY_API_KEY}`
+    },
+    body: JSON.stringify(printifyPayload)
+  });
+
+  if (!res.ok) {
+    const error = await res.text();
+    await logError('Printify Fulfillment Failed:', env, { error });
+  } else {
+    console.log('Printify Order Created successfully.');
+  }
 }
 
 /**
@@ -149,6 +262,24 @@ async function handleCapturePaypalOrder(request, env) {
   });
 
   const result = await res.json();
+  
+  if (res.ok && result.status === 'COMPLETED') {
+    const shippingAddress = mapPaypalAddress(result);
+    const items = result.purchase_units[0].items.map(i => {
+      // We rely on the 'sku' or similar to hold Printify IDs if you set them during creation
+      // For now, this assumes fulfillPrintifyOrder will be called with the right data structure
+      return JSON.parse(i.sku || '{}'); 
+    });
+
+    // TODO: Record in D1 Database (Order ID: result.id)
+
+    await fulfillPrintifyOrder({
+      internalOrderId: result.id,
+      items: items,
+      shippingAddress
+    }, env);
+  }
+
   return json({ success: res.ok, status: result.status });
 }
 
@@ -185,10 +316,45 @@ async function handleCreateCheckoutSession(request, env) {
     success_url: toAbsoluteUrl('/assets/checkout-success.html', baseUrl),
     cancel_url: toAbsoluteUrl('/merch.html', baseUrl),
     shipping_address_collection: { allowed_countries: ['US'] },
-    billing_address_collection: 'auto'
+    billing_address_collection: 'auto',
+    // Store cart data in metadata so the webhook can see it later
+    metadata: {
+      cart_json: JSON.stringify(items.map(i => ({ id: i.id, qty: i.quantity })))
+    }
   });
 
   return json({ url: session.url });
+}
+
+/**
+ * Stripe Webhook Handler
+ * Required to automate fulfillment because redirects can be unreliable.
+ */
+async function handleStripeWebhook(request, env) {
+  const signature = request.headers.get('stripe-signature');
+  const body = await request.text();
+  const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    await logError('Stripe Webhook Signature Verification Failed', env, { error: err.message });
+    return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    console.log('Payment Succeeded for Session:', session.id);
+    
+    // 1. Reconstruct order from session metadata
+    // 2. Extract shipping address from session.shipping_details
+    // 3. Record in D1 Database
+    // 4. Trigger Printify
+    // await fulfillPrintifyOrder({ ... }, env);
+  }
+
+  return json({ received: true });
 }
 
 export default {
@@ -206,6 +372,10 @@ export default {
 
       if (url.pathname === '/api/capture-paypal-order' && request.method === 'POST') {
         return await handleCapturePaypalOrder(request, env);
+      }
+
+      if (url.pathname === '/api/stripe-webhook' && request.method === 'POST') {
+        return await handleStripeWebhook(request, env);
       }
 
       if (url.pathname === '/api/toml' && request.method === 'GET') {
@@ -234,6 +404,7 @@ export default {
 
       return env.ASSETS.fetch(request);
     } catch (err) {
+      await logError('Unhandled Server Error', env, { error: err.message, stack: err.stack, url: url.toString() });
       return json({ error: err.message }, 500);
     }
   }
