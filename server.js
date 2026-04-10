@@ -352,6 +352,19 @@ async function handleStripeWebhook(request, env) {
     // 3. Record in D1 Database
     // 4. Trigger Printify
     // await fulfillPrintifyOrder({ ... }, env);
+  } else if (event.type === 'checkout.session.expired') {
+    const session = event.data.object;
+    console.log(`[Stripe] Checkout Session Expired (Abandoned): ${session.id}`);
+    
+  } else if (event.type === 'checkout.session.async_payment_failed') {
+    const session = event.data.object;
+    console.log(`[Stripe] Async Payment Failed: ${session.id}`);
+    
+  } else if (event.type === 'account.external_account.created') {
+    console.log(`[Stripe] External Account Created: ${event.data.object.id}`);
+    
+  } else {
+    console.log(`[Stripe] Handled other event type: ${event.type}`);
   }
 
   return json({ received: true });
