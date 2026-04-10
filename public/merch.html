@@ -25,8 +25,6 @@
 
     .product-card:hover { opacity: 0.85; }
 
-    .btn-view-product { width: 100%; padding: 0.65rem; font-size: 0.85rem; border-width: 1px; }
-
     @media (max-width: 900px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 520px) {
       .product-grid { grid-template-columns: 1fr; }
@@ -62,7 +60,6 @@
                 <div class="product-img" style="background-image:url('${image}')"></div>
                 <div class="product-name">${p.name}</div>
                 <div class="product-price">${formatCurrency(p.price)}</div>
-                <button class="btn-view-product" type="button">View Product</button>
               </a>
             </div>`;
         }).join('');

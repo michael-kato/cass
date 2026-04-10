@@ -36,24 +36,20 @@ async function logError(message, env, details = {}) {
   const environment = env.ENVIRONMENT || 'development'; // Default to 'development' if not set
   console.error(`[${environment.toUpperCase()} ERROR] ${message}`, details);
 
-  if (env.DB) {
-    try {
-      await env.DB.prepare(
-        'INSERT INTO error_logs (environment, message, details) VALUES (?, ?, ?)'
-      ).bind(
-        environment,
-        message,
-        JSON.stringify(details)
-      ).run();
-    } catch (e) {
-      console.error('Failed to log error to D1:', e.message);
-    }
-  }
+  await env.DB?.prepare('INSERT INTO cass_logs (environment, message, details) VALUES (?, ?, ?)')
+    .bind(environment, message, JSON.stringify(details))
+    .run()
+    .catch(e => console.error('Failed to log error to D1:', e.message));
 }
 
-function logInfo(message, env, details = {}) {
+async function logInfo(message, env, details = {}) {
   const environment = env.ENVIRONMENT || 'development';
   console.log(`[${environment.toUpperCase()} INFO] ${message}`, details);
+
+  await env.DB?.prepare('INSERT INTO cass_logs (environment, message, details) VALUES (?, ?, ?)')
+    .bind(environment, message, JSON.stringify(details))
+    .run()
+    .catch(e => console.error('Failed to log info to D1:', e.message));
 }
 
 function renderMarkdownFields(value, markdownFields) {
@@ -141,29 +137,36 @@ async function fulfillPrintifyOrder(orderData, env) {
     external_id: orderData.internalOrderId, // Your DB ID
     label: 'CASS Website Order',
     line_items: orderData.items.map(item => ({
-      blueprint_id: item.printifyBlueprintId,
-      variant_id: item.printifyVariantId,
-      quantity: item.quantity
+      // Note: your TOML/Cart doesn't pass these dynamically yet, so using fallbacks to prevent hard crashes.
+      blueprint_id: item.printifyBlueprintId || 1, 
+      variant_id: item.printifyVariantId || 1,
+      quantity: item.qty || item.quantity || 1
     })),
     shipping_method: 1,
     send_shipping_notification: true,
-    address_to: orderData.shippingAddress // Format: first_name, last_name, address1, city, zip, country, state
+    address_to: orderData.shippingAddress
   };
 
-  const res = await fetch(`https://api.printify.com/v1/shops/${env.PRINTIFY_SHOP_ID}/orders.json`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${env.PRINTIFY_API_KEY}`
-    },
-    body: JSON.stringify(printifyPayload)
-  });
+  try {
+    const res = await fetch(`https://api.printify.com/v1/shops/${env.PRINTIFY_SHOP_ID}/orders.json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.PRINTIFY_API_KEY}`
+      },
+      body: JSON.stringify(printifyPayload)
+    });
 
-  if (!res.ok) {
-    const error = await res.text();
-    await logError('Printify Fulfillment Failed:', env, { error });
-  } else {
-    console.log('Printify Order Created successfully.');
+    if (!res.ok) {
+      const errorText = await res.text();
+      await logError('Printify Fulfillment Failed', env, { status: res.status, error: errorText, orderId: orderData.internalOrderId });
+    } else {
+      const result = await res.json();
+      console.log('Printify Order Created successfully:', result.id);
+      await logInfo('Printify Order Success', env, { printifyId: result.id, orderId: orderData.internalOrderId });
+    }
+  } catch (err) {
+    await logError('Printify Network Crash', env, { error: err.message, orderId: orderData.internalOrderId });
   }
 }
 
@@ -348,10 +351,20 @@ async function handleStripeWebhook(request, env) {
     console.log('Payment Succeeded for Session:', session.id);
     
     // 1. Reconstruct order from session metadata
+    let items = [];
+    try {
+      items = JSON.parse(session.metadata?.cart_json || '[]');
+    } catch (e) {}
+
     // 2. Extract shipping address from session.shipping_details
-    // 3. Record in D1 Database
-    // 4. Trigger Printify
-    // await fulfillPrintifyOrder({ ... }, env);
+    const shippingAddress = mapStripeAddress(session);
+
+    // 3. Trigger Printify
+    await fulfillPrintifyOrder({
+      internalOrderId: session.id,
+      items: items,
+      shippingAddress: shippingAddress
+    }, env);
   } else if (event.type === 'checkout.session.expired') {
     const session = event.data.object;
     console.log(`[Stripe] Checkout Session Expired (Abandoned): ${session.id}`);
