@@ -328,4 +328,20 @@ function initCart() {
   document.querySelectorAll('.cart-trigger').forEach(cartBtn => {
     cartBtn.addEventListener('click', openDrawer);
   });
+
+  // Reset checkout buttons if user navigates "back" from a checkout page
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+      const stripeBtn = document.getElementById('cart-checkout-btn');
+      if (stripeBtn) {
+        stripeBtn.textContent = 'Checkout with Card';
+        stripeBtn.disabled = false;
+      }
+      const paypalBtn = document.getElementById('cart-paypal-btn');
+      if (paypalBtn) {
+        paypalBtn.textContent = 'Pay with PayPal';
+        paypalBtn.disabled = false;
+      }
+    }
+  });
 }
