@@ -43,8 +43,7 @@ function buildNav(activePage) {
       </a>
       <ul class="nav-links">${links}</ul>
       <div class="nav-icons">
-        <button aria-label="Search">${ICON_SEARCH}</button>
-        <button aria-label="Account">${ICON_ACCOUNT}</button>
+        <button class="search-trigger" aria-label="Search">${ICON_SEARCH}</button>
         <button class="cart-trigger" aria-label="Cart">
           ${ICON_CART}
           ${CART_BADGE_HTML}
@@ -53,9 +52,8 @@ function buildNav(activePage) {
       <button class="hamburger" id="hamburger" aria-label="Menu">${ICON_HAMBURGER}</button>
     </nav>
     <div class="mobile-menu" id="mobile-menu">
-      <div class="mobile-menu-actions">
-        <button aria-label="Search">${ICON_SEARCH}<span>Search</span></button>
-        <button aria-label="Account">${ICON_ACCOUNT}<span>Account</span></button>
+      <div class="mobile-menu-actions" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+        <button class="search-trigger" aria-label="Search">${ICON_SEARCH}<span>Search</span></button>
         <button class="cart-trigger" aria-label="Cart">
           ${ICON_CART}
           <span>Cart</span>
@@ -123,6 +121,49 @@ function initPage(activePage) {
       });
     });
   }
+
+  // Inject Search Modal
+  const searchModalHtml = `
+    <div class="site-search-modal" id="site-search-modal">
+      <div class="site-search-backdrop" id="site-search-backdrop"></div>
+      <div class="site-search-content">
+        <form id="site-search-form">
+          ${ICON_SEARCH}
+          <input type="text" id="site-search-input" placeholder="Search the site..." autocomplete="off" />
+          <button type="button" id="site-search-close" aria-label="Close">${ICON_CLOSE}</button>
+        </form>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', searchModalHtml);
+
+  const searchModal = document.getElementById('site-search-modal');
+  const searchInput = document.getElementById('site-search-input');
+  
+  function openSearch() {
+    searchModal.classList.add('open');
+    searchInput.focus();
+  }
+  function closeSearch() {
+    searchModal.classList.remove('open');
+    searchInput.value = '';
+  }
+
+  document.querySelectorAll('.search-trigger').forEach(btn => btn.addEventListener('click', openSearch));
+  document.getElementById('site-search-backdrop').addEventListener('click', closeSearch);
+  document.getElementById('site-search-close').addEventListener('click', closeSearch);
+  
+  document.getElementById('site-search-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = searchInput.value.trim();
+    if (q) {
+      window.location.href = 'search.html?q=' + encodeURIComponent(q);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSearch();
+  });
 
   // Load cart — dynamically so pages work without it if needed
   const cartScript = document.createElement('script');

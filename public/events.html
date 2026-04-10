@@ -359,7 +359,7 @@
             const spotsLeft = e.spots - e.filled;
             const almostFull = e.filled / e.spots >= 0.9;
             return `
-              <div class="event-card${isLowLight ? ' is-lowlight' : ''}" onclick="openModal(${e.id})" style="--card-color:${cardColor}">
+              <div class="event-card${isLowLight ? ' is-lowlight' : ''}" id="event-card-${e.id}" onclick="openModal(${e.id})" style="--card-color:${cardColor}">
                 <div class="event-card-img" style="background-color:${cardColor}">
                   ${e.image ? `<img src="${e.image}" alt="${e.name}" loading="lazy" />` : ''}
                   <div class="lowlight-overlay"></div>
@@ -393,6 +393,24 @@
                 </div>
               </div>`;
           }).join('');
+
+      if (!window.hasScrolled) {
+        const hId = new URLSearchParams(window.location.search).get('highlight');
+        if (hId) {
+          setTimeout(() => {
+            const card = document.getElementById('event-card-' + hId);
+            if (card) {
+              window.hasScrolled = true;
+              card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              card.style.transition = 'box-shadow 0.3s, transform 0.3s, filter 0.3s';
+              card.style.transform = 'scale(1.03)';
+              card.style.filter = 'brightness(1.15)';
+              card.style.boxShadow = '0 0 0 4px rgba(10,10,10,0.85), 0 16px 40px rgba(0,0,0,0.4)';
+              setTimeout(() => { card.style.transform = ''; card.style.boxShadow = ''; card.style.filter = ''; }, 2500);
+            }
+          }, 100);
+        }
+      }
     }
 
     /* SPOTS
