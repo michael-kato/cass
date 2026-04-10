@@ -94,7 +94,7 @@ Nav note:
 - shared Ken Burns frame/layer styles
 
 ## Data Layer
-The old JSON asset files are gone. Current sources are:
+Data sources are:
 - [`public/assets/events.toml`](/opt/git/cass/public/assets/events.toml)
 - [`public/assets/venues.toml`](/opt/git/cass/public/assets/venues.toml)
 - [`public/assets/merch.toml`](/opt/git/cass/public/assets/merch.toml)
@@ -125,20 +125,32 @@ Important note:
 - Cart state lives in `localStorage` under `cass_cart`
 - [`public/assets/cart.js`](/opt/git/cass/public/assets/cart.js) owns drawer UI and cart operations
 - Stripe checkout is created by `POST /api/create-checkout-session`
-- Worker now uses `env.SITE_URL || request.url.origin` as the checkout base URL
+- Worker uses `env.SITE_URL || request.url.origin` as the checkout base URL
 - Success URL points to [`public/assets/checkout-success.html`](/opt/git/cass/public/assets/checkout-success.html)
 - Cancel URL points back to [`public/merch.html`](/opt/git/cass/public/merch.html)
-- Cart is intentionally cleared on the success page, not before redirecting to Stripe
-- Success URL points to [`public/assets/checkout-success.html`](/opt/git/cass/public/assets/checkout-success.html)
-- Cancel URL points back to `public/merch.html`
-- Cart is cleared on the success page after a successful `POST /api/capture-paypal-order`
+- Cart clears on the success page after returning from a payment gateway
 - Fulfillment automated via Printify API calls triggered by verified payment events.
 - Stripe uses `POST /api/stripe-webhook` for fulfillment to handle async payments.
 - Local Worker secrets should be supplied through `.dev.vars` during `wrangler dev`
 - **TODO:** Implement Cloudflare D1 for unified order history and reconciliation.
+- Added Stripe Webhook endpoints handling `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_failed`, and `account.external_account.created`.
+
+## Search & Navigation
+- A purely local search engine operates from `public/search.html`.
+- Parses and indexes all TOML data (`merch`, `events`, `venues`).
+- Dynamically fetches and strips script tags from static HTML pages (About, Contact, FAQ, etc.) to index bare-text content.
+- Results dynamically extract associated hero images (`data-bg-image`) or standard `<img>` tags for visual layout.
+- Search result links to Events pass a `?highlight=ID` URL parameter.
+- `events.html` reads the parameter, triggers a smooth scrolling action, and animates a spotlight brightness and dark-border ping to highlight the event card.
+- User accounts are currently shelved (no "Account" header icon).
+
+## Error Logging & Observability
+- Uses Cloudflare D1 SQLite Database (`cass-db`) and `migrations/0001_initial_logs.sql` for error logging.
+- Global async `logError()` intercepts Stripe Signature verification, Printify fulfillment issues, and top-level fetch exceptions inside `server.js`.
+- D1 bindings configured in `wrangler.jsonc`.
 
 ## Visual / Motion State
-Shared Ken Burns is now reusable across pages.
+Shared Ken Burns logic is central and reusable across pages.
 
 Current usage:
 - Home hero backgrounds in [`public/index.html`](/opt/git/cass/public/index.html)
@@ -151,10 +163,10 @@ Home page specifics:
 - Shared helper updates the active background image while Ken Burns continues underneath
 
 ## Layout State
-- Shared spacing tokens now live in [`public/assets/shared.css`](/opt/git/cass/public/assets/shared.css)
-- `--site-gutter`, `--content-narrow`, `--content-standard`, and `--content-wide` are in use
-- Nav, footer, page content, FAQ content, and several home sections now use those shared spacing values
-- Some page-local sections still use hardcoded padding and may need a consistency pass later
+- Shared spacing tokens operate from [`public/assets/shared.css`](/opt/git/cass/public/assets/shared.css)
+- `--site-gutter`, `--content-narrow`, `--content-standard`, and `--content-wide` dictate spacing logic.
+- Nav, footer, page content, FAQ content, and home sections inherit these shared spacing styling logic.
+- Some page-local sections use hardcoded padding and require a consistency pass.
 
 ## Page Status
 | Page | Status | Notes |
@@ -180,8 +192,8 @@ npx wrangler dev
 Important:
 - `fetch()`-based pages require the worker/static server environment
 - opening files directly from disk will not work for TOML-backed pages
-- the app now depends on `/api/toml` for content loading
-- local Stripe testing should use `.dev.vars` with `STRIPE_SECRET_KEY` and `SITE_URL`
+- the app depends on `/api/toml` for content loading
+- local Stripe testing uses `.dev.vars` config mapping `STRIPE_SECRET_KEY` and `SITE_URL`
 
 ## Scraper Worker
 Scraper lives in [`/scraper`](/opt/git/cass/scraper).
@@ -216,9 +228,14 @@ Note:
 - Replace placeholder `SCRAPER_URL` in [`public/events.html`](/opt/git/cass/public/events.html) if not already deployed
 - Run a consistency pass on page-local layout gutters
 - Test all TOML-backed pages through the real worker/server path after content edits
-- Add webhook handling and order persistence later if the merch flow needs fulfillment tracking
+- Setup production Stripe Webhook keys securely by running `npx wrangler secret put STRIPE_WEBHOOK_SECRET`
 
 ## Recent Major Changes
+- Implemented global error logging securely tied to a Cloudflare D1 SQL database.
+- Created robust Local Search engine inside `search.html`.
+- Implemented deep-link highlighting and auto-scrolling on event cards.
+- Wired secure Stripe Webhook listeners in `server.js` to begin tracking async payments and cart abandonment.
+- Polished checkout and quantity selection buttons on `merch-item.html`.
 - Migrated asset data from JSON to TOML
 - Added server-side TOML parsing through `/api/toml`
 - Added trusted Markdown rendering for selected TOML fields
