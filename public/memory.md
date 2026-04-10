@@ -20,6 +20,7 @@
 ├── wrangler.jsonc
 ├── public/
 │   ├── index.html
+│   ├── checkout-success.html
 │   ├── events.html
 │   ├── faq.html
 │   ├── partners.html
@@ -35,8 +36,7 @@
 │   │   ├── cart.js
 │   │   ├── events.toml
 │   │   ├── venues.toml
-│   │   ├── merch.toml
-│   │   └── checkout-success.html
+│   │   └── merch.toml
 │   └── memory.md
 └── scraper/
     ├── index.js
@@ -126,7 +126,7 @@ Important note:
 - [`public/assets/cart.js`](/opt/git/cass/public/assets/cart.js) owns drawer UI and cart operations
 - Stripe checkout is created by `POST /api/create-checkout-session`
 - Worker uses `env.SITE_URL || request.url.origin` as the checkout base URL
-- Success URL points to [`public/assets/checkout-success.html`](/opt/git/cass/public/assets/checkout-success.html)
+- Success URL points to [`public/checkout-success.html`](/opt/git/cass/public/checkout-success.html)
 - Cancel URL points back to [`public/merch.html`](/opt/git/cass/public/merch.html)
 - Cart clears on the success page after returning from a payment gateway
 - Fulfillment automated via Printify API calls triggered by verified payment events.

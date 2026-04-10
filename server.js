@@ -224,7 +224,7 @@ async function handleCreatePaypalOrder(request, env) {
       items: paypalItems,
     }],
     application_context: {
-      return_url: toAbsoluteUrl('/assets/checkout-success.html', baseUrl),
+      return_url: toAbsoluteUrl('/checkout-success.html', baseUrl),
       cancel_url: toAbsoluteUrl('/merch.html', baseUrl),
       shipping_preference: 'GET_FROM_FILE',
       user_action: 'PAY_NOW',
@@ -316,7 +316,7 @@ async function handleCreateCheckoutSession(request, env) {
   const session = await stripe.checkout.sessions.create({
     line_items: lineItems,
     mode: 'payment',
-    success_url: toAbsoluteUrl('/assets/checkout-success.html', baseUrl),
+    success_url: toAbsoluteUrl('/checkout-success.html', baseUrl),
     cancel_url: toAbsoluteUrl('/merch.html', baseUrl),
     shipping_address_collection: { allowed_countries: ['US'] },
     billing_address_collection: 'auto',
