@@ -97,16 +97,25 @@
     .item-quantity {
       display: flex; align-items: center; gap: 0.75rem;
     }
+    .btn-qty {
+      padding: 0.5rem 0.8rem; border: none; border-radius: 3px;
+      background: var(--olive); color: var(--white);
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
+    }
+    .btn-qty:hover { background: var(--dark); }
     .quantity-input {
       width: 3.5rem; padding: 0.5rem 0.75rem;
-      border: 1px solid var(--sage-mid);
-      font-size: 0.9rem;
-      text-align: center;
+      border: 1px solid var(--sage-mid); border-radius: 3px;
+      background: var(--sage-light); color: var(--text-dark);
+      font-size: 0.95rem; font-weight: 600;
+      text-align: center; outline: none;
     }
+    .quantity-input:focus { border-color: var(--olive); }
 
     .item-actions { margin-top: 2rem; display: flex; flex-direction: column; gap: 0.75rem; }
-    .btn-add-cart { width: 100%; padding: 0.9rem; background: var(--sage); color: var(--text-dark); border: 1px solid var(--sage-mid); font-size: 0.95rem; }
-    .btn-add-cart:hover { background: var(--sage-light); }
+    .btn-add-cart { width: 100%; padding: 1rem; background: var(--olive); color: var(--white); border: none; border-radius: 4px; font-weight: 600; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+    .btn-add-cart:hover { background: var(--dark); }
+    .btn-add-cart:active { transform: scale(0.98); }
 
     .item-description {
       padding-top: 2rem; border-top: 1px solid var(--sage-mid);
@@ -195,9 +204,9 @@
           <div class="item-section">
             <div class="item-section-label">Quantity</div>
             <div class="item-quantity">
-              <button onclick="decreaseQty()" style="padding: 0.35rem 0.6rem; border: 1px solid var(--sage-mid); background: transparent; cursor: pointer;">−</button>
+              <button onclick="decreaseQty()" class="btn-qty" aria-label="Decrease quantity">−</button>
               <input id="qty-input" type="number" class="quantity-input" value="1" min="1" />
-              <button onclick="increaseQty()" style="padding: 0.35rem 0.6rem; border: 1px solid var(--sage-mid); background: transparent; cursor: pointer;">+</button>
+              <button onclick="increaseQty()" class="btn-qty" aria-label="Increase quantity">+</button>
             </div>
           </div>
 
