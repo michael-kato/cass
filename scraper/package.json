@@ -1,0 +1,16 @@
+{
+  "name": "sparkling-wave-7670",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev --test-scheduled",
+    "start": "wrangler dev --test-scheduled"
+  },
+  "devDependencies": {
+    "wrangler": "^4.81.1"
+  },
+  "dependencies": {
+    "@cloudflare/puppeteer": "^1.0.7"
+  }
+}
