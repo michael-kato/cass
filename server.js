@@ -244,9 +244,11 @@ async function handleCreatePaypalOrder(request, env) {
   const approveLink = order.links?.find(l => l.rel === 'approve');
 
   if (!approveLink) {
+    await logError('PayPal Order Creation Failed', env, { details: order });
     return json({ error: 'Failed to create PayPal order', details: order }, 500);
   }
 
+  await logInfo('PayPal Order Created', env, { orderId: order.id });
   return json({ url: approveLink.href });
 }
 
@@ -274,7 +276,8 @@ async function handleCapturePaypalOrder(request, env) {
       return JSON.parse(i.sku || '{}'); 
     });
 
-    // TODO: Record in D1 Database (Order ID: result.id)
+    // We explicitly log PayPal transaction capture prior to triggering fulfillment
+    await logInfo('PayPal Order Captured', env, { orderId: result.id, status: result.status });
 
     await fulfillPrintifyOrder({
       internalOrderId: result.id,
@@ -326,6 +329,7 @@ async function handleCreateCheckoutSession(request, env) {
     }
   });
 
+  await logInfo('Stripe Checkout Session Created', env, { sessionId: session.id });
   return json({ url: session.url });
 }
 
@@ -334,13 +338,15 @@ async function handleCreateCheckoutSession(request, env) {
  * Required to automate fulfillment because redirects can be unreliable.
  */
 async function handleStripeWebhook(request, env) {
+  console.log(`\n============== [WEBHOOK] INCOMING STRIPE EVENT ==============`);
   const signature = request.headers.get('stripe-signature');
   const body = await request.text();
   const stripe = new Stripe(env.STRIPE_SECRET_KEY);
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
+    event = await stripe.webhooks.constructEventAsync(body, signature, env.STRIPE_WEBHOOK_SECRET);
+    console.log(`[WEBHOOK] Successfully verified signature for event: ${event.type}`);
   } catch (err) {
     await logError('Stripe Webhook Signature Verification Failed', env, { error: err.message });
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
@@ -367,20 +373,25 @@ async function handleStripeWebhook(request, env) {
     }, env);
   } else if (event.type === 'checkout.session.expired') {
     const session = event.data.object;
-    console.log(`[Stripe] Checkout Session Expired (Abandoned): ${session.id}`);
-    
+    await logInfo('Stripe Checkout Abandoned', env, { sessionId: session.id });
   } else if (event.type === 'checkout.session.async_payment_failed') {
     const session = event.data.object;
-    console.log(`[Stripe] Async Payment Failed: ${session.id}`);
-    
+    await logError('Stripe Async Payment Failed', env, { sessionId: session.id });
   } else if (event.type === 'account.external_account.created') {
-    console.log(`[Stripe] External Account Created: ${event.data.object.id}`);
-    
+    await logInfo('Stripe External Account Created', env, { accountId: event.data.object.id });
   } else {
     console.log(`[Stripe] Handled other event type: ${event.type}`);
   }
 
   return json({ received: true });
+}
+
+async function handleClientErrorLogging(request, env) {
+  try {
+    const errorData = await request.json();
+    await logError(`Frontend JS Error: ${errorData.message || 'Unknown'}`, env, errorData);
+  } catch (e) {}
+  return json({ success: true });
 }
 
 export default {
@@ -402,6 +413,10 @@ export default {
 
       if (url.pathname === '/api/stripe-webhook' && request.method === 'POST') {
         return await handleStripeWebhook(request, env);
+      }
+
+      if (url.pathname === '/api/log-client' && request.method === 'POST') {
+        return await handleClientErrorLogging(request, env);
       }
 
       if (url.pathname === '/api/toml' && request.method === 'GET') {

@@ -5,6 +5,38 @@
    And call initNav('pagename') where pagename matches the data-page on the <a> tags.
 */
 
+window.addEventListener('error', function (event) {
+  try {
+    fetch('/api/log-client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'window.error',
+        message: event.message,
+        source: event.filename,
+        lineno: event.lineno,
+        error: event.error ? event.error.stack : null,
+        url: window.location.href
+      })
+    });
+  } catch(e) {}
+});
+
+window.addEventListener('unhandledrejection', function (event) {
+  try {
+    fetch('/api/log-client', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'unhandledrejection',
+        message: event.reason ? event.reason.toString() : 'Unhandled promise rejection',
+        url: window.location.href,
+        stack: event.reason && event.reason.stack ? event.reason.stack : null
+      })
+    });
+  } catch(e) {}
+});
+
 const NAV_LINKS = [
   { href: 'index.html',    label: 'Home',     key: 'home' },
   { href: 'events.html',   label: 'Events',   key: 'events' },
