@@ -55,6 +55,8 @@
       cursor: crosshair;
       border-radius: 4px;
       transition: opacity 0.2s;
+      /* The lens distortion will be dynamically applied here */
+      filter: url('#lensDistortion');
     }
 
     .grid-image:hover {
@@ -382,12 +384,13 @@
     }
 
     function renderGallery() {
-      const scale = selectedSize ? sizeScales[selectedSize] || 1 : 1;
+      const scale = sizeScales[selectedSize] || 1;
       currentImages = getProductImages().map(img => IMAGE_BASE + img);
+
       const grid = document.getElementById('image-grid');
       grid.classList.toggle('is-single', currentImages.length === 1);
       grid.innerHTML = currentImages.map(img => `
-        <div class="image-magnifier-wrapper" style="transform: scale(${scale}); transform-origin: center;">
+        <div class="image-magnifier-wrapper" style="overflow: hidden;">
           <img src="${img}" alt="Product" class="grid-image" />
           <div class="magnifier-lens"></div>
         </div>
@@ -514,7 +517,7 @@
       document.getElementById('for-you-grid').innerHTML = shuffle.map(p => `
         <div class="merch-card">
           <a href="merch-item.html?id=${p.id}">
-            <img class="merch-img" src="${IMAGE_BASE + (p.images?.[0] || '')}" alt="${p.name}" />
+            <div class="merch-img" style="background-image:url('${IMAGE_BASE + (p.images?.[0] || '')}')"></div>
             <div class="merch-info">
               <div class="merch-name">${p.name}</div>
               <div class="merch-price">${formatCurrency(p.price)}</div>
@@ -532,12 +535,73 @@
       renderGallery();
     }
 
+    // ── Lens Distortion Engine ──
+    const initLensEngine = () => {
+      const canvas = document.createElement('canvas');
+      const size = 128; // Standard 128px array
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const imgData = ctx.createImageData(size, size);
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+          const nx = (x / size) * 2 - 1, ny = (y / size) * 2 - 1;
+          const r = Math.sqrt(nx * nx + ny * ny);
+          let dist = (1 - r * r); if (dist < 0) dist = 0;
+
+          const dx = nx * dist, dy = ny * dist;
+          const rVal = Math.floor(((dx + 1) / 2) * 255);
+          const gVal = Math.floor(((dy + 1) / 2) * 255);
+
+          const idx = (y * size + x) * 4;
+          imgData.data[idx] = rVal; imgData.data[idx + 1] = gVal; imgData.data[idx + 2] = 0; imgData.data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.style.position = 'absolute'; svg.style.width = '0'; svg.style.height = '0';
+      svg.innerHTML = `
+        <defs>
+          <filter id="lensDistortion" color-interpolation-filters="sRGB">
+            <feImage href="${canvas.toDataURL()}" result="mapRaw" preserveAspectRatio="none"/>
+            <feGaussianBlur in="mapRaw" stdDeviation="4" result="mapSmooth" />
+            <feDisplacementMap in="SourceGraphic" in2="mapSmooth" scale="0" xChannelSelector="R" yChannelSelector="G" id="displacementScaler" />
+          </filter>
+        </defs>`;
+      document.body.appendChild(svg);
+    };
+
+    let currentLensScale = 0;
+    let lensAnimFrame;
+    function animateLens(target) {
+      if (lensAnimFrame) cancelAnimationFrame(lensAnimFrame);
+      const displacer = document.getElementById('displacementScaler');
+      if (!displacer) return;
+      function step() {
+        currentLensScale += (target - currentLensScale) * 0.12;
+        displacer.setAttribute('scale', currentLensScale);
+        if (Math.abs(target - currentLensScale) > 0.5) lensAnimFrame = requestAnimationFrame(step);
+        else displacer.setAttribute('scale', target);
+      }
+      step();
+    }
+
+    const distortionScales = {
+      'S': 80,    // Pinch inwards
+      'M': 0,     // Flat glass
+      'L': -40,   // Slight bulge
+      'XL': -80,  // Medium bulge
+      '2XL': -140  // Extreme extreme distortion bulge
+    };
+
     function selectSize(size) {
       selectedSize = size;
       document.querySelectorAll('#size-grid .option-btn').forEach(btn => {
         btn.classList.toggle('selected', btn.textContent.trim() === size);
       });
-      renderGallery();
+      // Fire mathematical optical glass distortion animation locally
+      const targetScale = distortionScales[size] || 0;
+      animateLens(targetScale);
     }
 
     function getQuantity() {
@@ -579,6 +643,9 @@
 
       addToCart(cartItem);
     }
+
+    // Inject the SVG lens physics node logic into the DOM
+    initLensEngine();
 
     // Load on page load
     loadProduct();
