@@ -385,7 +385,7 @@
             const spotsLeft = e.spots - e.filled;
             const almostFull = e.filled / e.spots >= 0.9;
             return `
-              <div class="event-card${isLowLight ? ' is-lowlight' : ''}" id="event-card-${e.id}" onclick="openModal(${e.id})" style="--card-color:${cardColor}">
+              <div class="event-card${isLowLight ? ' is-lowlight' : ''}" id="event-card-${e.id}" onclick="openModal('${e.id}')" style="--card-color:${cardColor}">
                 <div class="event-card-img" style="background-color:${cardColor}">
                   ${e.image ? `<img src="${e.image}" alt="${e.name}" loading="lazy" />` : ''}
                   <div class="lowlight-overlay"></div>
@@ -408,7 +408,7 @@
 
                   </div>
                   <div class="event-card-footer">
-                    <a href="${e.registerUrl}" target="_blank" rel="noopener noreferrer" class="btn-signup" onclick="event.stopPropagation()">Event Signup</a>
+                    <a href="https://practiscore.com/${e.id}/register" target="_blank" rel="noopener noreferrer" class="btn-signup" onclick="event.stopPropagation()">Event Signup</a>
                   </div>
                 </div>
               </div>`;
@@ -494,7 +494,7 @@
       }
       
       document.getElementById('modal-desc').innerHTML = e.descHtml || '';
-      document.getElementById('modal-register').href = e.registerUrl;
+      document.getElementById('modal-register').href = `https://practiscore.com/${e.id}/register`;
 
       document.getElementById('modal-backdrop').classList.add('open');
       document.body.style.overflow = 'hidden';
@@ -551,7 +551,7 @@
       return fetch(SCRAPER_URL);
     }).then(r => r.json()).then(matchData => {
       EVENTS.forEach(e => {
-        const live = matchData[e.practiscoreSlug];
+        const live = matchData[e.id];
         if (live?.success && live.spotsText) e.liveSpotsText = live.spotsText;
       });
       renderEvents();

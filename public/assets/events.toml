@@ -1,5 +1,5 @@
 [[events]]
-id = 1
+id = "pcsl-two-gun-at-pha-3"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-04-18"
@@ -44,10 +44,9 @@ Full refunds are available for withdrawal requests made through the Saturday pri
 
 Refunds issued will be less Stripe's 3% processing fee.
 """
-registerUrl = "https://practiscore.com/pcsl-two-gun-at-pha-3/register"
 
 [[events]]
-id = 2
+id = "bellevue-indoor-range-pcsl-low-light"
 type = "low-light"
 name = "PCSL One Gun - Low Light"
 date = "2026-04-19"
@@ -97,10 +96,9 @@ Full refunds are available for withdrawal requests made through the Saturday pri
 
 Refunds issued will be less Stripe's 3% processing fee.
 """
-registerUrl = "https://practiscore.com/bellevue-indoor-range-pcsl-low-light/register"
 
 [[events]]
-id = 3
+id = "april-two-gun-at-svrc-1"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-04-25"
@@ -152,10 +150,9 @@ Full refunds are available for withdrawal requests made through the **Saturday p
 
 Refunds issued will be less Stripe's **3% processing fee**.
 """
-registerUrl = "https://practiscore.com/april-two-gun-at-svrc-1/register"
 
 [[events]]
-id = 4
+id = "port-townsend-pcsl-2-gun-event-by-cascade-action-may"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-05-16"
@@ -207,10 +204,9 @@ Refunds issued will be less Stripe's 3% processing fee.
 112 Gun Club Rd, Port Townsend, WA 98368  
 [Get Directions](https://www.google.com/maps/dir//112+Gun+Club+Rd,+Port+Townsend,+WA+98368)
 """
-registerUrl = "https://practiscore.com/port-townsend-pcsl-2-gun-event-by-cascade-action-may/register"
 
 [[events]]
-id = 5
+id = "bellevue-indoor-range-pcsl-two-gun-5"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-05-17"
@@ -260,10 +256,9 @@ Full refunds are available for withdrawal requests made through the Saturday pri
 
 Refunds issued will be less Stripe's 3% processing fee.
 """
-registerUrl = "https://practiscore.com/bellevue-indoor-range-pcsl-two-gun-5/register"
 
 [[events]]
-id = 6
+id = "pcsl-two-gun-at-pha-2"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-05-23"
@@ -308,10 +303,9 @@ Full refunds are available for withdrawal requests made through the Saturday pri
 
 Refunds issued will be less Stripe's 3% processing fee.
 """
-registerUrl = "https://practiscore.com/pcsl-two-gun-at-pha-2/register"
 
 [[events]]
-id = 7
+id = "may-two-gun-at-svrc-1"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-05-30"
@@ -356,10 +350,9 @@ Full refunds are available for withdrawal requests made through the Saturday pri
 
 Refunds issued will be less Stripe's 3% processing fee.
 """
-registerUrl = "https://practiscore.com/may-two-gun-at-svrc-1/register"
 
 [[events]]
-id = 8
+id = "bellevue-indoor-range-pcsl-two-gun-6"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-06-07"
@@ -409,10 +402,9 @@ Full refunds are available for withdrawal requests made through the Saturday pri
 
 Refunds issued will be less Stripe's 3% processing fee.
 """
-registerUrl = "https://practiscore.com/bellevue-indoor-range-pcsl-two-gun-6/register"
 
 [[events]]
-id = 9
+id = "june-two-gun-at-svrc-2"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-06-27"
@@ -457,10 +449,9 @@ Full refunds are available for withdrawal requests made through the Saturday pri
 
 Refunds issued will be less Stripe's 3% processing fee.
 """
-registerUrl = "https://practiscore.com/june-two-gun-at-svrc-2/register"
 
 [[events]]
-id = 10
+id = "port-townsend-pcsl-2-gun-event-by-cascade-action-july"
 type = "two-gun"
 name = "PCSL Two Gun"
 date = "2026-07-11"
@@ -512,4 +503,3 @@ Refunds issued will be less Stripe's 3% processing fee.
 112 Gun Club Rd, Port Townsend, WA 98368  
 [Get Directions](https://www.google.com/maps/dir//112+Gun+Club+Rd,+Port+Townsend,+WA+98368)
 """
-registerUrl = "https://practiscore.com/port-townsend-pcsl-2-gun-event-by-cascade-action-july/register"
