@@ -7,4 +7,14 @@ compatibility_flags = ["nodejs_compat"]
 [browser]
 binding = "BROWSER"
 
+# KV Database for Caching
+# Run: npx wrangler kv namespace create MATCH_DATA
+# Then replace 'YOUR_ID' with the ID returned by that command
+[[kv_namespaces]]
+binding = "MATCH_DATA"
+id = "YOUR_ID_GOES_HERE"
+
+# Automatic background updates every 2 hours
+[triggers]
+crons = ["0 */2 * * *"]
 
