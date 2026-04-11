@@ -195,6 +195,17 @@
     .modal-detail svg { width: 15px; height: 15px; color: var(--olive); flex-shrink: 0; margin-top: 2px; }
     .modal-detail-text label { display: block; font-size: 0.7rem; color: var(--text-light); margin-bottom: 0.1rem; }
     .modal-detail-text span { font-size: 0.9rem; font-weight: 600; }
+    .modal-link-btn {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.25rem 0.75rem; margin-top: 0.25rem;
+      background: #f4f5f4; border: 1px solid var(--sage-mid);
+      border-radius: 4px; color: var(--text-dark);
+      text-decoration: none; font-size: 0.82rem; font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .modal-link-btn:hover {
+      background: var(--sage-mid); border-color: var(--olive);
+    }
     .modal-desc { font-size: 0.9rem; line-height: 1.7; color: var(--text-mid); margin-bottom: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--sage-mid); }
     .modal-actions { display: flex; gap: 0.75rem; }
     .btn-register {
@@ -447,10 +458,17 @@
 
       document.getElementById('modal-tag').textContent = typeLabel(e.type);
       document.getElementById('modal-title').textContent = e.name;
-      document.getElementById('modal-date').textContent = `${e.label} (${e.dayOfWeek})`;
-      document.getElementById('modal-location').textContent = e.venue
-        ? `${e.venue.name}, ${e.venue.address}`
-        : (e.locationText || '');
+      
+      const dateText = `${e.label} (${e.dayOfWeek})`;
+      document.getElementById('modal-date').innerHTML = e.calUrl
+        ? `<a href="${e.calUrl}" target="_blank" rel="noopener noreferrer" class="modal-link-btn">${dateText} ↗</a>`
+        : dateText;
+        
+      const locText = e.venue ? `${e.venue.name}, ${e.venue.address}` : (e.locationText || '');
+      document.getElementById('modal-location').innerHTML = e.mapLink
+        ? `<a href="${e.mapLink}" target="_blank" rel="noopener noreferrer" class="modal-link-btn">${locText} ↗</a>`
+        : locText;
+      
       document.getElementById('modal-desc').innerHTML = e.descHtml || '';
       document.getElementById('modal-register').href = e.registerUrl;
 
@@ -481,11 +499,26 @@
       EVENTS = events.map(e => {
         const derived = deriveDate(e.date);
         const venue = venueMap[e.venueId] ?? null;
+        
+        let mapLink = null;
+        if (venue && venue.address) {
+          mapLink = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(venue.address)}`;
+        }
+        
+        const [y, m, d] = e.date.split('-');
+        const jsDate = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+        jsDate.setDate(jsDate.getDate() + 1);
+        const startStr = `${y}${m}${d}`;
+        const endStr = `${jsDate.getFullYear()}${String(jsDate.getMonth() + 1).padStart(2, '0')}${String(jsDate.getDate()).padStart(2, '0')}`;
+        const calUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(e.name)}&dates=${startStr}/${endStr}${venue && venue.address ? `&location=${encodeURIComponent(venue.address)}` : ''}`;
+
         return {
           ...e,
           ...derived,
           state: venue?.state ?? null,
           venue,
+          mapLink,
+          calUrl
         };
       });
       renderEvents();
