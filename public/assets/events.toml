@@ -7,49 +7,42 @@ venueId = "pha"
 image = "assets/media/PHADrone.jpg"
 spots = 60
 desc = """
-## General Match Info
-
+### General Match Info
 Contact: [info@cascadeaction.org](mailto:info@cascadeaction.org)  
 FAQ: [cascadeaction.org/pages/faq](https://cascadeaction.org/pages/faq)
 
-## Schedule
-
+### Schedule
 - Setup: 8:00
 - New Shooters Meeting: 9:30
 - General Safety Meeting: 10:00
 
 **You will not be allowed to shoot if you miss the safety meeting.**
 
-## Match Details
+### Match Details
+- Stages: 5
+- Round Count (estimated): 100 carbine + 100 handgun
+- Match Fee: $35
 
-- **Stages:** 5
-- **Round Count (estimated):** 100 carbine + 100 handgun
-- **Match Fee:** $35
-
-## Divisions
-
+### Divisions
 - Competition
 - Practical
 
-New to action shooting or two-gun? Sign up as **Practical** and bring:
-
+New to action shooting or two-gun? Sign up as "Practical" and bring:
 - Rifle or PCC with sling, caliber no greater than `.308`
 - Handgun with a safe holster -- No SERPA or Uncle Mike's style fabric holsters
 - 3 magazines for each firearm
 
 **Use of M855 / SS109 or similar ammo is prohibited.**
 
-## Rules & Scoring
-
-PCSL General Rulebook, current revision, using **Hit Factor (Points Per Second)**.
+### Rules & Scoring
+PCSL General Rulebook, current revision, using Hit Factor (Points Per Second).
 
 Rulebook: [pcsleague.us](https://www.pcsleague.us/)
 
-## Refund Policy
+### Refund Policy
+Full refunds are available for withdrawal requests made through the Saturday prior to match date.
 
-Full refunds are available for withdrawal requests made through the **Saturday prior to match date**.
-
-Refunds issued will be less Stripe's **3% processing fee**.
+Refunds issued will be less Stripe's 3% processing fee.
 """
 registerUrl = "https://practiscore.com/pcsl-two-gun-at-pha-3/register"
 

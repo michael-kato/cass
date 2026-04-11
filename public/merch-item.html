@@ -122,24 +122,30 @@
 
     .option-btn {
       padding: 0.5rem 1rem;
-      border: 1.5px solid var(--sage-mid);
+      border: 1.5px solid var(--text-dark);
       background: transparent;
-      font-size: 0.9rem;
-      font-weight: 500;
+      font-size: 0.85rem;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+      font-weight: 600;
+      letter-spacing: 0.05em;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s, color 0.15s;
       color: var(--text-dark);
       border-radius: 2px;
     }
 
     .option-btn:hover {
-      border-color: var(--text-dark);
+      background: var(--text-dark);
+      color: var(--white);
+      transform: translate(-2px, -2px);
+      box-shadow: 3px 3px 0 rgba(74, 94, 58, 0.4);
     }
 
     .option-btn.selected {
       background: var(--text-dark);
       color: var(--white);
-      border-color: var(--text-dark);
+      transform: translate(-2px, -2px);
+      box-shadow: 3px 3px 0 var(--dark);
     }
 
     .item-quantity {
@@ -151,34 +157,37 @@
     .btn-qty {
       padding: 0.5rem 0.8rem;
       border: none;
-      border-radius: 3px;
+      border-radius: 2px;
       background: var(--olive);
       color: var(--white);
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.15s;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
     }
 
     .btn-qty:hover {
       background: var(--dark);
+      transform: translate(-1px, -1px);
+      box-shadow: 2px 2px 0 var(--text-dark);
     }
 
     .quantity-input {
       width: 3.5rem;
       padding: 0.5rem 0.75rem;
-      border: 1px solid var(--sage-mid);
-      border-radius: 3px;
-      background: var(--sage-light);
+      border: 1.5px solid var(--text-dark);
+      border-radius: 2px;
+      background: var(--white);
       color: var(--text-dark);
       font-size: 0.95rem;
       font-weight: 600;
       text-align: center;
       outline: none;
+      transition: box-shadow 0.15s;
     }
 
     .quantity-input:focus {
-      border-color: var(--olive);
+      box-shadow: 2px 2px 0 var(--olive);
     }
 
     .item-actions {
@@ -194,21 +203,24 @@
       background: var(--olive);
       color: var(--white);
       border: none;
-      border-radius: 4px;
-      font-weight: 600;
+      border-radius: 2px;
+      font-weight: 700;
       font-size: 0.95rem;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.1em;
       cursor: pointer;
-      transition: background 0.2s, transform 0.1s;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
     }
 
     .btn-add-cart:hover {
       background: var(--dark);
+      transform: translate(-3px, -3px);
+      box-shadow: 4px 4px 0 var(--dark-mid);
     }
 
     .btn-add-cart:active {
-      transform: scale(0.98);
+      transform: translate(0, 0);
+      box-shadow: none;
     }
 
     .item-description {
