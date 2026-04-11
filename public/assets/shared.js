@@ -1,4 +1,4 @@
-/* shared.js — injects nav, mobile menu, and footer into every page.
+/* shared.js - injects nav, mobile menu, and footer into every page.
    Each page must have:
      <div id="site-nav"></div>       at the top of <body>
      <div id="site-footer"></div>    at the bottom of <body>
@@ -197,7 +197,7 @@ function initPage(activePage) {
     if (e.key === 'Escape') closeSearch();
   });
 
-  // Load cart — dynamically so pages work without it if needed
+  // Load cart - dynamically so pages work without it if needed
   const cartScript = document.createElement('script');
   cartScript.src = 'assets/cart.js';
   cartScript.onload = () => initCart();
@@ -224,7 +224,7 @@ async function loadToml(path, collectionKey = null, options = {}) {
 }
 
 
-// Ken Burns — true circular pan
+// Ken Burns - true circular pan
 const KB_RADIUS = 1;   // pan radius in %
 const KB_SCALE_START = 1.08;
 const KB_SCALE_END   = 1.0;

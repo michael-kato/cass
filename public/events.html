@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Events — Cascade Action Shooting Sports</title>
+  <title>Events - Cascade Action Shooting Sports</title>
   <link rel="stylesheet" href="assets/shared.css" />
   <style>
     .filters {
@@ -97,7 +97,7 @@
     .event-date-badge .day   { font-size: 1.5rem; font-weight: 800; line-height: 1; }
     .event-date-badge .dow   { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-top: 1px; }
 
-    /* Body — colored by venue */
+    /* Body - colored by venue */
     .event-card-body {
       padding: 0.85rem 1rem 1rem;
       flex: 1; display: flex; flex-direction: column;
@@ -168,7 +168,14 @@
       width: 100%; height: 200px; background: #2a3a2a center/cover;
       border-radius: 6px 6px 0 0; overflow: hidden; position: relative;
     }
-    .modal-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    @keyframes kenburns {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.08); }
+    }
+    .modal-img img { 
+      width: 100%; height: 100%; object-fit: cover; display: block; 
+      animation: kenburns 16s ease-in-out infinite alternate;
+    }
     .modal-img .lowlight-overlay {
       position: absolute; inset: 0;
       background: radial-gradient(ellipse at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.65) 100%);
@@ -274,14 +281,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
             <div class="modal-detail-text"><label>Venue</label><span id="modal-location"></span></div>
           </div>
-          <div class="modal-detail">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <div class="modal-detail-text"><label>Time</label><span id="modal-time"></span></div>
-          </div>
-          <div class="modal-detail">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <div class="modal-detail-text"><label>Capacity</label><span id="modal-capacity"></span></div>
-          </div>
+
         </div>
         <div class="modal-desc rich-text" id="modal-desc"></div>
         <div class="modal-actions">
@@ -330,7 +330,7 @@
     }
 
     function typeLabel(type) {
-      return { 'two-gun': 'PCSL TWO GUN', 'low-light': 'PCSL ONE GUN — LOW LIGHT'}[type] || type.toUpperCase();
+      return { 'two-gun': 'PCSL TWO GUN', 'low-light': 'PCSL ONE GUN - LOW LIGHT'}[type] || type.toUpperCase();
     }
 
     function renderEvents() {
@@ -380,15 +380,10 @@
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
                       ${locationLabel(e)}
                     </div>
-                    ${e.time && e.time !== 'TBD' ? `
-                    <div class="event-meta-row">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                      ${e.time}
-                    </div>` : ''}
+
                   </div>
                   <div class="event-card-footer">
-                    
-                    <button class="btn-signup" onclick="event.stopPropagation();openModal(${e.id})">Event Signup</button>
+                    <a href="${e.registerUrl}" target="_blank" rel="noopener noreferrer" class="btn-signup" onclick="event.stopPropagation()">Event Signup</a>
                   </div>
                 </div>
               </div>`;
@@ -453,11 +448,9 @@
       document.getElementById('modal-tag').textContent = typeLabel(e.type);
       document.getElementById('modal-title').textContent = e.name;
       document.getElementById('modal-date').textContent = `${e.label} (${e.dayOfWeek})`;
-      document.getElementById('modal-time').textContent = e.time || 'TBD';
       document.getElementById('modal-location').textContent = e.venue
         ? `${e.venue.name}, ${e.venue.address}`
         : (e.locationText || '');
-      document.getElementById('modal-capacity').textContent = `${e.filled} / ${e.spots} registered`;
       document.getElementById('modal-desc').innerHTML = e.descHtml || '';
       document.getElementById('modal-register').href = e.registerUrl;
 

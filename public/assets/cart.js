@@ -1,4 +1,4 @@
-/* cart.js — CASS shopping cart
+/* cart.js - CASS shopping cart
    Manages cart state in localStorage.
    Injects a slide-out drawer into every page.
    shared.js calls initCart() after building the nav.
