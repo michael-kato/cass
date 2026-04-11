@@ -18,3 +18,6 @@ id = "YOUR_ID_GOES_HERE"
 [triggers]
 crons = ["0 */2 * * *"]
 
+[vars]
+SITE_URL = "https://cass.cass-account.workers.dev" # Replace with your actual production URL
+
