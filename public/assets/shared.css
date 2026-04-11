@@ -25,7 +25,7 @@
   --site-gutter: clamp(1.25rem, 4vw, 3.5rem);
   --content-narrow: 860px;
   --content-standard: 1100px;
-  --content-wide: 1200px;
+  --content-wide: 1440px;
   --section-pad-y: 3rem;
   --section-pad-y-lg: 4rem;
   --heading-xl: 2rem;
@@ -585,10 +585,18 @@ footer {
   transform: translateY(-3px);
 }
 
+.rich-text {
+  line-height: 1.45;
+}
+
 .rich-text p,
 .rich-text ul,
 .rich-text ol {
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.65rem;
+}
+
+.rich-text li {
+  margin-bottom: 0.15rem;
 }
 
 .rich-text p:last-child,

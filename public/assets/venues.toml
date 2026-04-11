@@ -4,15 +4,17 @@ name = "Snoqualmie Valley Rifle Club"
 color = "#2d6a35"
 state = "WA"
 address = "37904 SE Fall City-Snoqualmie Rd, Fall City, WA 98024"
+website = "https://www.svrifle.org/"
 lat = 47.553766901756156
 lng = -121.83426688539642
 
 [[venues]]
-id = "bellevue-indoor"
+id = "bir"
 name = "Bellevue Indoor Range"
 color = "#8b2020"
 state = "WA"
 address = "13570 NE Bel Red Rd, Bellevue, WA 98005"
+website = "https://www.bellevueindoorrange.com/"
 lat = 47.62347445503111
 lng = -122.15971623241418
 
@@ -22,6 +24,7 @@ name = "Piedmont Handgunner's Association"
 color = "#8b7535"
 state = "NC"
 address = "10346 North Carolina Hwy 150, Linwood, NC 27299"
+website = "https://pha-range.com/"
 lat = 35.749241195565986
 lng = -80.40453585608627
 
@@ -30,6 +33,7 @@ id = "jcsa"
 name = "Jefferson County Sportsman's Association"
 color = "#1a5c8a"
 state = "WA"
-address = "Jefferson County Sportsman's Association, WA"
+address = "112 Gun Club Rd, Port Townsend, WA 98368"
+website = "https://jeffersoncountysportsmen.org/"
 lat = 48.10017774224602
 lng = -122.82229877238586
