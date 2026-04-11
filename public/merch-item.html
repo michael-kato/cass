@@ -240,56 +240,14 @@
       margin-bottom: 1.5rem;
     }
 
-    .for-you-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1.25rem;
-    }
 
-    .for-you-card {
-      display: flex;
-      flex-direction: column;
-      cursor: pointer;
-      outline: 1.5px solid transparent;
-      outline-offset: 6px;
-      border-radius: 4px;
-      transition: opacity 0.2s, outline-color 0.2s;
-    }
-
-    .for-you-card:hover {
-      opacity: 0.85;
-      outline-color: var(--text-dark);
-    }
-
-    .for-you-img {
-      width: 100%;
-      background-color: var(--sage-mid);
-      display: block;
-      margin-bottom: 0.6rem;
-      border-radius: 2px;
-      object-fit: cover;
-    }
-
-    .for-you-name {
-      font-size: 0.85rem;
-      color: var(--text-dark);
-      margin-bottom: 0.2rem;
-      line-height: 1.3;
-    }
-
-    .for-you-price {
-      font-size: 0.85rem;
-      color: var(--text-mid);
-    }
 
     @media (max-width: 900px) {
       .item-container {
         grid-template-columns: 1fr;
       }
 
-      .for-you-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
+
     }
 
     @media (max-width: 600px) {
@@ -309,9 +267,7 @@
         display: none;
       }
 
-      .for-you-grid {
-        grid-template-columns: 1fr;
-      }
+
 
       .item-quantity {
         gap: 0.5rem;
@@ -387,7 +343,7 @@
       <!-- For You section -->
       <div class="for-you">
         <h2 class="for-you-title">For You</h2>
-        <div class="for-you-grid" id="for-you-grid"></div>
+        <div class="merch-grid" id="for-you-grid"></div>
       </div>
     </div>
   </div>
@@ -556,10 +512,14 @@
       const others = allMerch.filter(p => p.id !== currentProduct.id);
       const shuffle = [...others].sort(() => Math.random() - 0.5).slice(0, 4);
       document.getElementById('for-you-grid').innerHTML = shuffle.map(p => `
-        <div class="for-you-card" onclick="window.location.href='merch-item.html?id=${p.id}'">
-          <img class="for-you-img" src="${IMAGE_BASE + (p.images?.[0] || '')}" alt="${p.name}" />
-          <div class="for-you-name">${p.name}</div>
-          <div class="for-you-price">${formatCurrency(p.price)}</div>
+        <div class="merch-card">
+          <a href="merch-item.html?id=${p.id}">
+            <img class="merch-img" src="${IMAGE_BASE + (p.images?.[0] || '')}" alt="${p.name}" />
+            <div class="merch-info">
+              <div class="merch-name">${p.name}</div>
+              <div class="merch-price">${formatCurrency(p.price)}</div>
+            </div>
+          </a>
         </div>
       `).join('');
     }

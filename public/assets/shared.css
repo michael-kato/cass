@@ -533,12 +533,55 @@ canvas {
   background-image: var(--bg-image);
 }
 
+/* ── MERCH CARD COMPONENT ── */
+.merch-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+.merch-card {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.merch-card:hover {
+  opacity: 0.85;
+}
+.merch-card a {
+  display: flex; flex-direction: column;
+  text-decoration: none; color: inherit;
+  outline: 1.5px solid transparent; outline-offset: 6px;
+  border-radius: 4px; transition: outline-color 0.2s;
+}
+.merch-card:hover a {
+  outline-color: var(--text-dark);
+}
+.merch-img {
+  width: 100%; aspect-ratio: 1; border-radius: 4px; display: block;
+  background: var(--sage-mid) center/cover;
+  object-fit: cover;
+}
+.merch-info {
+  padding: 0.6rem 0 0.75rem 0;
+}
+.merch-name {
+  font-weight: 400; font-size: 0.85rem; color: var(--text-dark);
+  margin-bottom: 0.2rem; line-height: 1.3;
+}
+.merch-price {
+  font-size: 0.85rem; color: var(--text-mid);
+}
+
 /* ── RESPONSIVE ── */
 @media (max-width: 1040px) {
   .nav-links { display: none; }
   .nav-icons { display: none; }
   .hamburger { display: block; }
   .mobile-menu-actions { display: grid; }
+}
+
+@media (max-width: 900px) {
+  .merch-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 768px) {
@@ -557,6 +600,11 @@ canvas {
   .content-narrow,
   .page-content,
   .partners-intro { padding-left: 1rem; padding-right: 1rem; }
+  .merch-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 520px) {
+  .merch-grid { grid-template-columns: 1fr; }
 }
 
 /* ── SEARCH MODAL ── */

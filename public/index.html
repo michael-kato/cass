@@ -55,21 +55,6 @@
     .video-strip video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     .merch { padding: var(--section-pad-y) var(--site-gutter) 4rem; }
-    .merch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.25rem; }
-    .merch-card {
-      background: var(--sage-light); border: 1px solid var(--sage-mid);
-      overflow: hidden; cursor: pointer;
-    }
-    .merch-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-    .merch-card a { text-decoration: none; color: inherit; display: flex; flex-direction: column; height: 100%; }
-    .merch-img {
-      width: 100%; aspect-ratio: 1;
-      background: linear-gradient(135deg, var(--sage-mid), var(--olive) 80%) center/cover;
-      background-size: cover; background-position: center;
-    }
-    .merch-info { padding: 0.75rem; }
-    .merch-name { font-weight: 600; font-size: 1rem; margin-bottom: 0.25rem; }
-    .merch-price { font-size: 0.9rem; color: var(--olive); font-weight: 600; }
 
     .match-cta { display: grid; grid-template-columns: 1fr 1fr; height: 340px; position: relative; overflow: hidden; }
     .match-panel { position: relative; overflow: hidden; }
@@ -107,11 +92,9 @@
       .slide-content { bottom: 20%; max-width: min(420px, calc(100vw - (var(--site-gutter) * 2))); }
       .mission { grid-template-columns: 1fr; }
       .match-cta { grid-template-columns: 1fr; height: auto; }
-      .merch-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 520px) {
-      .merch-grid { grid-template-columns: 1fr; }
       .slide-content h2 { font-size: clamp(1.4rem, 8vw, 2rem); }
     }
   </style>
@@ -174,7 +157,7 @@
   </div>
 
   <section class="merch">
-    <h2 class="section-title">CASS Merch</h2>
+    <h2 class="section-title" style="text-align: center; margin-bottom: 2.5rem;">CASS Products</h2>
     <div class="merch-grid" id="merch-grid"></div>
     <div style="text-align:center; margin-top:1.5rem;">
       <a href="merch.html" style="font-family:'Assistant',sans-serif; font-weight:600; font-size:0.9rem; color:var(--olive); text-decoration:none; letter-spacing:0.05em;">
@@ -314,7 +297,7 @@
 
     loadToml('assets/merch.toml', 'products')
       .then(items => {
-        document.getElementById('merch-grid').innerHTML = items.map(p => {
+        document.getElementById('merch-grid').innerHTML = items.slice(0, 4).map(p => {
           const image = p.images && p.images[0] ? `assets/merch/${p.images[0]}` : '';
           return `
             <div class="merch-card">

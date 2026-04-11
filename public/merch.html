@@ -8,33 +8,7 @@
   <style>
     .merch-main { padding: 2.5rem var(--site-gutter) 4rem; }
 
-    .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; }
-    .product-card { display: flex; flex-direction: column; }
 
-    .product-img {
-      width: 100%; aspect-ratio: 1; display: block;
-      background: var(--sage-mid) center/cover; background-size: cover;
-      border-radius: 4px;
-    }
-    .product-name { font-size: 0.85rem; color: var(--text-dark); margin-top: 0.6rem; margin-bottom: 0.2rem; line-height: 1.3; }
-    .product-price { font-size: 0.85rem; color: var(--text-mid); margin-bottom: 0.75rem; }
-
-    .product-card a {
-      display: flex; flex-direction: column; height: 100%;
-      text-decoration: none; color: inherit;
-      outline: 1.5px solid transparent;
-      outline-offset: 6px;
-      border-radius: 4px;
-      transition: outline-color 0.2s;
-    }
-
-    .product-card:hover { opacity: 0.85; }
-    .product-card:hover a { outline-color: var(--text-dark); }
-
-    @media (max-width: 900px) { .product-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 520px) {
-      .product-grid { grid-template-columns: 1fr; }
-    }
   </style>
 </head>
 <body>
@@ -43,7 +17,7 @@
 
   <div class="merch-main">
     <h1>Merchandise</h1>
-    <div class="product-grid" id="product-grid"></div>
+    <div class="merch-grid" id="product-grid"></div>
   </div>
 
   <div id="site-footer"></div>
@@ -61,11 +35,13 @@
         document.getElementById('product-grid').innerHTML = items.map(p => {
           const image = p.images && p.images[0] ? `assets/merch/${p.images[0]}` : '';
           return `
-            <div class="product-card">
+            <div class="merch-card">
               <a href="merch-item.html?id=${p.id}">
-                <div class="product-img" style="background-image:url('${image}')"></div>
-                <div class="product-name">${p.name}</div>
-                <div class="product-price">${formatCurrency(p.price)}</div>
+                <div class="merch-img" style="background-image:url('${image}')"></div>
+                <div class="merch-info">
+                  <div class="merch-name">${p.name}</div>
+                  <div class="merch-price">${formatCurrency(p.price)}</div>
+                </div>
               </a>
             </div>`;
         }).join('');
