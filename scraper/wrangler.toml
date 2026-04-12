@@ -16,3 +16,5 @@ id = "f06e1acee402409aaf9b39d9bc1f87e3"
 [triggers]
 crons = ["0 */2 * * *"]
 
+[vars]
+CASS_SITE_URL = "https://cass.cass-account.workers.dev"

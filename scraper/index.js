@@ -50,7 +50,7 @@ export default {
 
     // GET /debug-sources (Verbose diagnostics)
     if (url.pathname === '/debug-sources') {
-      const siteUrl = env.SITE_URL || '(MISSING - SITE_URL not set)';
+      const siteUrl = env.CASS_SITE_URL || '(MISSING - CASS_SITE_URL not set)';
       const tomlUrl = `${siteUrl}/assets/events.toml`;
       let fetchStatus = null, rawSnippet = null, ids = [], fetchError = null;
 
@@ -112,7 +112,7 @@ async function fetchIdsFromSite(env) {
   // Local dev fallback: set TEST_IDS=id1,id2,id3 in .dev.vars
   // since Cloudflare Workers cannot fetch from localhost
   try {
-    const response = await fetch(`${env.SITE_URL}/assets/events.toml`);
+    const response = await fetch(`${env.CASS_SITE_URL}/assets/events.toml`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const text = await response.text();
 
