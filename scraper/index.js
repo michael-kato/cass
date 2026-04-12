@@ -111,6 +111,16 @@ export default {
       }
     }
 
+    if (url.pathname === '/history') {
+      const history = await puppeteer.history(env.BROWSER);
+      return new Response(JSON.stringify(history, null, 2), { headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.pathname === '/limits') {
+      const limits = await puppeteer.limits(env.BROWSER);
+      return new Response(JSON.stringify(limits, null, 2), { headers: { 'Content-Type': 'application/json' } });
+    }
+
     // GET /sync-merch (Automator for Variant IDs)
     if (url.pathname === '/sync-merch') {
       if (!env.PRINTIFY_API_KEY || !env.PRINTIFY_SHOP_ID) {
@@ -160,29 +170,45 @@ export default {
       }, null, 2), { headers: { 'Content-Type': 'application/json' } });
     }
 
-    const origin = new URL(request.url).origin;
     return new Response(`<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"><title>CASS Scraper</title><style>
-  body { font-family: monospace; background: #0f1117; color: #c9d1d9; padding: 2rem; }
-  h2 { color: #58a6ff; margin-bottom: 1rem; }
+<head><meta charset="utf-8"><title>CASS Scraper Dashboard</title><style>
+  body { font-family: -apple-system, blinkmacsystemfont, 'Segoe UI', roboto, sans-serif; background: #0d1117; color: #c9d1d9; padding: 2rem; max-width: 800px; margin: 0 auto; }
+  h2 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; margin-top: 2rem; }
+  h3 { color: #8b949e; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05rem; margin-top: 2rem; }
   ul { list-style: none; padding: 0; }
-  li { margin: 0.5rem 0; }
-  a { color: #79c0ff; text-decoration: none; }
+  li { margin: 0.75rem 0; padding: 0.5rem; background: #161b22; border-radius: 6px; border: 1px solid #30363d; transition: border-color 0.2s; }
+  li:hover { border-color: #58a6ff; }
+  a { color: #79c0ff; text-decoration: none; font-weight: bold; font-family: monospace; }
   a:hover { text-decoration: underline; }
-  .dim { color: #6e7681; margin-left: 1rem; }
+  .dim { color: #6e7681; margin-left: 0.5rem; font-size: 0.9rem; }
+  .badge { background: #238636; color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.7rem; vertical-align: middle; margin-left: 5px; }
+  .warn { background: #9e6a03; }
 </style></head>
 <body>
-  <h2>CASS Scraper API</h2>
+  <h2>CASS Scraper Dashboard</h2>
+
+  <h3>Scraper Control</h3>
   <ul>
-    <li><a href="/debug-sources">/debug-sources</a> <span class="dim">- verify TOML fetch &amp; ID extraction</span></li>
-    <li><a href="/test">/test</a> <span class="dim">- scrape first match (one and done)</span></li>
-    <li><a href="/scrape-all">/scrape-all</a> <span class="dim">- trigger full batch scrape in background</span></li>
-    <li><a href="/data?id=pcsl-two-gun-at-pha-3">/data?id=...</a> <span class="dim">- fetch cached result for a match</span></li>
-    <li><a href="/scrape?id=pcsl-two-gun-at-pha-3">/scrape?id=...</a> <span class="dim">- on-demand live scrape for a match</span></li>
-    <li><a href="/sessions">/sessions</a> <span class="dim">- inspect active browser sessions</span></li>
-    <li><a href="/clear-sessions">/clear-sessions</a> <span class="dim">- kill hung browser sessions</span></li>
-    <li><a href="/sync-merch">/sync-merch</a> <span class="dim">- GENERATE Printify TOML mapping block</span></li>
+    <li><a href="/test">/test</a> <span class="dim">Run one-off scrape for first match (returns text log)</span></li>
+    <li><a href="/scrape-all">/scrape-all</a> <span class="dim">Trigger background batch scrape of all matches</span></li>
+    <li><a href="/debug-sources">/debug-sources</a> <span class="dim">Verify ID extraction from events.toml</span></li>
+  </ul>
+
+  <h3>Browser Diagnostics</h3>
+  <ul>
+    <li><a href="/debug-browser">/debug-browser</a> <span class="badge">TEST</span> <span class="dim">Open example.com to verify Puppeteer connectivity</span></li>
+    <li><a href="/sessions">/sessions</a> <span class="dim">List currently active browser sessions</span></li>
+    <li><a href="/history">/history</a> <span class="dim">Session history (last 100, open and closed)</span></li>
+    <li><a href="/limits">/limits</a> <span class="dim">Check concurrency and rate limits</span></li>
+    <li><a href="/clear-sessions">/clear-sessions</a> <span class="badge warn">FORCE</span> <span class="dim">Kill all hung sessions immediately</span></li>
+  </ul>
+
+  <h3>Data &amp; Tools</h3>
+  <ul>
+    <li><a href="/data?id=pcsl-two-gun-at-pha-3">/data?id=...</a> <span class="dim">Fetch cached data for a specific match ID</span></li>
+    <li><a href="/scrape?id=pcsl-two-gun-at-pha-3">/scrape?id=...</a> <span class="dim">Perform on-demand live scrape for one match</span></li>
+    <li><a href="/sync-merch">/sync-merch</a> <span class="dim">Generate variant mapping TOML from Printify API</span></li>
   </ul>
 </body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 
