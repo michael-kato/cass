@@ -33,13 +33,16 @@ function toAbsoluteUrl(path, baseUrl) {
 }
 
 async function logError(message, env, details = {}) {
-  const environment = env.ENVIRONMENT || 'development'; // Default to 'development' if not set
+  const environment = env.ENVIRONMENT || 'development';
   console.error(`[${environment.toUpperCase()} ERROR] ${message}`, details);
 
-  await env.DB?.prepare('INSERT INTO cass_logs (environment, message, details) VALUES (?, ?, ?)')
-    .bind(environment, message, JSON.stringify(details))
-    .run()
-    .catch(e => console.error('Failed to log error to D1:', e.message));
+  try {
+    await env.DB?.prepare('INSERT INTO cass_logs (environment, message, details) VALUES (?, ?, ?)')
+      .bind(environment, message, JSON.stringify(details))
+      .run();
+  } catch (e) {
+    console.error('[logError] D1 write failed:', e.message);
+  }
 }
 
 async function logInfo(message, env, details = {}) {
@@ -85,24 +88,6 @@ function splitName(fullName) {
   };
 }
 
-/**
- * Maps Stripe Shipping Details to Printify Address Format
- */
-function mapStripeAddress(session) {
-  const { name, address } = session.shipping_details || {};
-  const { first_name, last_name } = splitName(name);
-  return {
-    first_name,
-    last_name,
-    email: session.customer_details?.email || '',
-    address1: address?.line1 || '',
-    address2: address?.line2 || '',
-    city: address?.city || '',
-    state: address?.state || '',
-    country: address?.country || '',
-    zip: address?.postal_code || ''
-  };
-}
 
 /**
  * Maps PayPal Order Details to Printify Address Format
@@ -133,12 +118,14 @@ async function fulfillPrintifyOrder(orderData, env) {
     return;
   }
 
+  console.log(`[Printify] Fulfilling order ${orderData.internalOrderId} — ${orderData.items.length} item(s)`);
+  console.log(`[Printify] Shipping to:`, JSON.stringify(orderData.shippingAddress));
+
   const printifyPayload = {
-    external_id: orderData.internalOrderId, // Your DB ID
+    external_id: orderData.internalOrderId,
     label: 'CASS Website Order',
     line_items: orderData.items.map(item => ({
-      // Note: your TOML/Cart doesn't pass these dynamically yet, so using fallbacks to prevent hard crashes.
-      blueprint_id: item.printifyBlueprintId || 1, 
+      blueprint_id: item.printifyBlueprintId || 1,
       variant_id: item.printifyVariantId || 1,
       quantity: item.qty || item.quantity || 1
     })),
@@ -168,6 +155,36 @@ async function fulfillPrintifyOrder(orderData, env) {
   } catch (err) {
     await logError('Printify Network Crash', env, { error: err.message, orderId: orderData.internalOrderId });
   }
+}
+
+/**
+ * Maps Stripe session.shipping_details to Printify address_to format.
+ */
+function mapStripeAddress(session) {
+  const shipping = session.shipping_details;
+  const email = session.customer_details?.email || '';
+
+  if (!shipping?.address) {
+    console.warn('[Webhook] No shipping address found on session:', session.id);
+    return {};
+  }
+
+  const { first_name, last_name } = splitName(shipping.name);
+  const addr = shipping.address;
+  console.log(`[Webhook] Shipping to ${first_name} ${last_name} — ${addr.city}, ${addr.state}`);
+
+  return {
+    first_name,
+    last_name,
+    email,
+    phone:    session.customer_details?.phone || '',
+    country:  addr.country      || 'US',
+    region:   addr.state        || '',
+    address1: addr.line1        || '',
+    address2: addr.line2        || '',
+    city:     addr.city         || '',
+    zip:      addr.postal_code  || ''
+  };
 }
 
 /**
@@ -329,7 +346,13 @@ async function handleCreateCheckoutSession(request, env) {
     }
   });
 
-  await logInfo('Stripe Checkout Session Created', env, { sessionId: session.id });
+  const totalAmount = lineItems.reduce((sum, li) => sum + li.price_data.unit_amount * li.quantity, 0);
+  await logInfo('Stripe Checkout Session Created', env, {
+    sessionId: session.id,
+    totalUsd: (totalAmount / 100).toFixed(2),
+    itemCount: items.length,
+    items: items.map(i => ({ name: i.name, qty: i.quantity, price: i.price }))
+  });
   return json({ url: session.url });
 }
 
@@ -354,23 +377,54 @@ async function handleStripeWebhook(request, env) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
-    console.log('Payment Succeeded for Session:', session.id);
-    
-    // 1. Reconstruct order from session metadata
-    let items = [];
+    console.log('[Webhook] Payment succeeded for session:', session.id);
+    console.log('[Webhook] Cart metadata:', session.metadata?.cart_json);
+
     try {
-      items = JSON.parse(session.metadata?.cart_json || '[]');
-    } catch (e) {}
+      // 1. Reconstruct order from session metadata
+      let items = [];
+      try {
+        items = JSON.parse(session.metadata?.cart_json || '[]');
+      } catch (e) {
+        await logError('Webhook: Failed to parse cart_json', env, { sessionId: session.id, raw: session.metadata?.cart_json });
+      }
+      console.log(`[Webhook] Parsed ${items.length} item(s) from cart`);
 
-    // 2. Extract shipping address from session.shipping_details
-    const shippingAddress = mapStripeAddress(session);
+      // 2. Extract shipping address
+      const shippingAddress = mapStripeAddress(session);
 
-    // 3. Trigger Printify
-    await fulfillPrintifyOrder({
-      internalOrderId: session.id,
-      items: items,
-      shippingAddress: shippingAddress
-    }, env);
+      // 3. Trigger Printify
+      await fulfillPrintifyOrder({
+        internalOrderId: session.id,
+        items,
+        shippingAddress
+      }, env);
+
+      // Log a complete order record to D1 for support / dispute resolution
+      await logInfo('Order Fulfilled', env, {
+        sessionId: session.id,
+        customerEmail: session.customer_details?.email,
+        amountPaidUsd: ((session.amount_total || 0) / 100).toFixed(2),
+        itemCount: items.length,
+        shippingCity: shippingAddress.city,
+        shippingState: shippingAddress.region,
+        shippingCountry: shippingAddress.country
+      });
+    } catch (err) {
+      await logError('Webhook: Fulfillment Crashed', env, {
+        sessionId: session.id,
+        error: err.message,
+        stack: err.stack
+      });
+    }
+  } else if (event.type === 'charge.refunded') {
+    const charge = event.data.object;
+    await logInfo('Stripe Refund Issued', env, {
+      chargeId: charge.id,
+      amountRefundedUsd: ((charge.amount_refunded || 0) / 100).toFixed(2),
+      customerEmail: charge.billing_details?.email,
+      reason: charge.refunds?.data?.[0]?.reason || 'unspecified'
+    });
   } else if (event.type === 'checkout.session.expired') {
     const session = event.data.object;
     await logInfo('Stripe Checkout Abandoned', env, { sessionId: session.id });
@@ -387,66 +441,82 @@ async function handleStripeWebhook(request, env) {
 }
 
 async function handleClientErrorLogging(request, env) {
-  try {
-    const errorData = await request.json();
-    await logError(`Frontend JS Error: ${errorData.message || 'Unknown'}`, env, errorData);
-  } catch (e) {}
+  const errorData = await request.json();
+  await logError(`Frontend JS Error: ${errorData.message || 'Unknown'}`, env, errorData);
   return json({ success: true });
 }
 
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-
+/**
+ * Global error handler — wraps any async fetch handler.
+ * Guarantees ALL unhandled exceptions are logged to D1 + console.
+ * Note: the Stripe webhook has its own local catch because Stripe
+ * must receive a 200 even when fulfillment fails (to prevent retries).
+ */
+function withErrorHandling(handler) {
+  return async (request, env, ctx) => {
     try {
-      if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
-        return await handleCreateCheckoutSession(request, env);
-      }
-
-      if (url.pathname === '/api/create-paypal-order' && request.method === 'POST') {
-        return await handleCreatePaypalOrder(request, env);
-      }
-
-      if (url.pathname === '/api/capture-paypal-order' && request.method === 'POST') {
-        return await handleCapturePaypalOrder(request, env);
-      }
-
-      if (url.pathname === '/api/stripe-webhook' && request.method === 'POST') {
-        return await handleStripeWebhook(request, env);
-      }
-
-      if (url.pathname === '/api/log-client' && request.method === 'POST') {
-        return await handleClientErrorLogging(request, env);
-      }
-
-      if (url.pathname === '/api/toml' && request.method === 'GET') {
-        const requestedPath = url.searchParams.get('path');
-        const markdownFields = new Set(
-          (url.searchParams.get('markdown') || '')
-            .split(',')
-            .map(field => field.trim())
-            .filter(Boolean)
-        );
-
-        if (!requestedPath || !requestedPath.startsWith('assets/') || !requestedPath.endsWith('.toml')) {
-          return json({ error: 'Invalid TOML path.' }, 400);
-        }
-
-        const assetUrl = new URL(`/${requestedPath}`, url);
-        const assetResponse = await env.ASSETS.fetch(new Request(assetUrl.toString(), { method: 'GET' }));
-
-        if (!assetResponse.ok) {
-          return json({ error: `Asset not found: ${requestedPath}` }, assetResponse.status);
-        }
-
-        const parsed = renderMarkdownFields(TOML.parse(await assetResponse.text()), markdownFields);
-        return json(parsed);
-      }
-
-      return env.ASSETS.fetch(request);
+      return await handler(request, env, ctx);
     } catch (err) {
-      await logError('Unhandled Server Error', env, { error: err.message, stack: err.stack, url: url.toString() });
-      return json({ error: err.message }, 500);
+      await logError('Unhandled Server Error', env, {
+        error: err.message,
+        stack: err.stack,
+        url: request.url
+      });
+      return json({ error: 'Internal Server Error' }, 500);
     }
+  };
+}
+
+async function handleRequest(request, env, ctx) {
+  const url = new URL(request.url);
+
+  if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
+    return await handleCreateCheckoutSession(request, env);
   }
+
+  if (url.pathname === '/api/create-paypal-order' && request.method === 'POST') {
+    return await handleCreatePaypalOrder(request, env);
+  }
+
+  if (url.pathname === '/api/capture-paypal-order' && request.method === 'POST') {
+    return await handleCapturePaypalOrder(request, env);
+  }
+
+  if (url.pathname === '/api/stripe-webhook' && request.method === 'POST') {
+    return await handleStripeWebhook(request, env);
+  }
+
+  if (url.pathname === '/api/log-client' && request.method === 'POST') {
+    return await handleClientErrorLogging(request, env);
+  }
+
+  if (url.pathname === '/api/toml' && request.method === 'GET') {
+    const requestedPath = url.searchParams.get('path');
+    const markdownFields = new Set(
+      (url.searchParams.get('markdown') || '')
+        .split(',')
+        .map(field => field.trim())
+        .filter(Boolean)
+    );
+
+    if (!requestedPath || !requestedPath.startsWith('assets/') || !requestedPath.endsWith('.toml')) {
+      return json({ error: 'Invalid TOML path.' }, 400);
+    }
+
+    const assetUrl = new URL(`/${requestedPath}`, url);
+    const assetResponse = await env.ASSETS.fetch(new Request(assetUrl.toString(), { method: 'GET' }));
+
+    if (!assetResponse.ok) {
+      return json({ error: `Asset not found: ${requestedPath}` }, assetResponse.status);
+    }
+
+    const parsed = renderMarkdownFields(TOML.parse(await assetResponse.text()), markdownFields);
+    return json(parsed);
+  }
+
+  return env.ASSETS.fetch(request);
+}
+
+export default {
+  fetch: withErrorHandling(handleRequest)
 };

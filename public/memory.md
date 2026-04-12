@@ -262,6 +262,9 @@ Note: `registerUrl` field was removed. URL is derived from `id`.
 - Run a consistency pass on page-local layout gutters
 - Test all TOML-backed pages through the real worker/server path after content edits
 - Setup production Stripe Webhook keys securely by running `npx wrangler secret put STRIPE_WEBHOOK_SECRET`
+- **Create a dedicated D1 `orders` table** for full order records (id, customer email, items JSON, amount, shipping address, Printify order ID, status, timestamps). The current `cass_logs` table is for diagnostics only and is not a substitute for an order ledger.
+- **Subscribe `charge.refunded` in Stripe Dashboard** under Developers → Webhooks → select endpoint → add event type. Required for refund logging to fire.
+- **Implement refund support**: build `/api/refund` endpoint for Stripe (`stripe.refunds.create`) and PayPal (`/v2/payments/captures/{id}/refund`). Should cancel the corresponding Printify order if not yet shipped, log the refund to D1, and ideally notify the customer via Stripe's built-in refund email.
 
 ## Recent Major Changes
 - **Scraper complete overhaul**: Link-first architecture, ID-based KV storage, dynamic TOML-fetching, login-authenticated Puppeteer scraping, full management endpoint suite
