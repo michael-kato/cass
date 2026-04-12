@@ -111,15 +111,15 @@ export default {
 
     if (url.pathname === '/debug-fetch') {
       try {
-        const id = 'pcsl-two-gun-at-pha-3';
-        const res = await fetch(`https://practiscore.com/${id}/register`, {
-          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
-        });
-        const text = await res.text();
-        const ok = text.includes('spot') || text.includes('remain') || text.includes('full');
-        return new Response(`HTTP ${res.status} | Found Data: ${ok} | Length: ${text.length}`, { status: 200 });
+        console.log('[Debug] Performing Skeleton Browser Launch...');
+        const b = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
+        const p = await b.newPage();
+        await p.goto('https://example.com');
+        const title = await p.title();
+        await b.close();
+        return new Response(`Browser Sanity Check: SUCCESS | Title: ${title}`, { status: 200 });
       } catch (err) {
-        return new Response(`Fetch Failed: ${err.message}`, { status: 500 });
+        return new Response(`Browser Sanity Check: FAILED | Error: ${err.message}`, { status: 500 });
       }
     }
 
@@ -286,7 +286,7 @@ async function scrapeAllMatches(env) {
     while (attempts < 2) {
       try {
         console.log(`[Scraper] Launching browser (Batch Attempt ${attempts + 1})...`);
-        browser = await puppeteer.launch(env.BROWSER);
+        browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
         break;
       } catch (err) {
         if (err.message.includes('429') && attempts === 0) {
@@ -371,13 +371,13 @@ async function scrapeSingleId(env, matchId) {
     if (!env.BROWSER) throw new Error('BROWSER binding is missing.');
     try {
       console.log(`[Scraper] Launching browser (Attempt 1)...`);
-      browser = await puppeteer.launch(env.BROWSER);
+      browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
     } catch (err) {
       if (err.message.includes('429')) {
         console.warn('Rate limited (429). Waiting 15 seconds before retry...');
         await new Promise(r => setTimeout(r, 15000));
         console.log(`[Scraper] Launching browser (Attempt 2)...`);
-        browser = await puppeteer.launch(env.BROWSER);
+        browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
       } else {
         throw err;
       }
