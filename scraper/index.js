@@ -112,7 +112,10 @@ async function fetchIdsFromSite(env) {
   // Local dev fallback: set TEST_IDS=id1,id2,id3 in .dev.vars
   // since Cloudflare Workers cannot fetch from localhost
   try {
-    const response = await fetch(`${env.CASS_SITE_URL}/assets/events.toml`);
+    // Prefer Service Binding (direct Worker-to-Worker, no public internet)
+    // Falls back to plain HTTP fetch if binding isn't available
+    const fetcher = env.CASS_SITE ?? { fetch: (r) => fetch(r) };
+    const response = await fetcher.fetch(new Request(`https://cass.cass-account.workers.dev/assets/events.toml`));
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const text = await response.text();
 
@@ -132,6 +135,7 @@ async function fetchIdsFromSite(env) {
     return [];
   }
 }
+
 
 function buildUrl(matchId) {
   return `https://practiscore.com/${matchId}/register`;

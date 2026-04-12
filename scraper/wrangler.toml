@@ -7,6 +7,11 @@ compatibility_flags = ["nodejs_compat"]
 [browser]
 binding = "BROWSER"
 
+# Service Binding: direct Worker-to-Worker call (bypasses workers.dev routing)
+[[services]]
+binding = "CASS_SITE"
+service = "cass"
+
 # KV Database for Caching
 [[kv_namespaces]]
 binding = "MATCH_DATA"
