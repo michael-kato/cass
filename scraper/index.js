@@ -80,6 +80,19 @@ export default {
     }
 
     // GET /scrape-all (Manual Batch Trigger)
+    if (url.pathname === '/debug-fetch') {
+      try {
+        const id = 'pcsl-two-gun-at-pha-3';
+        const res = await fetch(`https://practiscore.com/${id}/register`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
+        });
+        const html = await res.text();
+        return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      } catch (err) {
+        return new Response(`Fetch Failed: ${err.message}`, { status: 500 });
+      }
+    }
+
     if (url.pathname === '/scrape-all') {
       console.log('[Scraper] Triggered /scrape-all endpoint');
       ctx.waitUntil(scrapeAllMatches(env));
@@ -139,17 +152,17 @@ export default {
         const data = await res.json();
 
         let tomlOutput = "# PRINTIFY VARIANT MAPPING (Copy-paste these sections into merch.toml)\n\n";
-        
+
         // Use the actual 'data' property in Printify's response
         const products = data.data || [];
-        
+
         products.forEach(p => {
           tomlOutput += `### PRODUCT: ${p.title} (Blueprint: ${p.blueprint_id})\n`;
           tomlOutput += `# PRODUCT_ID: ${p.id} \n`;
           tomlOutput += `printifyBlueprintId = ${p.blueprint_id}\n`;
           tomlOutput += `printifyPrintProviderId = ${p.print_provider_id}\n\n`;
           tomlOutput += `[products.variants]\n`;
-          
+
           p.variants.forEach(v => {
             // Convert "Color / Size" to "Color-Size"
             const cleanTitle = v.title.replace(/\s*\/\s*/g, '-');
@@ -265,7 +278,7 @@ async function scrapeAllMatches(env) {
   try {
     // Temporarily disabled to avoid management API rate limits
     // await clearDeadSessions(env);
-    
+
     await new Promise(r => setTimeout(r, 3000));
     if (!env.BROWSER) throw new Error('BROWSER binding is missing.');
 
@@ -354,7 +367,7 @@ async function scrapeSingleId(env, matchId) {
   try {
     // Temporarily disabled to avoid management API rate limits
     // await clearDeadSessions(env);
-    
+
     await new Promise(r => setTimeout(r, 3000));
     if (!env.BROWSER) throw new Error('BROWSER binding is missing.');
     try {
@@ -375,7 +388,7 @@ async function scrapeSingleId(env, matchId) {
     console.log('[Scraper] Navigating to login...');
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
-    
+
     console.log('[Scraper] Submitting credentials...');
     await page.type("#user-email", env.PS_USERNAME);
     await page.type("#user-password", env.PS_PASSWORD);
