@@ -33,16 +33,19 @@ export default {
 
     // GET /test (Scrape only the FIRST match found in the TOML)
     if (url.pathname === '/test') {
-      console.log('[Scraper] Triggered /test endpoint');
-      const ids = await fetchIdsFromSite(env);
-      if (ids.length === 0) {
-        console.error('[Scraper] /test failed: No IDs found');
-        return new Response('No match IDs found in events.toml', { status: 404 });
-      }
-
-      const result = await scrapeSingleId(env, ids[0]);
-      return new Response(JSON.stringify(result, null, 2), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      console.log('[Scraper] Triggered /test endpoint (Background)');
+      ctx.waitUntil((async () => {
+        const ids = await fetchIdsFromSite(env);
+        if (ids.length > 0) {
+          await scrapeSingleId(env, ids[0]);
+          console.log(`[Scraper] /test background job finished for ${ids[0]}`);
+        } else {
+          console.error('[Scraper] /test failed: No IDs found');
+        }
+      })());
+      return new Response('Scrape started in background. Check npx wrangler tail.', { 
+        status: 202,
+        headers: { 'Access-Control-Allow-Origin': '*' }
       });
     }
 
@@ -162,7 +165,11 @@ async function scrapeAllMatches(env) {
 
   let browser;
   try {
-    await clearDeadSessions(env);
+    // Temporarily disabled to avoid management API rate limits
+    // await clearDeadSessions(env);
+    
+    await new Promise(r => setTimeout(r, 3000));
+    if (!env.BROWSER) throw new Error('BROWSER binding is missing.');
 
     // Retry loop for the 429 Rate Limit error
     let attempts = 0;
@@ -173,8 +180,8 @@ async function scrapeAllMatches(env) {
         break;
       } catch (err) {
         if (err.message.includes('429') && attempts === 0) {
-          console.warn('[Scraper] Rate limited (429). Waiting 10 seconds before retry...');
-          await new Promise(r => setTimeout(r, 10000));
+          console.warn('[Scraper] Rate limited (429). Waiting 15 seconds before retry...');
+          await new Promise(r => setTimeout(r, 15000));
           attempts++;
         } else {
           throw err;
@@ -246,8 +253,11 @@ async function scrapeAllMatches(env) {
 async function scrapeSingleId(env, matchId) {
   console.log(`[Scraper] Starting scrape for ID: ${matchId}`);
   let browser;
-  try {
-    await clearDeadSessions(env);
+    // Temporarily disabled to avoid management API rate limits
+    // await clearDeadSessions(env);
+    
+    await new Promise(r => setTimeout(r, 3000));
+    if (!env.BROWSER) throw new Error('BROWSER binding is missing.');
 
     let attempts = 0;
     while (attempts < 2) {
@@ -257,8 +267,8 @@ async function scrapeSingleId(env, matchId) {
         break;
       } catch (err) {
         if (err.message.includes('429') && attempts === 0) {
-          console.warn('[Scraper] Rate limited (429). Waiting 10 seconds before retry...');
-          await new Promise(r => setTimeout(r, 10000));
+          console.warn('[Scraper] Rate limited (429). Waiting 15 seconds before retry...');
+          await new Promise(r => setTimeout(r, 15000));
           attempts++;
         } else {
           throw err;
