@@ -77,7 +77,7 @@ export default {
         rawFetchMatchCount: ids.length, rawFetchIds: ids,
         resolvedIds,
         resolvedCount: resolvedIds.length,
-        usingFallback: ids.length === 0 && resolvedIds.length > 0,
+        resolvedVia: resolvedIds.length === 0 ? 'none' : ids.length > 0 ? 'http' : env.CASS_SITE ? 'service-binding' : 'TEST_IDS',
         rawSnippet
       }, null, 2), { headers: { 'Content-Type': 'application/json' } });
     }
