@@ -48,12 +48,37 @@ export default {
       return new Response('Batch scrape job started...', { status: 202 });
     }
 
-    // GET /debug-sources (Check what IDs are being pulled)
+    // GET /debug-sources (Verbose diagnostics)
     if (url.pathname === '/debug-sources') {
-      const ids = await fetchIdsFromSite(env);
+      const siteUrl = env.SITE_URL || '(MISSING - SITE_URL not set)';
+      const tomlUrl = `${siteUrl}/assets/events.toml`;
+      let fetchStatus = null, rawSnippet = null, ids = [], fetchError = null;
+
+      try {
+        const response = await fetch(tomlUrl);
+        fetchStatus = response.status;
+        const text = await response.text();
+        rawSnippet = text.substring(0, 300);
+
+        const regex = /\[\[events\]\]\s*id\s*=\s*"([^"]+)"/g;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+          ids.push(match[1]);
+        }
+      } catch (err) {
+        fetchError = err.message;
+      }
+
+      // Also show what fetchIdsFromSite() actually resolves to (with TEST_IDS fallback)
+      const resolvedIds = await fetchIdsFromSite(env);
+
       return new Response(JSON.stringify({
-        count: ids.length,
-        ids: ids
+        siteUrl, tomlUrl, fetchStatus, fetchError,
+        rawFetchMatchCount: ids.length, rawFetchIds: ids,
+        resolvedIds,
+        resolvedCount: resolvedIds.length,
+        usingFallback: ids.length === 0 && resolvedIds.length > 0,
+        rawSnippet
       }, null, 2), { headers: { 'Content-Type': 'application/json' } });
     }
 
@@ -62,21 +87,26 @@ export default {
 };
 
 async function fetchIdsFromSite(env) {
+  // Local dev fallback: set TEST_IDS=id1,id2,id3 in .dev.vars
+  // since Cloudflare Workers cannot fetch from localhost
   try {
     const response = await fetch(`${env.SITE_URL}/assets/events.toml`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const text = await response.text();
     
-    // Regex: Matches top-level 'id = "..."' (ignoring venueId)
-    // In your TOML, match IDs come immediately after [[events]]
     const regex = /\[\[events\]\]\s*id\s*=\s*"([^"]+)"/g;
     const ids = [];
     let match;
     while ((match = regex.exec(text)) !== null) {
       if (!ids.includes(match[1])) ids.push(match[1]);
     }
-    return ids;
+    if (ids.length > 0) return ids;
+    throw new Error('No IDs found in TOML');
   } catch (err) {
-    console.error('[Scraper] Failed to fetch TOML:', err.message);
+    console.warn(`[Scraper] Site fetch failed (${err.message}). Trying TEST_IDS fallback...`);
+    if (env.TEST_IDS) {
+      return env.TEST_IDS.split(',').map(s => s.trim()).filter(Boolean);
+    }
     return [];
   }
 }
