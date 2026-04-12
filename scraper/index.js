@@ -82,45 +82,13 @@ export default {
     // GET /scrape-all (Manual Batch Trigger)
     if (url.pathname === '/debug-fetch') {
       try {
-        console.log('[Debug] Attempting Fetch-Based Login...');
-        
-        // 1. Get Login Page + CSRF Token
-        const loginPageRes = await fetch('https://practiscore.com/login');
-        const loginHtml = await loginPageRes.text();
-        const csrfMatch = loginHtml.match(/name="authenticity_token"\s+value="([^"]+)"/i);
-        if (!csrfMatch) throw new Error('Could not find CSRF token');
-        const csrfToken = csrfMatch[1];
-
-        // 2. Perform Login POST
-        const formData = new URLSearchParams();
-        formData.append('authenticity_token', csrfToken);
-        formData.append('user[email]', env.PS_USERNAME);
-        formData.append('user[password]', env.PS_PASSWORD);
-        formData.append('commit', 'Sign in');
-
-        const loginPostRes = await fetch('https://practiscore.com/users/sign_in', {
-          method: 'POST',
-          body: formData,
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          redirect: 'manual'
-        });
-
-        // 3. Extract Session Cookie
-        const setCookie = loginPostRes.headers.get('set-cookie');
-        if (!setCookie) throw new Error('No cookie returned. Check credentials.');
-
-        // 4. Test Scrape with Cookie
-        const matchRes = await fetch(`https://practiscore.com/pcsl-two-gun-at-pha-3/register`, {
-          headers: { 'Cookie': setCookie }
-        });
-        const matchHtml = await matchRes.text();
-        const foundData = matchHtml.includes('spot') || matchHtml.includes('remain');
-
-        return new Response(`Login Status: ${loginPostRes.status}\nData Found: ${foundData}\n\n--- SCRAPED HTML --- \n${matchHtml.slice(0, 2000)}`, {
+        const res = await fetch('https://practiscore.com/login');
+        const html = await res.text();
+        return new Response(`HTTP ${res.status}\n\n--- HTML START ---\n${html.slice(0, 5000)}`, {
           headers: { 'Content-Type': 'text/plain; charset=utf-8' }
         });
       } catch (err) {
-        return new Response(`Fetch-Login Failed: ${err.message}`, { status: 500 });
+        return new Response(`Fetch Failed: ${err.message}`, { status: 500 });
       }
     }
 
