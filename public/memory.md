@@ -182,64 +182,97 @@ Home page specifics:
 | `policies.html` | Active | Shared shell, static content |
 | `seasons.html` | Active | Shared shell, static content |
 
-## Local Run Notes
-Likely local workflow:
-```bash
-npm install
-npx wrangler dev
-```
-
-Important:
-- `fetch()`-based pages require the worker/static server environment
-- opening files directly from disk will not work for TOML-backed pages
-- the app depends on `/api/toml` for content loading
-- local Stripe testing uses `.dev.vars` config mapping `STRIPE_SECRET_KEY` and `SITE_URL`
+## Deployment
+- Main CASS site auto-deploys to Cloudflare when changes are pushed to `main` via Cloudflare's native Git integration. No GitHub Actions needed.
+- Scraper worker at `/scraper/` is NOT covered by the Git integration. It must be manually deployed from within that directory: `npx wrangler deploy -c wrangler.toml`
+- **Critical**: Always use `-c wrangler.toml` for the scraper deploy to prevent Wrangler from picking up the parent `wrangler.jsonc`
 
 ## Scraper Worker
-Scraper lives in [`/scraper`](/opt/git/cass/scraper).
+Scraper lives in [`/scraper`](/opt/git/cass/scraper) as a fully independent Cloudflare Worker.
 
-Current code in [`scraper/index.js`](/opt/git/cass/scraper/index.js):
-- says it fetches slugs dynamically from the live site
-- still points to `assets/events.json`
-- exposes `/data`, `/scrape`, and `/scrape-all`
-- stores match results in KV under `MATCH_DATA`
+### Architecture
+- **No external API exists** for Practiscore — all data must be scraped.
+- Registration data is behind a login wall. Raw HTTP fetch returns only a "requires a free account" alert, not spot counts.
+- Scraper must: (1) log in via Puppeteer, (2) navigate to each match's `/register` URL, (3) extract the `.alert-info` div text.
+- Data is cached in a Cloudflare KV namespace (`MATCH_DATA`, id: `f06e1acee402409aaf9b39d9bc1f87e3`) so the main site reads from cache, not live scrapes.
+- Scraper runs automatically every 2 hours via Cron trigger.
 
-Current mismatch to note:
-- scraper code comments mention dynamic slug loading from `events.json`
-- scraper README and `scraper/wrangler.toml` still describe hardcoded `MATCH_SLUGS`
-- main site has already migrated to `events.toml`
+### ID System
+- `events.toml` uses `id = "practiscore-match-handle"` (the middle segment of the Practiscore URL).
+- The scraper constructs the full URL as `https://practiscore.com/${id}/register`.
+- The same `id` is used as the KV database key, so `MATCH_DATA.get(id)` returns live spot data.
+- `registerUrl` field has been removed from `events.toml` — it's now derived from `id`.
+- `events.html` constructs registration links as `` `https://practiscore.com/${e.id}/register` ``.
+- `events.html` looks up scraper data with `matchData[e.id]` (previously used `e.practiscoreSlug`).
 
-This area still needs alignment before treating scraper behavior as current.
+### Endpoints
+| Endpoint | Description |
+|---|---|
+| `/` | HTML index of all endpoints (clickable links) |
+| `/debug-sources` | Verbose fetch diagnostics — shows what IDs resolve to |
+| `/test` | Scrapes the first match found (one-and-done, no param needed) |
+| `/scrape-all` | Triggers background batch scrape of all matches |
+| `/data?id=...` | Returns cached KV result for a specific match |
+| `/scrape?id=...` | On-demand live scrape for a specific match |
+| `/sessions` | Lists active Cloudflare Browser Rendering sessions |
+| `/clear-sessions` | Force-kills any hung browser sessions |
 
-## Dependencies
-Current app dependencies in [`package.json`](/opt/git/cass/package.json):
-- `@iarna/toml`
-- `marked`
-- `express`
-- `stripe`
+### Config Files
+- [`scraper/wrangler.toml`](/opt/git/cass/scraper/wrangler.toml): binds `BROWSER` (Browser Rendering), `MATCH_DATA` (KV), and Cron trigger
+- [`scraper/.dev.vars`](/opt/git/cass/scraper/.dev.vars): `PS_USERNAME`, `PS_PASSWORD`, `CASS_SITE_URL`, `TEST_IDS`
+- `CASS_SITE_URL` is also set in `[vars]` in `wrangler.toml` for production
 
-Note:
-- `express` is still listed, but the current main app runtime is a Worker-style `fetch()` handler, not an Express app
+### Local Development Limitations
+Cloudflare Workers sandbox blocks these in local dev (`wrangler dev`):
+1. **Fetch to `localhost`**: Returns `403 error code: 1003` (Direct IP Access Not Allowed)
+2. **Fetch to `*.workers.dev`**: Returns `404 error code: 1042` (Worker-to-Worker routing blocked in dev)
+3. **Puppeteer/Browser Rendering**: Crashes with `RangeError: Offset is outside the bounds of the DataView`
+
+**Workaround**: `TEST_IDS=id1,id2` in `.dev.vars` provides a fallback ID list when TOML fetch fails. The `fetchIdsFromSite()` function falls back to this automatically.
+
+### Dynamic ID Fetching
+- In production: scraper fetches `${CASS_SITE_URL}/assets/events.toml` and extracts all `id` fields using regex: `/\[\[events\]\]\s*id\s*=\s*"([^"]+)"/g`
+- In local dev: TOML fetch fails (403/404), `TEST_IDS` fallback kicks in
+- `usingFallback: true` in `/debug-sources` output confirms fallback is active
+
+### Known Gotchas
+- **Never add `MATCH_DATA` KV binding to the main `wrangler.jsonc`** — it belongs only to the scraper. Adding it to the main site causes `error 1042` on all requests, breaking `events.toml` serving.
+- Cloudflare Browser Rendering free tier: 100 sessions/day, max 2 concurrent. `wrangler dev` counts against this, not just production.
+- `wrangler dev` for scraper may show 429 even under the limit due to dev-mode throttling. Deploy to production for reliable browser testing.
+- The `[vars]` in `wrangler.toml` override `.dev.vars` for the same key — remove vars from `wrangler.toml` if you want `.dev.vars` to take effect locally.
+
+## events.toml Schema
+Each `[[events]]` entry has:
+```toml
+[[events]]
+id = "practiscore-match-handle"   # used as DB key + URL segment, replaces old numeric id
+type = "two-gun" | "low-light"
+name = "Display Name"
+date = "YYYY-MM-DD"
+venueId = "bir" | "pha" | "svrc" | "jcsa"
+image = "assets/media/filename.jpg"
+spots = 60
+desc = """..."""   # Markdown, rendered server-side to descHtml
+```
+Note: `registerUrl` field was removed. URL is derived from `id`.
 
 ## Current Known Issues / Follow-Ups
-- Update `public/assets/merch.toml` to include `shopifyVariantId` for every product.
-- Update scraper worker to consume TOML or a derived JSON/API source instead of `assets/events.json`
-- Update scraper README and `scraper/wrangler.toml` so docs/config match reality
-- Replace placeholder `SCRAPER_URL` in [`public/events.html`](/opt/git/cass/public/events.html) if not already deployed
+- Deploy scraper via `npx wrangler deploy -c wrangler.toml` after changes (not covered by Git auto-deploy)
+- Update `public/assets/merch.toml` to include `shopifyVariantId` for every product
 - Run a consistency pass on page-local layout gutters
 - Test all TOML-backed pages through the real worker/server path after content edits
 - Setup production Stripe Webhook keys securely by running `npx wrangler secret put STRIPE_WEBHOOK_SECRET`
 
 ## Recent Major Changes
-- Implemented global error logging securely tied to a Cloudflare D1 SQL database.
-- Created robust Local Search engine inside `search.html`.
-- Implemented deep-link highlighting and auto-scrolling on event cards.
-- Wired secure Stripe Webhook listeners in `server.js` to begin tracking async payments and cart abandonment.
-- Polished checkout and quantity selection buttons on `merch-item.html`.
+- **Scraper complete overhaul**: Link-first architecture, ID-based KV storage, dynamic TOML-fetching, login-authenticated Puppeteer scraping, full management endpoint suite
+- `events.toml` migrated from numeric IDs + `registerUrl` to string IDs (Practiscore match handles) with no `registerUrl` field
+- `events.html` updated to derive registration URLs from `e.id` and look up scraper data by `e.id`
+- Implemented global error logging securely tied to a Cloudflare D1 SQL database
+- Created robust Local Search engine inside `search.html`
+- Implemented deep-link highlighting and auto-scrolling on event cards
+- Wired secure Stripe Webhook listeners in `server.js`
 - Migrated asset data from JSON to TOML
 - Added server-side TOML parsing through `/api/toml`
 - Added trusted Markdown rendering for selected TOML fields
 - Refactored Ken Burns behavior into shared JS/CSS
-- Applied Ken Burns to home, FAQ, about, and contact
-- Added hero background crossfade on the home page
 - Tightened shared site gutters and content width handling
