@@ -1,6 +1,25 @@
-// CASS Practiscore Scraper (Final Production Version)
-// Ultra-Lean ID-Based Logic
 import puppeteer from "@cloudflare/puppeteer";
+import { AsyncLocalStorage } from 'node:async_hooks';
+
+const logStorage = new AsyncLocalStorage();
+
+// Overload console.log and console.warn globally for this worker
+const originalLog = console.log;
+const originalWarn = console.warn;
+
+console.log = (...args) => {
+  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+  originalLog(msg);
+  const stream = logStorage.getStore();
+  if (stream) stream(msg);
+};
+
+console.warn = (...args) => {
+  const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+  originalWarn(`[WARN] ${msg}`);
+  const stream = logStorage.getStore();
+  if (stream) stream(`⚠️ ${msg}`);
+};
 
 export default {
   async scheduled(event, env, ctx) {
@@ -33,19 +52,30 @@ export default {
 
     // GET /test (Scrape only the FIRST match found in the TOML)
     if (url.pathname === '/test') {
-      console.log('[Scraper] Triggered /test endpoint (Background)');
-      ctx.waitUntil((async () => {
-        const ids = await fetchIdsFromSite(env);
-        if (ids.length > 0) {
-          await scrapeSingleId(env, ids[0]);
-          console.log(`[Scraper] /test background job finished for ${ids[0]}`);
-        } else {
-          console.error('[Scraper] /test failed: No IDs found');
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      const encoder = new TextEncoder();
+      const streamWriter = (msg) => writer.write(encoder.encode(msg + '\n'));
+
+      ctx.waitUntil(logStorage.run(streamWriter, async () => {
+        try {
+          console.log('--- Starting Global Streamed Test Scrape ---');
+          const ids = await fetchIdsFromSite(env);
+          if (ids.length === 0) {
+            console.warn('No IDs found in events.toml');
+          } else {
+            await scrapeSingleId(env, ids[0]);
+            console.log('--- Scrape Finished ---');
+          }
+        } catch (err) {
+          console.log(`!!! FATAL ERROR: ${err.message}`);
+        } finally {
+          writer.close();
         }
-      })());
-      return new Response('Scrape started in background. Check npx wrangler tail.', { 
-        status: 202,
-        headers: { 'Access-Control-Allow-Origin': '*' }
+      }));
+
+      return new Response(readable, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' }
       });
     }
 
@@ -259,40 +289,37 @@ async function scrapeSingleId(env, matchId) {
     
     await new Promise(r => setTimeout(r, 3000));
     if (!env.BROWSER) throw new Error('BROWSER binding is missing.');
-
-    let attempts = 0;
-    while (attempts < 2) {
-      try {
-        console.log(`[Scraper] Launching browser (Attempt ${attempts + 1})...`);
+    try {
+      console.log(`[Scraper] Launching browser (Attempt 1)...`);
+      browser = await puppeteer.launch(env.BROWSER);
+    } catch (err) {
+      if (err.message.includes('429')) {
+        console.warn('Rate limited (429). Waiting 15 seconds before retry...');
+        await new Promise(r => setTimeout(r, 15000));
+        console.log(`[Scraper] Launching browser (Attempt 2)...`);
         browser = await puppeteer.launch(env.BROWSER);
-        break;
-      } catch (err) {
-        if (err.message.includes('429') && attempts === 0) {
-          console.warn('[Scraper] Rate limited (429). Waiting 15 seconds before retry...');
-          await new Promise(r => setTimeout(r, 15000));
-          attempts++;
-        } else {
-          throw err;
-        }
+      } else {
+        throw err;
       }
     }
 
     const page = await browser.newPage();
+    console.log('[Scraper] Navigating to login...');
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-
     await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
+    
+    console.log('[Scraper] Submitting credentials...');
     await page.type("#user-email", env.PS_USERNAME);
     await page.type("#user-password", env.PS_PASSWORD);
-
-    console.log('[Scraper] Submitting login form...');
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle2' }),
       page.click('button[type="submit"]')
     ]);
 
     const url = buildUrl(matchId);
-    console.log(`[Scraper] Navigating to match page: ${url}`);
+    console.log(`[Scraper] Navigating to: ${url}`);
     const data = await page.evaluate(() => {
+      // ... same evaluation logic ...
       const alerts = Array.from(document.querySelectorAll('.alert-info'));
       const target = alerts.find(a =>
         /spot|remain|full|waitlist|registration opens|requires a free account/i.test(a.innerText)
