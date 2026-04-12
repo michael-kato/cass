@@ -97,6 +97,20 @@ export default {
       return new Response(`Cleared ${sessions.length} session(s).`, { status: 200 });
     }
 
+    if (url.pathname === '/debug-fetch') {
+      try {
+        const id = 'pcsl-two-gun-at-pha-3';
+        const res = await fetch(`https://practiscore.com/${id}/register`, {
+          headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' }
+        });
+        const text = await res.text();
+        const ok = text.includes('spot') || text.includes('remain') || text.includes('full');
+        return new Response(`HTTP ${res.status} | Found Data: ${ok} | Length: ${text.length}`, { status: 200 });
+      } catch (err) {
+        return new Response(`Fetch Failed: ${err.message}`, { status: 500 });
+      }
+    }
+
     if (url.pathname === '/debug-browser') {
       try {
         console.log('[Debug] Launching browser...');
