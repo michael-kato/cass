@@ -253,6 +253,7 @@ async function scrapeAllMatches(env) {
 async function scrapeSingleId(env, matchId) {
   console.log(`[Scraper] Starting scrape for ID: ${matchId}`);
   let browser;
+  try {
     // Temporarily disabled to avoid management API rate limits
     // await clearDeadSessions(env);
     
