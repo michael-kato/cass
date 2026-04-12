@@ -118,21 +118,45 @@ async function fulfillPrintifyOrder(orderData, env) {
     return;
   }
 
+  // Fetch product data from our own TOML to get Printify IDs
+  const baseUrl = env.SITE_URL || 'https://cass.cass-account.workers.dev';
+  const merchRes = await fetch(`${baseUrl}/assets/merch.toml`);
+  if (!merchRes.ok) throw new Error('Failed to load merch.toml for fulfillment');
+  const merchText = await merchRes.text();
+  const products = TOML.parse(merchText).products || [];
+
   console.log(`[Printify] Fulfilling order ${orderData.internalOrderId} — ${orderData.items.length} item(s)`);
-  console.log(`[Printify] Shipping to:`, JSON.stringify(orderData.shippingAddress));
+  
+  const lineItems = orderData.items.map(item => {
+    // Find the product by checking which ID in our TOML is a prefix of the cart item ID
+    // We sort by length descending to ensure 't-shirt-extra' matches before 't-shirt'
+    const product = products
+      .sort((a, b) => b.id.length - a.id.length)
+      .find(p => item.id.startsWith(p.id));
+
+    if (!product) {
+      console.warn(`[Printify] Product not found in TOML for item ID: ${item.id}`);
+      return null;
+    }
+
+    return {
+      blueprint_id: Number(product.printifyBlueprintId) || 0,
+      print_provider_id: Number(product.printifyPrintProviderId) || 1, 
+      variant_id: Number(product.printifyVariantId) || 0,
+      quantity: item.qty
+    };
+  }).filter(li => li !== null);
 
   const printifyPayload = {
     external_id: orderData.internalOrderId,
     label: 'CASS Website Order',
-    line_items: orderData.items.map(item => ({
-      blueprint_id: item.printifyBlueprintId || 1,
-      variant_id: item.printifyVariantId || 1,
-      quantity: item.qty || item.quantity || 1
-    })),
+    line_items: lineItems,
     shipping_method: 1,
     send_shipping_notification: true,
     address_to: orderData.shippingAddress
   };
+
+  console.log(`[Printify] Payload:`, JSON.stringify(printifyPayload));
 
   try {
     const res = await fetch(`https://api.printify.com/v1/shops/${env.PRINTIFY_SHOP_ID}/orders.json`, {
@@ -161,29 +185,21 @@ async function fulfillPrintifyOrder(orderData, env) {
  * Maps Stripe session.shipping_details to Printify address_to format.
  */
 function mapStripeAddress(session) {
-  const shipping = session.shipping_details;
-  const email = session.customer_details?.email || '';
-
-  if (!shipping?.address) {
-    console.warn('[Webhook] No shipping address found on session:', session.id);
-    return {};
-  }
-
-  const { first_name, last_name } = splitName(shipping.name);
-  const addr = shipping.address;
-  console.log(`[Webhook] Shipping to ${first_name} ${last_name} — ${addr.city}, ${addr.state}`);
+  const details = session.shipping_details || {};
+  const addr = details.address || {};
+  const customer = session.customer_details || {};
 
   return {
-    first_name,
-    last_name,
-    email,
-    phone:    session.customer_details?.phone || '',
-    country:  addr.country      || 'US',
-    region:   addr.state        || '',
-    address1: addr.line1        || '',
-    address2: addr.line2        || '',
-    city:     addr.city         || '',
-    zip:      addr.postal_code  || ''
+    first_name: (details.name || customer.name || 'Customer').split(' ')[0],
+    last_name: (details.name || customer.name || '').split(' ').slice(1).join(' '),
+    email: customer.email || '',
+    phone: customer.phone || '',
+    country: addr.country || 'US',
+    region: addr.state || '',
+    address1: addr.line1 || '',
+    address2: addr.line2 || '',
+    city: addr.city || '',
+    zip: addr.postal_code || ''
   };
 }
 
@@ -376,24 +392,28 @@ async function handleStripeWebhook(request, env) {
   }
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    console.log('[Webhook] Payment succeeded for session:', session.id);
-    console.log('[Webhook] Cart metadata:', session.metadata?.cart_json);
+    const slimSession = event.data.object;
+    const stripe = new Stripe(env.STRIPE_SECRET_KEY);
+    
+    // FETCH THE FULL SESSION: This guarantees we get metadata and shipping_details
+    const session = await stripe.checkout.sessions.retrieve(slimSession.id, {
+      expand: ['shipping_details']
+    });
+
+    console.log(`[Webhook] Payment succeeded for session: ${session.id}`);
+    
+    const metadata = session.metadata || {};
+    console.log(`[Webhook] Cart metadata: ${metadata.cart_json || 'MISSING'}`);
+    
+    const items = JSON.parse(metadata.cart_json || '[]');
+    console.log(`[Webhook] Parsed ${items.length} item(s) from cart`);
+
+    const shippingAddress = mapStripeAddress(session);
+    if (!shippingAddress.address1) {
+      console.warn(`[Webhook] No shipping address found on session: ${session.id}`);
+    }
 
     try {
-      // 1. Reconstruct order from session metadata
-      let items = [];
-      try {
-        items = JSON.parse(session.metadata?.cart_json || '[]');
-      } catch (e) {
-        await logError('Webhook: Failed to parse cart_json', env, { sessionId: session.id, raw: session.metadata?.cart_json });
-      }
-      console.log(`[Webhook] Parsed ${items.length} item(s) from cart`);
-
-      // 2. Extract shipping address
-      const shippingAddress = mapStripeAddress(session);
-
-      // 3. Trigger Printify
       await fulfillPrintifyOrder({
         internalOrderId: session.id,
         items,
@@ -469,6 +489,7 @@ function withErrorHandling(handler) {
 
 async function handleRequest(request, env, ctx) {
   const url = new URL(request.url);
+  console.log(`[Request] ${request.method} ${url.pathname}`);
 
   if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
     return await handleCreateCheckoutSession(request, env);

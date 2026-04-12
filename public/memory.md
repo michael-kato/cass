@@ -262,9 +262,20 @@ Note: `registerUrl` field was removed. URL is derived from `id`.
 - Run a consistency pass on page-local layout gutters
 - Test all TOML-backed pages through the real worker/server path after content edits
 - Setup production Stripe Webhook keys securely by running `npx wrangler secret put STRIPE_WEBHOOK_SECRET`
-- **Create a dedicated D1 `orders` table** for full order records (id, customer email, items JSON, amount, shipping address, Printify order ID, status, timestamps). The current `cass_logs` table is for diagnostics only and is not a substitute for an order ledger.
-- **Subscribe `charge.refunded` in Stripe Dashboard** under Developers → Webhooks → select endpoint → add event type. Required for refund logging to fire.
-- **Implement refund support**: build `/api/refund` endpoint for Stripe (`stripe.refunds.create`) and PayPal (`/v2/payments/captures/{id}/refund`). Should cancel the corresponding Printify order if not yet shipped, log the refund to D1, and ideally notify the customer via Stripe's built-in refund email.
+- [x] Implement `withErrorHandling` middleware in `server.js` for global error logging to D1.
+- [x] Fix Scraper Service Binding path and remove fragile HTTP fetch fallback.
+- [x] Implement parallel session cleanup in Scraper.
+- [x] Add numeric 'remaining' Extraction to scraper for frontend math.
+- [x] Update frontend to show "Sold / Total" spots with "Almost Full" badges.
+- [x] Implement Stripe session retrieval in webhook for robust address/metadata access.
+- [x] Fix Printify fulfillment logic to handle multi-dash product and color names.
+
+### NEXT STEPS (Tomorrow):
+- [ ] **Printify ID Mapping**: Add `printifyBlueprintId` and `printifyPrintProviderId` to each product in `merch.toml`.
+- [ ] **Variant Logic**: Map specific `variant_id` values for color/size combinations in `merch.toml` to automate order creation.
+- [ ] **D1 Order Ledger**: Create a dedicated `orders` table in D1 (beyond the current diagnostic `cass_logs`).
+- [ ] **Refund API**: Build `/api/refund` for Stripe and PayPal with Printify order cancellation logic.
+- [ ] **Stripe Production Check**: Ensure the webhook is subscribed to `checkout.session.completed` in the live dashboard.
 
 ## Recent Major Changes
 - **Scraper complete overhaul**: Link-first architecture, ID-based KV storage, dynamic TOML-fetching, login-authenticated Puppeteer scraping, full management endpoint suite
