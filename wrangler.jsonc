@@ -32,12 +32,5 @@
 	},
 	"compatibility_flags": [
 		"nodejs_compat"
-	],
-	"kv_namespaces": [
-		{
-			"binding": "MATCH_DATA",
-			"id": "f06e1acee402409aaf9b39d9bc1f87e3",
-			"remote": true
-		}
 	]
 }
