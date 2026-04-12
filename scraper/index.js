@@ -99,7 +99,7 @@ export default {
     if (url.pathname === '/debug-browser') {
       try {
         console.log('[Debug] Launching browser...');
-        const b = await robustLaunch(env);
+        const b = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
         const p = await b.newPage();
         await p.goto('https://example.com', { waitUntil: 'networkidle2' });
         const title = await p.title();
@@ -252,7 +252,6 @@ async function clearDeadSessions(env) {
     console.log(`[Scraper] Found ${sessions.length} sessions. Clearing...`);
     await Promise.allSettled(sessions.map(async (s) => {
       try {
-        // Only attempt to close if it has an ID
         if (s.sessionId) {
           const b = await puppeteer.connect(env.BROWSER, s.sessionId);
           await b.close();
@@ -262,33 +261,6 @@ async function clearDeadSessions(env) {
     console.log('[Scraper] Session cleanup complete.');
   } catch (err) {
     console.warn(`[Scraper] Session cleanup failed: ${err.message}`);
-  }
-}
-
-async function robustLaunch(env) {
-  let attempts = 0;
-  while (attempts < 3) {
-    try {
-      console.log(`[Scraper] Launching browser (Attempt ${attempts + 1})...`);
-      return await puppeteer.launch(env.BROWSER, { protocolTimeout: 90000 });
-    } catch (err) {
-      const msg = err.message.toLowerCase();
-      const isRetryable = msg.includes('429') || msg.includes('session') || msg.includes('timeout') || msg.includes('connect');
-      
-      if (isRetryable && attempts < 2) {
-        console.warn(`[Scraper] Launch error: ${err.message}. Retrying...`);
-        if (msg.includes('429')) {
-          await new Promise(r => setTimeout(r, 15000));
-        } else {
-          // If session is hung/missing, try a cleanup before retry
-          await clearDeadSessions(env);
-          await new Promise(r => setTimeout(r, 2000));
-        }
-        attempts++;
-      } else {
-        throw err;
-      }
-    }
   }
 }
 
@@ -305,7 +277,7 @@ async function scrapeAllMatches(env) {
 
   let browser;
   try {
-    browser = await robustLaunch(env);
+    browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
 
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
@@ -372,7 +344,7 @@ async function scrapeSingleId(env, matchId) {
   console.log(`[Scraper] Starting scrape for ID: ${matchId}`);
   let browser;
   try {
-    browser = await robustLaunch(env);
+    browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
 
     const page = await browser.newPage();
     console.log('[Scraper] Navigating to login...');
