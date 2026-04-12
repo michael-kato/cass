@@ -48,6 +48,16 @@ export default {
       return new Response('Batch scrape job started...', { status: 202 });
     }
 
+    if (url.pathname === '/sessions') {
+      const sessions = await puppeteer.sessions(env.BROWSER);
+      return new Response(JSON.stringify(sessions, null, 2), { headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (url.pathname === '/clear-sessions') {
+      await clearDeadSessions(env);
+      return new Response('Sessions cleared.', { status: 200 });
+    }
+
     // GET /debug-sources (Verbose diagnostics)
     if (url.pathname === '/debug-sources') {
       const siteUrl = env.CASS_SITE_URL || '(MISSING - CASS_SITE_URL not set)';
@@ -109,8 +119,8 @@ export default {
 };
 
 async function fetchIdsFromSite(env) {
-  // Local dev fallback: set TEST_IDS=id1,id2,id3 in .dev.vars
-  // since Cloudflare Workers cannot fetch from localhost
+  // In production: uses CASS_SITE service binding (direct Worker-to-Worker).
+  // In local dev: service binding unavailable, TEST_IDS fallback is used instead.
   try {
     // Prefer Service Binding (direct Worker-to-Worker, no public internet)
     // Falls back to plain HTTP fetch if binding isn't available
@@ -137,6 +147,19 @@ async function fetchIdsFromSite(env) {
 }
 
 
+async function clearDeadSessions(env) {
+  try {
+    const sessions = await puppeteer.sessions(env.BROWSER);
+    for (const s of sessions) {
+      try {
+        const b = await puppeteer.connect(env.BROWSER, s.sessionId);
+        await b.close();
+      } catch (_) { /* already dead */ }
+    }
+    if (sessions.length > 0) console.log(`[Scraper] Cleared ${sessions.length} stale session(s).`);
+  } catch (_) { /* ignore */ }
+}
+
 function buildUrl(matchId) {
   return `https://practiscore.com/${matchId}/register`;
 }
@@ -150,6 +173,7 @@ async function scrapeAllMatches(env) {
 
   let browser;
   try {
+    await clearDeadSessions(env);
     browser = await puppeteer.launch(env.BROWSER);
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
@@ -196,6 +220,7 @@ async function scrapeAllMatches(env) {
 async function scrapeSingleId(env, matchId) {
   let browser;
   try {
+    await clearDeadSessions(env);
     browser = await puppeteer.launch(env.BROWSER);
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
