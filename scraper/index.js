@@ -33,8 +33,12 @@ export default {
 
     // GET /test (Scrape only the FIRST match found in the TOML)
     if (url.pathname === '/test') {
+      console.log('[Scraper] Triggered /test endpoint');
       const ids = await fetchIdsFromSite(env);
-      if (ids.length === 0) return new Response('No match IDs found in events.toml', { status: 404 });
+      if (ids.length === 0) {
+        console.error('[Scraper] /test failed: No IDs found');
+        return new Response('No match IDs found in events.toml', { status: 404 });
+      }
 
       const result = await scrapeSingleId(env, ids[0]);
       return new Response(JSON.stringify(result, null, 2), {
@@ -44,6 +48,7 @@ export default {
 
     // GET /scrape-all (Manual Batch Trigger)
     if (url.pathname === '/scrape-all') {
+      console.log('[Scraper] Triggered /scrape-all endpoint');
       ctx.waitUntil(scrapeAllMatches(env));
       return new Response('Batch scrape job started...', { status: 202 });
     }
@@ -84,13 +89,13 @@ export default {
 <body>
   <h2>CASS Scraper API</h2>
   <ul>
-    <li><a href="${origin}/debug-sources">/debug-sources</a> <span class="dim">- verify TOML fetch &amp; ID extraction</span></li>
-    <li><a href="${origin}/test">/test</a> <span class="dim">- scrape first match (one and done)</span></li>
-    <li><a href="${origin}/scrape-all">/scrape-all</a> <span class="dim">- trigger full batch scrape in background</span></li>
-    <li><a href="${origin}/data?id=pcsl-two-gun-at-pha-3">/data?id=...</a> <span class="dim">- fetch cached result for a match</span></li>
-    <li><a href="${origin}/scrape?id=pcsl-two-gun-at-pha-3">/scrape?id=...</a> <span class="dim">- on-demand live scrape for a match</span></li>
-    <li><a href="${origin}/sessions">/sessions</a> <span class="dim">- inspect active browser sessions</span></li>
-    <li><a href="${origin}/clear-sessions">/clear-sessions</a> <span class="dim">- kill hung browser sessions</span></li>
+    <li><a href="/debug-sources">/debug-sources</a> <span class="dim">- verify TOML fetch &amp; ID extraction</span></li>
+    <li><a href="/test">/test</a> <span class="dim">- scrape first match (one and done)</span></li>
+    <li><a href="/scrape-all">/scrape-all</a> <span class="dim">- trigger full batch scrape in background</span></li>
+    <li><a href="/data?id=pcsl-two-gun-at-pha-3">/data?id=...</a> <span class="dim">- fetch cached result for a match</span></li>
+    <li><a href="/scrape?id=pcsl-two-gun-at-pha-3">/scrape?id=...</a> <span class="dim">- on-demand live scrape for a match</span></li>
+    <li><a href="/sessions">/sessions</a> <span class="dim">- inspect active browser sessions</span></li>
+    <li><a href="/clear-sessions">/clear-sessions</a> <span class="dim">- kill hung browser sessions</span></li>
   </ul>
 </body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 
@@ -98,49 +103,50 @@ export default {
 };
 
 async function fetchIdsFromSite(env) {
-  // Production: uses CASS_SITE service binding (direct Worker-to-Worker).
-  // Local dev: service binding unavailable, falls back to TEST_IDS in .dev.vars.
-  if (env.CASS_SITE) {
-    try {
-      const response = await env.CASS_SITE.fetch(new Request('https://cass/assets/events.toml'));
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const text = await response.text();
+  console.log('[Scraper] Fetching Match IDs from main site...');
+  if (!env.CASS_SITE) {
+    console.error('[Scraper] Missing CASS_SITE binding. Check wrangler.toml');
+    return [];
+  }
 
-      const regex = /\[\[events\]\]\s*id\s*=\s*"([^"]+)"/g;
-      const ids = [];
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        if (!ids.includes(match[1])) ids.push(match[1]);
-      }
-      if (ids.length > 0) return ids;
-      throw new Error('No IDs found in TOML');
-    } catch (err) {
-      console.warn(`[Scraper] Service binding fetch failed: ${err.message}`);
+  try {
+    const response = await env.CASS_SITE.fetch(new Request('https://cass/assets/events.toml'));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+
+    const regex = /\[\[events\]\]\s*id\s*=\s*"([^"]+)"/g;
+    const ids = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      if (!ids.includes(match[1])) ids.push(match[1]);
     }
+    console.log(`[Scraper] Found ${ids.length} IDs in events.toml`);
+    if (ids.length > 0) return ids;
+    throw new Error('No IDs found in TOML');
+  } catch (err) {
+    console.error(`[Scraper] Failed to fetch IDs via service binding: ${err.message}`);
+    return [];
   }
-
-  // Fallback for local dev
-  if (env.TEST_IDS) {
-    console.warn('[Scraper] Using TEST_IDS fallback (local dev mode).');
-    return env.TEST_IDS.split(',').map(s => s.trim()).filter(Boolean);
-  }
-
-  console.error('[Scraper] No CASS_SITE binding and no TEST_IDS set. Cannot fetch match IDs.');
-  return [];
 }
 
 
 async function clearDeadSessions(env) {
   try {
+    console.log('[Scraper] Checking for stale browser sessions...');
     const sessions = await puppeteer.sessions(env.BROWSER);
-    for (const s of sessions) {
+    if (sessions.length === 0) return;
+    
+    console.log(`[Scraper] Found ${sessions.length} sessions. Clearing...`);
+    await Promise.all(sessions.map(async (s) => {
       try {
         const b = await puppeteer.connect(env.BROWSER, s.sessionId);
         await b.close();
-      } catch (_) { /* already dead */ }
-    }
-    if (sessions.length > 0) console.log(`[Scraper] Cleared ${sessions.length} stale session(s).`);
-  } catch (_) { /* ignore */ }
+      } catch (_) { /* already closed */ }
+    }));
+    console.log('[Scraper] Session cleanup complete.');
+  } catch (err) {
+    console.warn(`[Scraper] Session cleanup failed: ${err.message}`);
+  }
 }
 
 function buildUrl(matchId) {
@@ -201,10 +207,28 @@ async function scrapeAllMatches(env) {
 }
 
 async function scrapeSingleId(env, matchId) {
+  console.log(`[Scraper] Starting scrape for ID: ${matchId}`);
   let browser;
   try {
     await clearDeadSessions(env);
-    browser = await puppeteer.launch(env.BROWSER);
+    
+    let attempts = 0;
+    while (attempts < 2) {
+      try {
+        console.log(`[Scraper] Launching browser (Attempt ${attempts + 1})...`);
+        browser = await puppeteer.launch(env.BROWSER);
+        break;
+      } catch (err) {
+        if (err.message.includes('429') && attempts === 0) {
+          console.warn('[Scraper] Rate limited (429). Waiting 10 seconds before retry...');
+          await new Promise(r => setTimeout(r, 10000));
+          attempts++;
+        } else {
+          throw err;
+        }
+      }
+    }
+
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
@@ -223,17 +247,18 @@ async function scrapeSingleId(env, matchId) {
       return target ? target.innerText.replace(/×/g, '').trim() : "Registration Info Not Found";
     });
 
-    const result = {
-      matchId,
-      spotsText: data,
-      success: !data.includes("Not Found"),
-      scrapedAt: new Date().toISOString()
+    const res = {
+      id: matchId,
+      spots: data.trim(),
+      updated: new Date().toISOString()
     };
 
-    await env.MATCH_DATA.put(matchId, JSON.stringify(result));
-    return result;
+    // Save success state
+    await env.MATCH_DATA.put(matchId, JSON.stringify(res));
+    return res;
   } catch (err) {
-    return { error: err.message, success: false };
+    console.error(`[Scraper] Fatal error for ${matchId}:`, err.message);
+    throw err;
   } finally {
     if (browser) await browser.close();
   }
