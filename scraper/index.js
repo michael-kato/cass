@@ -59,37 +59,13 @@ export default {
       return new Response(`Cleared ${sessions.length} session(s).`, { status: 200 });
     }
 
-    // GET /debug-sources (Verbose diagnostics)
+    // GET /debug-sources
     if (url.pathname === '/debug-sources') {
-      const siteUrl = env.CASS_SITE_URL || '(MISSING - CASS_SITE_URL not set)';
-      const tomlUrl = `${siteUrl}/assets/events.toml`;
-      let fetchStatus = null, rawSnippet = null, ids = [], fetchError = null;
-
-      try {
-        const response = await fetch(tomlUrl);
-        fetchStatus = response.status;
-        const text = await response.text();
-        rawSnippet = text.substring(0, 300);
-
-        const regex = /\[\[events\]\]\s*id\s*=\s*"([^"]+)"/g;
-        let match;
-        while ((match = regex.exec(text)) !== null) {
-          ids.push(match[1]);
-        }
-      } catch (err) {
-        fetchError = err.message;
-      }
-
-      // Also show what fetchIdsFromSite() actually resolves to (with TEST_IDS fallback)
       const resolvedIds = await fetchIdsFromSite(env);
-
       return new Response(JSON.stringify({
-        siteUrl, tomlUrl, fetchStatus, fetchError,
-        rawFetchMatchCount: ids.length, rawFetchIds: ids,
         resolvedIds,
         resolvedCount: resolvedIds.length,
-        resolvedVia: resolvedIds.length === 0 ? 'none' : ids.length > 0 ? 'http' : env.CASS_SITE ? 'service-binding' : 'TEST_IDS',
-        rawSnippet
+        resolvedVia: env.CASS_SITE ? 'service-binding' : resolvedIds.length > 0 ? 'TEST_IDS' : 'none'
       }, null, 2), { headers: { 'Content-Type': 'application/json' } });
     }
 
@@ -122,31 +98,35 @@ export default {
 };
 
 async function fetchIdsFromSite(env) {
-  // In production: uses CASS_SITE service binding (direct Worker-to-Worker).
-  // In local dev: service binding unavailable, TEST_IDS fallback is used instead.
-  try {
-    // Prefer Service Binding (direct Worker-to-Worker, no public internet)
-    // Falls back to plain HTTP fetch if binding isn't available
-    const fetcher = env.CASS_SITE ?? { fetch: (r) => fetch(r) };
-    const response = await fetcher.fetch(new Request(`https://cass.cass-account.workers.dev/assets/events.toml`));
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const text = await response.text();
+  // Production: uses CASS_SITE service binding (direct Worker-to-Worker).
+  // Local dev: service binding unavailable, falls back to TEST_IDS in .dev.vars.
+  if (env.CASS_SITE) {
+    try {
+      const response = await env.CASS_SITE.fetch(new Request('https://cass/assets/events.toml'));
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const text = await response.text();
 
-    const regex = /\[\[events\]\]\s*id\s*=\s*"([^"]+)"/g;
-    const ids = [];
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      if (!ids.includes(match[1])) ids.push(match[1]);
+      const regex = /\[\[events\]\]\s*id\s*=\s*"([^"]+)"/g;
+      const ids = [];
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        if (!ids.includes(match[1])) ids.push(match[1]);
+      }
+      if (ids.length > 0) return ids;
+      throw new Error('No IDs found in TOML');
+    } catch (err) {
+      console.warn(`[Scraper] Service binding fetch failed: ${err.message}`);
     }
-    if (ids.length > 0) return ids;
-    throw new Error('No IDs found in TOML');
-  } catch (err) {
-    console.warn(`[Scraper] Site fetch failed (${err.message}). Trying TEST_IDS fallback...`);
-    if (env.TEST_IDS) {
-      return env.TEST_IDS.split(',').map(s => s.trim()).filter(Boolean);
-    }
-    return [];
   }
+
+  // Fallback for local dev
+  if (env.TEST_IDS) {
+    console.warn('[Scraper] Using TEST_IDS fallback (local dev mode).');
+    return env.TEST_IDS.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  console.error('[Scraper] No CASS_SITE binding and no TEST_IDS set. Cannot fetch match IDs.');
+  return [];
 }
 
 
