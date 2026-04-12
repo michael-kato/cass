@@ -135,7 +135,7 @@ async function clearDeadSessions(env) {
     console.log('[Scraper] Checking for stale browser sessions...');
     const sessions = await puppeteer.sessions(env.BROWSER);
     if (sessions.length === 0) return;
-    
+
     console.log(`[Scraper] Found ${sessions.length} sessions. Clearing...`);
     await Promise.all(sessions.map(async (s) => {
       try {
@@ -163,40 +163,77 @@ async function scrapeAllMatches(env) {
   let browser;
   try {
     await clearDeadSessions(env);
-    browser = await puppeteer.launch(env.BROWSER);
+
+    // Retry loop for the 429 Rate Limit error
+    let attempts = 0;
+    while (attempts < 2) {
+      try {
+        console.log(`[Scraper] Launching browser (Batch Attempt ${attempts + 1})...`);
+        browser = await puppeteer.launch(env.BROWSER);
+        break;
+      } catch (err) {
+        if (err.message.includes('429') && attempts === 0) {
+          console.warn('[Scraper] Rate limited (429). Waiting 10 seconds before retry...');
+          await new Promise(r => setTimeout(r, 10000));
+          attempts++;
+        } else {
+          throw err;
+        }
+      }
+    }
+
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
     // Login
-    await page.goto("https://practiscore.com/login", { waitUntil: "domcontentloaded" });
-    await page.type("input[name='email']", env.PS_USERNAME);
-    await page.type("input[name='password']", env.PS_PASSWORD);
+    console.log('[Scraper] Logging in for batch process...');
+    await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
+    await page.type("#user-email", env.PS_USERNAME);
+    await page.type("#user-password", env.PS_PASSWORD);
     await Promise.all([
-      page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-      page.click("button[type='submit']")
+      page.waitForNavigation({ waitUntil: 'networkidle2' }),
+      page.click('button[type="submit"]')
     ]);
 
     for (const id of ids) {
       try {
         console.log(`[Scraper] Processing ${id}...`);
-        await page.goto(buildUrl(id), { waitUntil: 'domcontentloaded' });
-
         const data = await page.evaluate(() => {
           const alerts = Array.from(document.querySelectorAll('.alert-info'));
-          const target = alerts.find(a => /spot|remain|full|waitlist/i.test(a.innerText));
-          return target ? target.innerText.replace(/×/g, '').trim() : "Registration Info Not Found";
+          const target = alerts.find(a =>
+            /spot|remain|full|waitlist|registration opens|requires a free account/i.test(a.innerText)
+          );
+
+          if (!target) return null;
+          const text = target.innerText.replace(/×/g, '').trim();
+          const lower = text.toLowerCase();
+
+          if (text.includes('requires a free account')) return { status: 'error' };
+          if (lower.includes('full') || lower.includes('wait list')) return { status: 'full', remaining: 0, raw: text };
+          if (lower.includes('registration opens')) return { status: 'upcoming', remaining: null, raw: text };
+
+          const match = text.match(/(\d+)/);
+          return { status: 'open', remaining: match ? parseInt(match[1], 10) : null, raw: text };
         });
 
+        if (!data || data.status === 'error') {
+          if (data?.status === 'error') throw new Error('Scraper logged out or session expired.');
+          console.warn(`[Scraper] No registration info found for ${id}`);
+          continue;
+        }
+
         const result = {
-          matchId: id,
-          spotsText: data,
-          success: !data.includes("Not Found"),
-          scrapedAt: new Date().toISOString()
+          id: id,
+          remaining: data.remaining,
+          status: data.status,
+          raw: data.raw,
+          updated: new Date().toISOString()
         };
 
         await env.MATCH_DATA.put(id, JSON.stringify(result));
       } catch (err) {
         console.error(`[Scraper] Failed ${id}: ${err.message}`);
+        if (err.message.includes('Scraper logged out')) throw err; // Stop batch if auth fails
       }
     }
   } catch (err) {
@@ -211,7 +248,7 @@ async function scrapeSingleId(env, matchId) {
   let browser;
   try {
     await clearDeadSessions(env);
-    
+
     let attempts = 0;
     while (attempts < 2) {
       try {
@@ -235,7 +272,7 @@ async function scrapeSingleId(env, matchId) {
     await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
     await page.type("#user-email", env.PS_USERNAME);
     await page.type("#user-password", env.PS_PASSWORD);
-    
+
     console.log('[Scraper] Submitting login form...');
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle2' }),
@@ -244,16 +281,31 @@ async function scrapeSingleId(env, matchId) {
 
     const url = buildUrl(matchId);
     console.log(`[Scraper] Navigating to match page: ${url}`);
-    await page.goto(url, { waitUntil: 'networkidle2' });
     const data = await page.evaluate(() => {
       const alerts = Array.from(document.querySelectorAll('.alert-info'));
-      const target = alerts.find(a => /spot|remain|full|waitlist/i.test(a.innerText));
-      return target ? target.innerText.replace(/×/g, '').trim() : "Registration Info Not Found";
+      const target = alerts.find(a =>
+        /spot|remain|full|waitlist|registration opens|requires a free account/i.test(a.innerText)
+      );
+
+      if (!target) return null;
+      const text = target.innerText.replace(/×/g, '').trim();
+      const lower = text.toLowerCase();
+
+      if (text.includes('requires a free account')) return { status: 'error' };
+      if (lower.includes('full') || lower.includes('wait list')) return { status: 'full', remaining: 0, raw: text };
+      if (lower.includes('registration opens')) return { status: 'upcoming', remaining: null, raw: text };
+
+      const match = text.match(/(\d+)/);
+      return { status: 'open', remaining: match ? parseInt(match[1], 10) : null, raw: text };
     });
+
+    if (!data || data.status === 'error') throw new Error(data?.status === 'error' ? 'Scraper logged out' : 'Data not found');
 
     const res = {
       id: matchId,
-      spots: data.trim(),
+      remaining: data.remaining,
+      status: data.status,
+      raw: data.raw,
       updated: new Date().toISOString()
     };
 
