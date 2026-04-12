@@ -112,41 +112,56 @@ function mapPaypalAddress(order) {
 /**
  * Printify Fulfillment Helper
  */
+/**
+ * Maps our cart items to Printify's line_items format using the product TOML.
+ */
+function mapCartItemsToPrintify(cartItems, productList) {
+  return cartItems.map(item => {
+    // Find the product by checking which ID in our TOML is a prefix of the cart item ID
+    const product = productList
+      .sort((a, b) => b.id.length - a.id.length)
+      .find(p => item.id.startsWith(p.id));
+
+    if (!product) {
+      console.warn(`[Mapping] Product not found in TOML for item ID: ${item.id}`);
+      return null;
+    }
+
+    // Extract color and size from the remainder (e.g. "Vintage Black-M")
+    const remainder = item.id.replace(product.id, '').replace(/^-/, '');
+    const variantId = product.variants?.[remainder] || product.printifyVariantId || 0;
+
+    console.log(`[Mapping] ${item.id} -> Variant: ${variantId}`);
+
+    return {
+      blueprint_id: Number(product.printifyBlueprintId) || 0,
+      print_provider_id: Number(product.printifyPrintProviderId) || 1, 
+      variant_id: Number(variantId) || 0,
+      quantity: item.qty
+    };
+  }).filter(li => li !== null);
+}
+
 async function fulfillPrintifyOrder(orderData, env) {
   if (!env.PRINTIFY_API_KEY || !env.PRINTIFY_SHOP_ID) {
     await logError('Printify config missing.', env);
     return;
   }
 
-  // Fetch product data from our own TOML to get Printify IDs
+  // 1. Fetch products and map items
   const baseUrl = env.SITE_URL || 'https://cass.cass-account.workers.dev';
   const merchRes = await fetch(`${baseUrl}/assets/merch.toml`);
   if (!merchRes.ok) throw new Error('Failed to load merch.toml for fulfillment');
   const merchText = await merchRes.text();
   const products = TOML.parse(merchText).products || [];
 
-  console.log(`[Printify] Fulfilling order ${orderData.internalOrderId} — ${orderData.items.length} item(s)`);
-  
-  const lineItems = orderData.items.map(item => {
-    // Find the product by checking which ID in our TOML is a prefix of the cart item ID
-    // We sort by length descending to ensure 't-shirt-extra' matches before 't-shirt'
-    const product = products
-      .sort((a, b) => b.id.length - a.id.length)
-      .find(p => item.id.startsWith(p.id));
+  const lineItems = mapCartItemsToPrintify(orderData.items, products);
+  if (lineItems.length === 0) {
+    await logError('Printify: No valid line items mapped.', env, { orderId: orderData.internalOrderId });
+    return;
+  }
 
-    if (!product) {
-      console.warn(`[Printify] Product not found in TOML for item ID: ${item.id}`);
-      return null;
-    }
-
-    return {
-      blueprint_id: Number(product.printifyBlueprintId) || 0,
-      print_provider_id: Number(product.printifyPrintProviderId) || 1, 
-      variant_id: Number(product.printifyVariantId) || 0,
-      quantity: item.qty
-    };
-  }).filter(li => li !== null);
-
+  // 2. Transmit to Printify
   const printifyPayload = {
     external_id: orderData.internalOrderId,
     label: 'CASS Website Order',
@@ -156,6 +171,7 @@ async function fulfillPrintifyOrder(orderData, env) {
     address_to: orderData.shippingAddress
   };
 
+  console.log(`[Printify] Transmitting Order ${orderData.internalOrderId}...`);
   console.log(`[Printify] Payload:`, JSON.stringify(printifyPayload));
 
   try {

@@ -29,9 +29,16 @@ name = "Cascade Anime Collection - Echo ACR"
 price = 35
 images = ["Echo ACR_01.webp"]
 type = "options"
-printifyBlueprintId = 1234
-printifyVariantId = 5678
+printifyBlueprintId = 66
+printifyPrintProviderId = 1
 sizes = ["S", "M", "L", "XL", "2XL"]
+
+[products.variants]
+"Tri-Blend Macchiato-S" = 12341
+"Tri-Blend Macchiato-M" = 12342
+"Tri-Blend Macchiato-L" = 12343
+"Tri-Blend Vintage Black-S" = 12344
+"Tri-Blend Vintage Black-M" = 12345
 description = """
 Available in two unique colors, Echo sports a custom Templar Precision ACR and is ready for a match win!
 
@@ -52,7 +59,14 @@ name = "Cascade Action Anime Collection - Sierra G36K"
 price = 35
 images = ["sierra-g36k_01.webp"]
 type = "options"
+printifyBlueprintId = 66
+printifyPrintProviderId = 1
 sizes = ["S", "M", "L", "XL", "2XL"]
+
+[products.variants]
+"Tri-Blend Macchiato-S" = 32341
+"Tri-Blend Macchiato-M" = 32342
+"Tri-Blend Vintage Black-L" = 32343
 description = "Premium tri-blend t-shirt featuring original anime-inspired artwork."
 
 [products.colors]

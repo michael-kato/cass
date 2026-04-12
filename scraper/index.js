@@ -97,6 +97,59 @@ export default {
       return new Response(`Cleared ${sessions.length} session(s).`, { status: 200 });
     }
 
+    if (url.pathname === '/debug-browser') {
+      try {
+        console.log('[Debug] Launching browser...');
+        const b = await puppeteer.launch(env.BROWSER);
+        const p = await b.newPage();
+        await p.goto('https://example.com');
+        const title = await p.title();
+        await b.close();
+        return new Response(`Success: ${title}`, { status: 200 });
+      } catch (err) {
+        return new Response(`Debug Failed: ${err.message}`, { status: 500 });
+      }
+    }
+
+    // GET /sync-merch (Automator for Variant IDs)
+    if (url.pathname === '/sync-merch') {
+      if (!env.PRINTIFY_API_KEY || !env.PRINTIFY_SHOP_ID) {
+        return new Response('Missing PRINTIFY_API_KEY or PRINTIFY_SHOP_ID in scraper secrets.', { status: 500 });
+      }
+
+      try {
+        const res = await fetch(`https://api.printify.com/v1/shops/${env.PRINTIFY_SHOP_ID}/products.json?limit=100`, {
+          headers: { 'Authorization': `Bearer ${env.PRINTIFY_API_KEY}` }
+        });
+        if (!res.ok) throw new Error(`Printify Error: ${res.status}`);
+        const data = await res.json();
+
+        let tomlOutput = "# PRINTIFY VARIANT MAPPING (Copy-paste these sections into merch.toml)\n\n";
+        
+        // Use the actual 'data' property in Printify's response
+        const products = data.data || [];
+        
+        products.forEach(p => {
+          tomlOutput += `### PRODUCT: ${p.title} (Blueprint: ${p.blueprint_id})\n`;
+          tomlOutput += `# PRODUCT_ID: ${p.id} \n`;
+          tomlOutput += `printifyBlueprintId = ${p.blueprint_id}\n`;
+          tomlOutput += `printifyPrintProviderId = ${p.print_provider_id}\n\n`;
+          tomlOutput += `[products.variants]\n`;
+          
+          p.variants.forEach(v => {
+            // Convert "Color / Size" to "Color-Size"
+            const cleanTitle = v.title.replace(/\s*\/\s*/g, '-');
+            tomlOutput += `"${cleanTitle}" = ${v.id}\n`;
+          });
+          tomlOutput += "\n";
+        });
+
+        return new Response(tomlOutput, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+      } catch (err) {
+        return new Response(`Sync Failed: ${err.message}`, { status: 500 });
+      }
+    }
+
     // GET /debug-sources
     if (url.pathname === '/debug-sources') {
       const resolvedIds = await fetchIdsFromSite(env);
@@ -129,6 +182,7 @@ export default {
     <li><a href="/scrape?id=pcsl-two-gun-at-pha-3">/scrape?id=...</a> <span class="dim">- on-demand live scrape for a match</span></li>
     <li><a href="/sessions">/sessions</a> <span class="dim">- inspect active browser sessions</span></li>
     <li><a href="/clear-sessions">/clear-sessions</a> <span class="dim">- kill hung browser sessions</span></li>
+    <li><a href="/sync-merch">/sync-merch</a> <span class="dim">- GENERATE Printify TOML mapping block</span></li>
   </ul>
 </body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 
