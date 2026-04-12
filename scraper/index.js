@@ -232,15 +232,19 @@ async function scrapeSingleId(env, matchId) {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
-    await page.goto("https://practiscore.com/login", { waitUntil: "domcontentloaded" });
-    await page.type("input[name='email']", env.PS_USERNAME);
-    await page.type("input[name='password']", env.PS_PASSWORD);
+    await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
+    await page.type("#user-email", env.PS_USERNAME);
+    await page.type("#user-password", env.PS_PASSWORD);
+    
+    console.log('[Scraper] Submitting login form...');
     await Promise.all([
-      page.waitForNavigation({ waitUntil: 'domcontentloaded' }),
-      page.click("button[type='submit']")
+      page.waitForNavigation({ waitUntil: 'networkidle2' }),
+      page.click('button[type="submit"]')
     ]);
 
-    await page.goto(buildUrl(matchId), { waitUntil: 'domcontentloaded' });
+    const url = buildUrl(matchId);
+    console.log(`[Scraper] Navigating to match page: ${url}`);
+    await page.goto(url, { waitUntil: 'networkidle2' });
     const data = await page.evaluate(() => {
       const alerts = Array.from(document.querySelectorAll('.alert-info'));
       const target = alerts.find(a => /spot|remain|full|waitlist/i.test(a.innerText));
