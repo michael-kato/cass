@@ -54,8 +54,9 @@ export default {
     }
 
     if (url.pathname === '/clear-sessions') {
+      const sessions = await puppeteer.sessions(env.BROWSER);
       await clearDeadSessions(env);
-      return new Response('Sessions cleared.', { status: 200 });
+      return new Response(`Cleared ${sessions.length} session(s).`, { status: 200 });
     }
 
     // GET /debug-sources (Verbose diagnostics)
@@ -112,6 +113,8 @@ export default {
     <li><a href="${origin}/scrape-all">/scrape-all</a> <span class="dim">- trigger full batch scrape in background</span></li>
     <li><a href="${origin}/data?id=pcsl-two-gun-at-pha-3">/data?id=...</a> <span class="dim">- fetch cached result for a match</span></li>
     <li><a href="${origin}/scrape?id=pcsl-two-gun-at-pha-3">/scrape?id=...</a> <span class="dim">- on-demand live scrape for a match</span></li>
+    <li><a href="${origin}/sessions">/sessions</a> <span class="dim">- inspect active browser sessions</span></li>
+    <li><a href="${origin}/clear-sessions">/clear-sessions</a> <span class="dim">- kill hung browser sessions</span></li>
   </ul>
 </body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 
