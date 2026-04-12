@@ -79,19 +79,6 @@ export default {
       });
     }
 
-    // GET /scrape-all (Manual Batch Trigger)
-    if (url.pathname === '/debug-fetch') {
-      try {
-        const res = await fetch('https://practiscore.com/login');
-        const html = await res.text();
-        return new Response(`HTTP ${res.status}\n\n--- HTML START ---\n${html.slice(0, 5000)}`, {
-          headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-        });
-      } catch (err) {
-        return new Response(`Fetch Failed: ${err.message}`, { status: 500 });
-      }
-    }
-
     if (url.pathname === '/scrape-all') {
       console.log('[Scraper] Triggered /scrape-all endpoint');
       ctx.waitUntil(scrapeAllMatches(env));
@@ -109,30 +96,17 @@ export default {
       return new Response(`Cleared ${sessions.length} session(s).`, { status: 200 });
     }
 
-    if (url.pathname === '/debug-fetch') {
-      try {
-        console.log('[Debug] Performing Skeleton Browser Launch...');
-        const b = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
-        const p = await b.newPage();
-        await p.goto('https://example.com');
-        const title = await p.title();
-        await b.close();
-        return new Response(`Browser Sanity Check: SUCCESS | Title: ${title}`, { status: 200 });
-      } catch (err) {
-        return new Response(`Browser Sanity Check: FAILED | Error: ${err.message}`, { status: 500 });
-      }
-    }
-
     if (url.pathname === '/debug-browser') {
       try {
         console.log('[Debug] Launching browser...');
-        const b = await puppeteer.launch(env.BROWSER);
+        const b = await robustLaunch(env);
         const p = await b.newPage();
-        await p.goto('https://example.com');
+        await p.goto('https://example.com', { waitUntil: 'networkidle2' });
         const title = await p.title();
         await b.close();
         return new Response(`Success: ${title}`, { status: 200 });
       } catch (err) {
+        console.error(`[Debug] Failed: ${err.message}`);
         return new Response(`Debug Failed: ${err.message}`, { status: 500 });
       }
     }
@@ -247,18 +221,48 @@ async function clearDeadSessions(env) {
   try {
     console.log('[Scraper] Checking for stale browser sessions...');
     const sessions = await puppeteer.sessions(env.BROWSER);
-    if (sessions.length === 0) return;
+    if (!sessions || sessions.length === 0) return;
 
     console.log(`[Scraper] Found ${sessions.length} sessions. Clearing...`);
-    await Promise.all(sessions.map(async (s) => {
+    await Promise.allSettled(sessions.map(async (s) => {
       try {
-        const b = await puppeteer.connect(env.BROWSER, s.sessionId);
-        await b.close();
-      } catch (_) { /* already closed */ }
+        // Only attempt to close if it has an ID
+        if (s.sessionId) {
+          const b = await puppeteer.connect(env.BROWSER, s.sessionId);
+          await b.close();
+        }
+      } catch (_) { /* already closed or inaccessible */ }
     }));
     console.log('[Scraper] Session cleanup complete.');
   } catch (err) {
     console.warn(`[Scraper] Session cleanup failed: ${err.message}`);
+  }
+}
+
+async function robustLaunch(env) {
+  let attempts = 0;
+  while (attempts < 3) {
+    try {
+      console.log(`[Scraper] Launching browser (Attempt ${attempts + 1})...`);
+      return await puppeteer.launch(env.BROWSER, { protocolTimeout: 90000 });
+    } catch (err) {
+      const msg = err.message.toLowerCase();
+      const isRetryable = msg.includes('429') || msg.includes('session') || msg.includes('timeout') || msg.includes('connect');
+      
+      if (isRetryable && attempts < 2) {
+        console.warn(`[Scraper] Launch error: ${err.message}. Retrying...`);
+        if (msg.includes('429')) {
+          await new Promise(r => setTimeout(r, 15000));
+        } else {
+          // If session is hung/missing, try a cleanup before retry
+          await clearDeadSessions(env);
+          await new Promise(r => setTimeout(r, 2000));
+        }
+        attempts++;
+      } else {
+        throw err;
+      }
+    }
   }
 }
 
@@ -275,29 +279,7 @@ async function scrapeAllMatches(env) {
 
   let browser;
   try {
-    // Temporarily disabled to avoid management API rate limits
-    // await clearDeadSessions(env);
-
-    await new Promise(r => setTimeout(r, 3000));
-    if (!env.BROWSER) throw new Error('BROWSER binding is missing.');
-
-    // Retry loop for the 429 Rate Limit error
-    let attempts = 0;
-    while (attempts < 2) {
-      try {
-        console.log(`[Scraper] Launching browser (Batch Attempt ${attempts + 1})...`);
-        browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
-        break;
-      } catch (err) {
-        if (err.message.includes('429') && attempts === 0) {
-          console.warn('[Scraper] Rate limited (429). Waiting 15 seconds before retry...');
-          await new Promise(r => setTimeout(r, 15000));
-          attempts++;
-        } else {
-          throw err;
-        }
-      }
-    }
+    browser = await robustLaunch(env);
 
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
@@ -364,24 +346,7 @@ async function scrapeSingleId(env, matchId) {
   console.log(`[Scraper] Starting scrape for ID: ${matchId}`);
   let browser;
   try {
-    // Temporarily disabled to avoid management API rate limits
-    // await clearDeadSessions(env);
-
-    await new Promise(r => setTimeout(r, 3000));
-    if (!env.BROWSER) throw new Error('BROWSER binding is missing.');
-    try {
-      console.log(`[Scraper] Launching browser (Attempt 1)...`);
-      browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
-    } catch (err) {
-      if (err.message.includes('429')) {
-        console.warn('Rate limited (429). Waiting 15 seconds before retry...');
-        await new Promise(r => setTimeout(r, 15000));
-        console.log(`[Scraper] Launching browser (Attempt 2)...`);
-        browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
-      } else {
-        throw err;
-      }
-    }
+    browser = await robustLaunch(env);
 
     const page = await browser.newPage();
     console.log('[Scraper] Navigating to login...');
