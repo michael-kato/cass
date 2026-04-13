@@ -217,7 +217,7 @@ export default {
       try {
         browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
         const page = await browser.newPage();
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
         await page.goto(targetUrl, { waitUntil: 'networkidle2' });
         const content = await page.content();
         await browser.close();
@@ -397,8 +397,11 @@ async function performLogin(page, env, debugList) {
   await page.focus('input[name="password"]');
   console.log('[Scraper] Submitting form via JS click...');
   
-  // Nuclear Click: Bypasses visibility/obstruction checks
+  // Nuclear Click: Only if we are actually still on a login/sign-in page
   await page.evaluate(() => {
+    const isAuthPage = window.location.href.includes('login') || window.location.href.includes('sign_in');
+    if (!isAuthPage) return;
+    
     const btn = document.querySelector('button[type="submit"]') || document.querySelector('.btn-primary');
     if (btn) btn.click();
   });
@@ -447,7 +450,7 @@ async function scrapeAllMatches(env) {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
     const page = await browser.newPage();
     await applyStealth(page);
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
 
     for (const id of ids) {
       try {
