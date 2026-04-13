@@ -316,9 +316,11 @@ async function performLogin(page, env) {
 
   await page.type('input[name="username"]', env.PS_USERNAME, { delay: 50 });
   await page.type('input[name="password"]', env.PS_PASSWORD, { delay: 50 });
+  
+  console.log('[Scraper] Submitting form via Enter...');
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'networkidle2' }),
-    page.click('button[type="submit"]')
+    page.keyboard.press('Enter')
   ]);
   console.log('[Scraper] Login successful.');
 }
