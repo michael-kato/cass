@@ -6,7 +6,7 @@ observability = { enabled = true }
 
 # Browser Rendering binding
 [browser]
-binding = "BROWSER"
+binding = "MYBROWSER"
 
 # Service Binding: direct Worker-to-Worker call (bypasses workers.dev routing)
 [[services]]

@@ -86,36 +86,50 @@ export default {
     }
 
     if (url.pathname === '/sessions') {
-      const sessions = await puppeteer.sessions(env.BROWSER);
+      const sessions = await puppeteer.sessions(env.MYBROWSER);
       return new Response(JSON.stringify(sessions, null, 2), { headers: { 'Content-Type': 'application/json' } });
     }
 
     if (url.pathname === '/clear-sessions') {
-      const sessions = await puppeteer.sessions(env.BROWSER);
+      const sessions = await puppeteer.sessions(env.MYBROWSER);
       await clearDeadSessions(env);
       return new Response(`Cleared ${sessions.length} session(s).`, { status: 200 });
     }
 
     if (url.pathname === '/debug-browser') {
       try {
-        const browser = await puppeteer.launch(env.BROWSER);
-        const page = await browser.newPage();
-        await page.goto("https://example.com");
-        const metrics = await page.metrics();
-        await browser.close();
-        return new Response.json(metrics);
+        console.log('[Debug] Diagnostic Start');
+        console.log('--- Binding Status ---');
+        console.log('BROWSER exists:', !!env.MYBROWSER);
+        console.log('BROWSER type:', typeof env.MYBROWSER);
+
+        console.log('[Debug] Attempting Launch (60s timeout)...');
+        const b = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
+
+        console.log('[Debug] Browser Acquired. ID:', b.connected ? 'Connected' : 'Disconnected');
+        const p = await b.newPage();
+        await p.goto('https://example.com');
+        const title = await p.title();
+        await b.close();
+
+        return new Response(`Success: ${title}`, { status: 200 });
       } catch (err) {
-        return new Response(`Debug Failed: ${err.message}`, { status: 500 });
+        const fullError = JSON.stringify(err, Object.getOwnPropertyNames(err), 2);
+        console.error(`[Debug] FATAL LAUNCH ERROR:\n${fullError}`);
+        return new Response(`Debug Failed: ${err.message}\n\nCheck logs for full trace.`, {
+          status: 500,
+          headers: { 'Content-Type': 'text/plain' }
+        });
       }
     }
 
     if (url.pathname === '/history') {
-      const history = await puppeteer.history(env.BROWSER);
+      const history = await puppeteer.history(env.MYBROWSER);
       return new Response(JSON.stringify(history, null, 2), { headers: { 'Content-Type': 'application/json' } });
     }
 
     if (url.pathname === '/limits') {
-      const limits = await puppeteer.limits(env.BROWSER);
+      const limits = await puppeteer.limits(env.MYBROWSER);
       return new Response(JSON.stringify(limits, null, 2), { headers: { 'Content-Type': 'application/json' } });
     }
 
@@ -244,14 +258,14 @@ async function fetchIdsFromSite(env) {
 async function clearDeadSessions(env) {
   try {
     console.log('[Scraper] Checking for stale browser sessions...');
-    const sessions = await puppeteer.sessions(env.BROWSER);
+    const sessions = await puppeteer.sessions(env.MYBROWSER);
     if (!sessions || sessions.length === 0) return;
 
     console.log(`[Scraper] Found ${sessions.length} sessions. Clearing...`);
     await Promise.allSettled(sessions.map(async (s) => {
       try {
         if (s.sessionId) {
-          const b = await puppeteer.connect(env.BROWSER, s.sessionId);
+          const b = await puppeteer.connect(env.MYBROWSER, s.sessionId);
           await b.close();
         }
       } catch (_) { /* already closed or inaccessible */ }
@@ -275,7 +289,7 @@ async function scrapeAllMatches(env) {
 
   let browser;
   try {
-    browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
+    browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
 
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
@@ -342,7 +356,7 @@ async function scrapeSingleId(env, matchId) {
   console.log(`[Scraper] Starting scrape for ID: ${matchId}`);
   let browser;
   try {
-    browser = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
+    browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
 
     const page = await browser.newPage();
     console.log('[Scraper] Navigating to login...');
