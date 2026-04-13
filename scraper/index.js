@@ -403,6 +403,10 @@ async function performLogin(page, env, debugList) {
 
   // Diagnostic: Log all likely submit buttons
   const submitDetails = await page.evaluate(() => {
+    // 1. Kill the USCCA trap/popup immediately
+    const trap = document.querySelector('#popupForm') || document.querySelector('.modal');
+    if (trap) trap.remove();
+
     const btns = Array.from(document.querySelectorAll('button, input[type="submit"]'));
     return btns.map(b => ({
       tag: b.tagName,
@@ -413,20 +417,35 @@ async function performLogin(page, env, debugList) {
   });
   console.log('[Scraper] Potential submit buttons:', JSON.stringify(submitDetails));
 
+  // Also remove everything related to Turnstile lockers
+  await page.evaluate(() => {
+    document.querySelectorAll('[data-turnstile-lock]').forEach(el => el.removeAttribute('disabled'));
+  });
+
   await page.type('input[name="username"]', env.PS_USERNAME || '', { delay: 50 });
   await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
 
   await page.focus('input[name="password"]');
   await captureDebug(env, page, 'Form Filled', debugList || []);
 
-  console.log('[Scraper] Submitting form via JS click...');
+  console.log('[Scraper] Waiting for Cloudflare Turnstile to solve...');
+  try {
+    // Wait up to 10s for the Turnstile token to be populated
+    await page.waitForFunction(() => {
+      const token = document.querySelector('input[name="cf-turnstile-response"]')?.value;
+      return token && token.length > 20;
+    }, { timeout: 10000 });
+    console.log('[Scraper] Turnstile solved!');
+  } catch (e) {
+    console.warn('[Scraper] Turnstile timeout (proceeding anyway)');
+  }
 
-  // Nuclear Click: Only if we are actually still on a login/sign-in page
+  console.log('[Scraper] Submitting form via strict JS click...');
+
+  // Nuclear Click: Target the specific form button to avoid popups
   await page.evaluate(() => {
-    const isAuthPage = window.location.href.includes('login') || window.location.href.includes('sign_in');
-    if (!isAuthPage) return;
-
-    const btn = document.querySelector('button[type="submit"]') || document.querySelector('.btn-primary');
+    const form = document.querySelector('.omb_loginForm');
+    const btn = form ? form.querySelector('button[type="submit"]') : document.querySelector('button[type="submit"]');
     if (btn) btn.click();
   });
 
@@ -454,7 +473,11 @@ async function performLogin(page, env, debugList) {
 
   // Brief wait for cookies to settle in the warm pool
   console.log('[Scraper] Waiting for session to settle...');
-  await new Promise(r => setTimeout(r, 2000));
+  await new Promise(r => setTimeout(r, 4000));
+
+  const cookies = await page.cookies();
+  const sessionExists = cookies.some(c => c.name.includes('session'));
+  console.log(`[Scraper] Session Cookie Detected: ${sessionExists} (${cookies.length} total cookies)`);
 
   await captureDebug(env, page, 'Session Settled', debugList || []);
   console.log('[Scraper] Login step finished.');
@@ -476,7 +499,7 @@ async function scrapeAllMatches(env) {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
     const page = await browser.newPage();
     await applyStealth(page);
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36');
 
     for (const id of ids) {
       try {
@@ -549,7 +572,7 @@ async function scrapeSingleId(env, matchId) {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
     const page = await browser.newPage();
     await applyStealth(page);
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36');
 
     const url = buildUrl(matchId);
     console.log(`[Scraper] Navigating to: ${url}`);
