@@ -181,6 +181,26 @@ export default {
       }
     }
 
+    // GET /view-html?url=...
+    if (url.pathname === '/view-html') {
+      const targetUrl = url.searchParams.get('url');
+      if (!targetUrl) return new Response('Missing ?url=', { status: 400 });
+      
+      let browser;
+      try {
+        browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
+        const page = await browser.newPage();
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.goto(targetUrl, { waitUntil: 'networkidle2' });
+        const content = await page.content();
+        await browser.close();
+        return new Response(content, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+      } catch (err) {
+        if (browser) await browser.close();
+        return new Response(`Error: ${err.message}`, { status: 500 });
+      }
+    }
+
     // GET /debug-sources
     if (url.pathname === '/debug-sources') {
       const resolvedIds = await fetchIdsFromSite(env);
@@ -229,6 +249,7 @@ export default {
   <ul>
     <li><a href="/data?id=pcsl-two-gun-at-pha-3">/data?id=...</a> <span class="dim">Fetch cached data for a specific match ID</span></li>
     <li><a href="/scrape?id=pcsl-two-gun-at-pha-3">/scrape?id=...</a> <span class="dim">Perform on-demand live scrape for one match</span></li>
+    <li><a href="/view-html?url=https://practiscore.com/login">/view-html?url=...</a> <span class="badge">DEBUG</span> <span class="dim">See raw HTML of any page via Puppeteer</span></li>
     <li><a href="/sync-merch">/sync-merch</a> <span class="dim">Generate variant mapping TOML from Printify API</span></li>
   </ul>
 </body></html>`, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
@@ -285,6 +306,25 @@ async function clearDeadSessions(env) {
   }
 }
 
+async function performLogin(page, env) {
+  console.log('[Scraper] Navigating to login...');
+  await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
+  
+  const isLoginPage = await page.$("#user-email");
+  if (!isLoginPage) {
+    throw new Error(`Login form not found. Title: ${await page.title()}`);
+  }
+
+  console.log('[Scraper] Entering credentials...');
+  await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
+  await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle2' }),
+    page.click('button[type="submit"]')
+  ]);
+  console.log('[Scraper] Login successful.');
+}
+
 function buildUrl(matchId) {
   return `https://practiscore.com/${matchId}/register`;
 }
@@ -299,44 +339,25 @@ async function scrapeAllMatches(env) {
   let browser;
   try {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
-
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-
-    // Login
-    console.log('[Scraper] Navigating to login (checking session)...');
-    await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
-    
-    const title = await page.title();
-    console.log(`[Scraper] Initial Page Title: ${title}`);
-    
-    if (title.includes('Cloudflare') || title.includes('Challenge')) {
-      throw new Error(`Bot challenge detected: ${title}`);
-    }
-
-    // Check if we are already logged in (redirected to Home/Dashboard)
-    const isLoginPage = await page.$("#user-email");
-    
-    if (!isLoginPage) {
-      if (title.toLowerCase().includes('home') || title.toLowerCase().includes('dashboard')) {
-        console.log('[Scraper] Already logged in (detected via redirect). Skipping login flow.');
-      } else {
-        console.warn('[Scraper] Redirected but destination unclear. Attempting to proceed anyway.');
-      }
-    } else {
-      console.log('[Scraper] Not logged in. Submitting credentials...');
-      await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
-      await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: 'networkidle2' }),
-        page.click('button[type="submit"]')
-      ]);
-      console.log('[Scraper] Login submitted.');
-    }
 
     for (const id of ids) {
       try {
         console.log(`[Scraper] Processing ${id}...`);
+        const url = buildUrl(id);
+        console.log(`[Scraper] Navigating to: ${url}`);
+        await page.goto(url, { waitUntil: "networkidle2" });
+
+        let content = await page.content();
+        if (content.includes('requires a free account')) {
+          console.log('[Scraper] Auth required. Logging in...');
+          await performLogin(page, env);
+          console.log(`[Scraper] Returning to match: ${url}`);
+          await page.goto(url, { waitUntil: "networkidle2" });
+          content = await page.content();
+        }
+
         const data = await page.evaluate(() => {
           const alerts = Array.from(document.querySelectorAll('.alert-info'));
           const target = alerts.find(a =>
@@ -356,8 +377,7 @@ async function scrapeAllMatches(env) {
         });
 
         if (!data || data.status === 'error') {
-          if (data?.status === 'error') throw new Error('Scraper logged out or session expired.');
-          console.warn(`[Scraper] No registration info found for ${id}`);
+          console.warn(`[Scraper] Data skip for ${id}: ${data?.status || 'no info'}`);
           continue;
         }
 
@@ -371,8 +391,7 @@ async function scrapeAllMatches(env) {
 
         await env.MATCH_DATA.put(id, JSON.stringify(result));
       } catch (err) {
-        console.error(`[Scraper] Failed ${id}: ${err.message}`);
-        if (err.message.includes('Scraper logged out')) throw err; // Stop batch if auth fails
+        console.error(`[Scraper] Error ${id}: ${err.message}`);
       }
     }
   } catch (err) {
@@ -383,46 +402,27 @@ async function scrapeAllMatches(env) {
 }
 
 async function scrapeSingleId(env, matchId) {
-  console.log(`[Scraper] Starting scrape for ID: ${matchId}`);
+  console.log(`[Scraper] Starting single scrape: ${matchId}`);
   let browser;
   try {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
-
     const page = await browser.newPage();
-    console.log('[Scraper] Navigating to login (checking session)...');
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-    await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
-
-    const title = await page.title();
-    console.log(`[Scraper] Initial Page Title: ${title}`);
-    
-    if (title.includes('Cloudflare') || title.includes('Challenge')) {
-      throw new Error(`Bot challenge detected: ${title}`);
-    }
-
-    const isLoginPage = await page.$("#user-email");
-    
-    if (!isLoginPage) {
-      if (title.toLowerCase().includes('home') || title.toLowerCase().includes('dashboard')) {
-        console.log('[Scraper] Already logged in (detected via redirect). Skipping login flow.');
-      } else {
-        console.warn('[Scraper] Redirected but destination unclear. Attempting to proceed anyway.');
-      }
-    } else {
-      console.log('[Scraper] Not logged in. Submitting credentials...');
-      await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
-      await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: 'networkidle2' }),
-        page.click('button[type="submit"]')
-      ]);
-      console.log('[Scraper] Login submitted.');
-    }
 
     const url = buildUrl(matchId);
     console.log(`[Scraper] Navigating to: ${url}`);
+    await page.goto(url, { waitUntil: "networkidle2" });
+
+    let content = await page.content();
+    if (content.includes('requires a free account')) {
+      console.log('[Scraper] Auth required. Logging in...');
+      await performLogin(page, env);
+      console.log(`[Scraper] Returning to match: ${url}`);
+      await page.goto(url, { waitUntil: "networkidle2" });
+      content = await page.content();
+    }
+
     const data = await page.evaluate(() => {
-      // ... same evaluation logic ...
       const alerts = Array.from(document.querySelectorAll('.alert-info'));
       const target = alerts.find(a =>
         /spot|remain|full|waitlist|registration opens|requires a free account/i.test(a.innerText)
@@ -440,7 +440,7 @@ async function scrapeSingleId(env, matchId) {
       return { status: 'open', remaining: match ? parseInt(match[1], 10) : null, raw: text };
     });
 
-    if (!data || data.status === 'error') throw new Error(data?.status === 'error' ? 'Scraper logged out' : 'Data not found');
+    if (!data || data.status === 'error') throw new Error('Data not found or login failed');
 
     const res = {
       id: matchId,
@@ -450,11 +450,10 @@ async function scrapeSingleId(env, matchId) {
       updated: new Date().toISOString()
     };
 
-    // Save success state
     await env.MATCH_DATA.put(matchId, JSON.stringify(res));
     return res;
   } catch (err) {
-    console.error(`[Scraper] Fatal error for ${matchId}:`, err.message);
+    console.error(`[Scraper] Single Scrape Error: ${err.message}`);
     throw err;
   } finally {
     if (browser) await browser.close();
