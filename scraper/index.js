@@ -181,6 +181,33 @@ export default {
       }
     }
 
+    // GET /debug-view
+    if (url.pathname === '/debug-view') {
+      const debugData = await env.MATCH_DATA.get('DEBUG_LAST_RUN', { type: 'json' });
+      if (!debugData) return new Response('No debug data found. Run /test first.', { status: 404 });
+      
+      let html = `<html><head><title>Visual Debugger</title><style>
+        body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 2rem; }
+        .step { background: #2a2a2a; padding: 1rem; margin-bottom: 2rem; border-radius: 8px; border: 1px solid #444; }
+        img { max-width: 100%; border: 1px solid #555; margin-top: 1rem; }
+        pre { background: #000; padding: 1rem; overflow: auto; max-height: 300px; font-size: 12px; }
+        h2 { color: #4ade80; }
+      </style></head><body><h1>Latest Scrape Diagnostics</h1>`;
+      
+      for (const step of debugData) {
+        html += `<div class="step">
+          <h2>Step: ${step.name}</h2>
+          <p>URL: ${step.url} | Time: ${step.time}</p>
+          <img src="data:image/png;base64,${step.screenshot}" />
+          <h3>HTML Snippet</h3>
+          <pre>${step.html.substring(0, 5000).replace(/</g, '&lt;')}</pre>
+        </div>`;
+      }
+      
+      html += '</body></html>';
+      return new Response(html, { headers: { 'Content-Type': 'text/html' } });
+    }
+
     // GET /view-html?url=...
     if (url.pathname === '/view-html') {
       const targetUrl = url.searchParams.get('url');
@@ -249,6 +276,7 @@ export default {
   <ul>
     <li><a href="/data?id=pcsl-two-gun-at-pha-3">/data?id=...</a> <span class="dim">Fetch cached data for a specific match ID</span></li>
     <li><a href="/scrape?id=pcsl-two-gun-at-pha-3">/scrape?id=...</a> <span class="dim">Perform on-demand live scrape for one match</span></li>
+    <li><a href="/debug-view">/debug-view</a> <span class="badge">VISION</span> <span class="dim">See screenshots & HTML from last test run</span></li>
     <li><a href="/view-html?url=https://practiscore.com/login">/view-html?url=...</a> <span class="badge">DEBUG</span> <span class="dim">See raw HTML of any page via Puppeteer</span></li>
     <li><a href="/sync-merch">/sync-merch</a> <span class="dim">Generate variant mapping TOML from Printify API</span></li>
   </ul>
@@ -306,6 +334,19 @@ async function clearDeadSessions(env) {
   }
 }
 
+async function captureDebug(env, page, name, debugList) {
+  try {
+    console.log(`[Debug] Capturing state: ${name}...`);
+    const screenshot = await page.screenshot({ encoding: 'base64' });
+    const html = await page.content();
+    const url = page.url();
+    debugList.push({ name, url, screenshot, html, time: new Date().toISOString() });
+    await env.MATCH_DATA.put('DEBUG_LAST_RUN', JSON.stringify(debugList));
+  } catch (err) {
+    console.warn(`[Debug] Capture failed for ${name}: ${err.message}`);
+  }
+}
+
 async function applyStealth(page) {
   // Use a modern, consistent viewport
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
@@ -339,8 +380,10 @@ async function applyStealth(page) {
   });
 }
 
-async function performLogin(page, env) {
+async function performLogin(page, env, debugList) {
   console.log(`[Scraper] Starting login attempt for: ${env.PS_USERNAME?.substring(0, 3)}... (length: ${env.PS_USERNAME?.length || 0})`);
+  await captureDebug(env, page, 'Before Login Form', debugList || []);
+  
   console.log('[Scraper] Login page detected. Submitting credentials...');
   
   const userField = await page.$('input[name="username"]');
@@ -361,6 +404,8 @@ async function performLogin(page, env) {
     page.waitForSelector('input[name="username"]', { hidden: true, timeout: 15000 }).catch(() => {})
   ]);
 
+  await captureDebug(env, page, 'After Submission', debugList || []);
+
   const afterTitle = await page.title();
   const afterContent = await page.content();
   console.log(`[Scraper] Post-Submission Title: ${afterTitle}`);
@@ -377,6 +422,7 @@ async function performLogin(page, env) {
   console.log('[Scraper] Waiting for session to settle...');
   await new Promise(r => setTimeout(r, 2000));
   
+  await captureDebug(env, page, 'Session Settled', debugList || []);
   console.log('[Scraper] Login step finished.');
 }
 
@@ -464,6 +510,7 @@ async function scrapeAllMatches(env) {
 async function scrapeSingleId(env, matchId) {
   console.log(`[Scraper] Starting single scrape: ${matchId}`);
   let browser;
+  const debugList = [];
   try {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
     const page = await browser.newPage();
@@ -473,14 +520,16 @@ async function scrapeSingleId(env, matchId) {
     const url = buildUrl(matchId);
     console.log(`[Scraper] Navigating to: ${url}`);
     await page.goto(url, { waitUntil: "networkidle2" });
+    await captureDebug(env, page, 'Initial Match Page', debugList);
 
     let content = await page.content();
     if (content.includes('requires a free account')) {
       console.log('[Scraper] Auth required. Logging in...');
-      await performLogin(page, env);
+      await performLogin(page, env, debugList);
       console.log(`[Scraper] Returning to match: ${url}`);
       await page.goto(url, { waitUntil: "networkidle2" });
       content = await page.content();
+      await captureDebug(env, page, 'Returned to Match', debugList);
     }
 
     console.log('[Scraper] Looking for registration alerts...');
