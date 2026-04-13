@@ -304,26 +304,35 @@ async function scrapeAllMatches(env) {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
     // Login
-    console.log('[Scraper] Navigating to login...');
+    console.log('[Scraper] Navigating to login (checking session)...');
     await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
     
-    // Check for bot challenges
     const title = await page.title();
-    console.log(`[Scraper] Login Page Title: ${title}`);
+    console.log(`[Scraper] Initial Page Title: ${title}`);
+    
     if (title.includes('Cloudflare') || title.includes('Challenge')) {
       throw new Error(`Bot challenge detected: ${title}`);
     }
 
-    console.log('[Scraper] Waiting for login form...');
-    await page.waitForSelector("#user-email", { timeout: 15000 });
+    // Check if we are already logged in (redirected to Home/Dashboard)
+    const isLoginPage = await page.$("#user-email");
     
-    console.log('[Scraper] Submitting credentials...');
-    await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
-    await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'networkidle2' }),
-      page.click('button[type="submit"]')
-    ]);
+    if (!isLoginPage) {
+      if (title.toLowerCase().includes('home') || title.toLowerCase().includes('dashboard')) {
+        console.log('[Scraper] Already logged in (detected via redirect). Skipping login flow.');
+      } else {
+        console.warn('[Scraper] Redirected but destination unclear. Attempting to proceed anyway.');
+      }
+    } else {
+      console.log('[Scraper] Not logged in. Submitting credentials...');
+      await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
+      await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'networkidle2' }),
+        page.click('button[type="submit"]')
+      ]);
+      console.log('[Scraper] Login submitted.');
+    }
 
     for (const id of ids) {
       try {
@@ -380,26 +389,35 @@ async function scrapeSingleId(env, matchId) {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
 
     const page = await browser.newPage();
-    console.log('[Scraper] Navigating to login...');
+    console.log('[Scraper] Navigating to login (checking session)...');
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
 
     const title = await page.title();
-    console.log(`[Scraper] Login Page Title: ${title}`);
+    console.log(`[Scraper] Initial Page Title: ${title}`);
+    
     if (title.includes('Cloudflare') || title.includes('Challenge')) {
       throw new Error(`Bot challenge detected: ${title}`);
     }
 
-    console.log('[Scraper] Waiting for login form...');
-    await page.waitForSelector("#user-email", { timeout: 15000 });
-
-    console.log('[Scraper] Submitting credentials...');
-    await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
-    await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'networkidle2' }),
-      page.click('button[type="submit"]')
-    ]);
+    const isLoginPage = await page.$("#user-email");
+    
+    if (!isLoginPage) {
+      if (title.toLowerCase().includes('home') || title.toLowerCase().includes('dashboard')) {
+        console.log('[Scraper] Already logged in (detected via redirect). Skipping login flow.');
+      } else {
+        console.warn('[Scraper] Redirected but destination unclear. Attempting to proceed anyway.');
+      }
+    } else {
+      console.log('[Scraper] Not logged in. Submitting credentials...');
+      await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
+      await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: 'networkidle2' }),
+        page.click('button[type="submit"]')
+      ]);
+      console.log('[Scraper] Login submitted.');
+    }
 
     const url = buildUrl(matchId);
     console.log(`[Scraper] Navigating to: ${url}`);
