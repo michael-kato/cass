@@ -307,17 +307,15 @@ async function clearDeadSessions(env) {
 }
 
 async function performLogin(page, env) {
-  console.log('[Scraper] Navigating to login...');
-  await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
+  console.log('[Scraper] Login page detected. Submitting credentials...');
   
-  const isLoginPage = await page.$("#user-email");
-  if (!isLoginPage) {
+  const userField = await page.$('input[name="username"]');
+  if (!userField) {
     throw new Error(`Login form not found. Title: ${await page.title()}`);
   }
 
-  console.log('[Scraper] Entering credentials...');
-  await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
-  await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
+  await page.type('input[name="username"]', env.PS_USERNAME, { delay: 50 });
+  await page.type('input[name="password"]', env.PS_PASSWORD, { delay: 50 });
   await Promise.all([
     page.waitForNavigation({ waitUntil: 'networkidle2' }),
     page.click('button[type="submit"]')
