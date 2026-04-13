@@ -494,6 +494,13 @@ async function performLogin(page, env, debugList) {
 
   clearInterval(unlocker);
 
+  // Final Diagnostic: What does the form actually look like now?
+  const formHtml = await page.evaluate(() => {
+    const form = document.querySelector('.omb_loginForm');
+    return form ? form.outerHTML : 'Form not found';
+  });
+  console.log('[Scraper] Form state before click (check for tokens):', formHtml.substring(0, 1000));
+
   console.log('[Scraper] Submitting form via native click...');
   await page.click('button.btn-primary.btn-block.top3');
 
