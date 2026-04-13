@@ -94,7 +94,9 @@ export default {
         if (ids.length === 0) {
           console.warn('No IDs found in events.toml');
         } else {
-          await scrapeSingleId(env, ids[0]);
+          const id = ids[Math.floor(Math.random() * ids.length)];
+          console.log(`[Scraper] Random test match: ${id}`);
+          await scrapeSingleId(env, id);
           console.log('\n--- Test Run Complete ---');
         }
       });
@@ -378,6 +380,24 @@ async function applyStealth(page) {
       return getParameter.apply(this, arguments);
     };
 
+    // Canvas Fingerprinting Masking
+    const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+    HTMLCanvasElement.prototype.toDataURL = function(type) {
+      if (type === 'image/png' && this.width === 220 && this.height === 30) {
+        // Return a slightly jittered version or a known "safe" one if needed
+        return originalToDataURL.apply(this, arguments);
+      }
+      return originalToDataURL.apply(this, arguments);
+    };
+
+    // Mock Screen consistency
+    Object.defineProperty(window, 'screen', {
+      get: () => ({
+        width: 1920, height: 1080, availWidth: 1920, availHeight: 1040,
+        colorDepth: 24, pixelDepth: 24,
+      })
+    });
+
     // Conceal vendor/renderer
     window.chrome = { runtime: {} };
     window.name = '';
@@ -399,6 +419,13 @@ async function performLogin(page, env, debugList) {
   console.log('[Scraper] Navigating to official login page...');
   await page.goto('https://practiscore.com/login', { waitUntil: 'networkidle0', timeout: 30000 });
   
+  // Diagnostic: Check if Turnstile script is even loaded
+  const scriptExists = await page.evaluate(() => !!document.querySelector('script[src*="turnstile"]'));
+  console.log(`[Scraper] Turnstile script tag present: ${scriptExists}`);
+
+  const widgetExists = await page.evaluate(() => !!document.querySelector('.cf-turnstile'));
+  console.log(`[Scraper] Turnstile widget container present: ${widgetExists}`);
+
   // Human-like signals to wake up Turnstile
   console.log('[Scraper] Sending randomized human-like signals...');
   const randX = () => Math.floor(Math.random() * 600) + 100;
@@ -595,12 +622,23 @@ async function scrapeSingleId(env, matchId) {
     await applyStealth(page);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36');
     
-    // Console forwarding for deeper diagnostics
+    // Deep Diagnostics: Network & Console
     page.on('console', msg => {
       const txt = msg.text();
-      // Ignore noisy analytics/ads
       if (txt.includes('google') || txt.includes('bugsnag') || txt.includes('Facebook')) return;
       console.log(`[Page Console] ${txt}`);
+    });
+
+    page.on('requestfailed', req => {
+      if (req.url().includes('challenges')) {
+        console.warn(`[Network Fail] Turnstile request failed: ${req.url()} - ${req.failure().errorText}`);
+      }
+    });
+
+    page.on('response', res => {
+      if (res.url().includes('challenges') && res.status() >= 400) {
+        console.warn(`[Network Block] Turnstile error ${res.status()}: ${res.url()}`);
+      }
     });
 
     const url = buildUrl(matchId);
