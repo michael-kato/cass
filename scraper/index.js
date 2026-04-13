@@ -353,6 +353,34 @@ async function captureDebug(env, page, name, debugList) {
   }
 }
 
+async function solveTurnstile(env, siteKey, pageUrl) {
+  if (!env.TWOCAPTCHA_API_KEY) return null;
+  console.log('[2Captcha] Requesting solve for Turnstile...');
+  try {
+    const res = await fetch(`https://2captcha.com/in.php?key=${env.TWOCAPTCHA_API_KEY}&method=turnstile&sitekey=${siteKey}&pageurl=${pageUrl}&json=1`);
+    const data = await res.json();
+    if (data.status !== 1) throw new Error(`2Captcha Init Error: ${data.request}`);
+    
+    const requestId = data.request;
+    // Poll for result
+    for (let i = 0; i < 20; i++) {
+       await new Promise(r => setTimeout(r, 5000));
+       const check = await fetch(`https://2captcha.com/res.php?key=${env.TWOCAPTCHA_API_KEY}&action=get&id=${requestId}&json=1`);
+       const result = await check.json();
+       if (result.status === 1) {
+         console.log('[2Captcha] Turnstile Solve Success!');
+         return result.request;
+       }
+       if (result.request !== 'CAPCHA_NOT_READY') throw new Error(`2Captcha Poll Error: ${result.request}`);
+       console.log(`[2Captcha] Still waiting... (${i+1}/20)`);
+    }
+    throw new Error('2Captcha Timeout');
+  } catch (err) {
+    console.warn(`[2Captcha] Failed: ${err.message}`);
+    return null;
+  }
+}
+
 async function applyStealth(page) {
   // Use a modern, consistent viewport
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
@@ -496,16 +524,32 @@ async function performLogin(page, env, debugList) {
   }, 500);
 
   console.log('[Scraper] Waiting for Turnstile token to appear...');
+  let gToken = null;
   try {
     await page.waitForFunction(() => {
-      // Look for the response input ANYWHERE in the form or body
       const token = document.querySelector('[name="cf-turnstile-response"]')?.value || 
                     document.querySelector('.cf-turnstile input')?.value;
       return token && token.length > 20;
-    }, { timeout: 20000 });
-    console.log('[Scraper] Turnstile solved!');
+    }, { timeout: 15000 });
+    console.log('[Scraper] Turnstile solved natively!');
   } catch (e) {
-    console.warn('[Scraper] Turnstile token not found (attempting final manual submission)');
+    console.warn('[Scraper] Native Turnstile timeout. Falling back to 2Captcha API...');
+    
+    if (env.TWOCAPTCHA_API_KEY) {
+      const siteKey = '0x4AAAAAACA-xyf0Ck7rjuze'; // Hardcoded from site source
+      const pageUrl = page.url();
+      gToken = await solveTurnstile(env, siteKey, pageUrl);
+      
+      if (gToken) {
+        await page.evaluate((tok) => {
+          const inputs = document.querySelectorAll('[name="cf-turnstile-response"]');
+          inputs.forEach(i => i.value = tok);
+          console.log('[Page] 2Captcha Token Injected');
+        }, gToken);
+      }
+    } else {
+      console.warn('[Scraper] No 2Captcha key found. Attempting final blind submission...');
+    }
   }
 
   clearInterval(unlocker);
