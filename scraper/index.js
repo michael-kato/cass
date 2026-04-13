@@ -362,18 +362,24 @@ async function applyStealth(page) {
 
   // Inject stealth script
   await page.evaluateOnNewDocument(() => {
-    // Delete the webdriver property
-    Object.defineProperty(navigator, 'webdriver', { get: () => false });
+    // Hide webdriver
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
 
     // Mock traits
     Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
     Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
     Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
+    
+    // WebGL Vendor/Renderer masking (NVIDIA RTX 3080)
+    const getParameter = WebGLRenderingContext.prototype.getParameter;
+    WebGLRenderingContext.prototype.getParameter = function(parameter) {
+      if (parameter === 37445) return 'Google Inc. (NVIDIA)';
+      if (parameter === 37446) return 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3080 Direct3D11 vs_5_0 ps_5_0, D3D11)';
+      return getParameter.apply(this, arguments);
+    };
 
     // Conceal vendor/renderer
     window.chrome = { runtime: {} };
-
-    // Mask name
     window.name = '';
 
     // Mock permissions
@@ -401,53 +407,54 @@ async function performLogin(page, env, debugList) {
     throw new Error(`Login form not found. Title: ${await page.title()}`);
   }
 
-  // Diagnostic: Log all likely submit buttons
-  const submitDetails = await page.evaluate(() => {
-    // 1. Kill the USCCA trap/popup immediately
+  // 1. Kill the USCCA trap/popup immediately
+  await page.evaluate(() => {
     const trap = document.querySelector('#popupForm') || document.querySelector('.modal');
     if (trap) trap.remove();
-
-    const btns = Array.from(document.querySelectorAll('button, input[type="submit"]'));
-    return btns.map(b => ({
-      tag: b.tagName,
-      type: b.getAttribute('type'),
-      text: b.innerText || b.getAttribute('value'),
-      classes: b.className
-    }));
   });
-  console.log('[Scraper] Potential submit buttons:', JSON.stringify(submitDetails));
 
-  // Also remove everything related to Turnstile lockers
-  await page.evaluate(() => {
-    document.querySelectorAll('[data-turnstile-lock]').forEach(el => el.removeAttribute('disabled'));
+  console.log('[Scraper] Waiting for Turnstile iframe to load...');
+  await page.waitForSelector('iframe[src*="challenges.cloudflare.com"]', { timeout: 5000 }).catch(() => {
+    console.warn('[Scraper] Turnstile iframe not found (might be internal or delayed)');
   });
 
   await page.type('input[name="username"]', env.PS_USERNAME || '', { delay: 50 });
   await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
-
+  
   await page.focus('input[name="password"]');
   await captureDebug(env, page, 'Form Filled', debugList || []);
 
-  console.log('[Scraper] Waiting for Cloudflare Turnstile to solve...');
+  // Deliberate human-like pause for Turnstile to react to typing
+  console.log('[Scraper] Pausing for 2s (human-like behavior)...');
+  await new Promise(r => setTimeout(r, 2000));
+  
+  // Continuously unlock the button in the background
+  const unlocker = setInterval(() => {
+    page.evaluate(() => {
+      const btn = document.querySelector('button.btn-primary.btn-block.top3') || document.querySelector('.omb_loginForm button[type="submit"]');
+      if (btn) {
+        btn.removeAttribute('disabled');
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+      }
+    }).catch(() => {});
+  }, 500);
+
+  console.log('[Scraper] Waiting for Turnstile token...');
   try {
-    // Wait up to 10s for the Turnstile token to be populated
     await page.waitForFunction(() => {
       const token = document.querySelector('input[name="cf-turnstile-response"]')?.value;
-      return token && token.length > 20;
-    }, { timeout: 10000 });
+      return token && token.length > 30;
+    }, { timeout: 20000 });
     console.log('[Scraper] Turnstile solved!');
   } catch (e) {
-    console.warn('[Scraper] Turnstile timeout (proceeding anyway)');
+    console.warn('[Scraper] Turnstile wait expired - attempting submission anyway.');
   }
 
-  console.log('[Scraper] Submitting form via strict JS click...');
+  clearInterval(unlocker);
 
-  // Nuclear Click: Target the specific form button to avoid popups
-  await page.evaluate(() => {
-    const form = document.querySelector('.omb_loginForm');
-    const btn = form ? form.querySelector('button[type="submit"]') : document.querySelector('button[type="submit"]');
-    if (btn) btn.click();
-  });
+  console.log('[Scraper] Submitting form via native click...');
+  await page.click('button.btn-primary.btn-block.top3');
 
   // Wait for the form to disappear or navigation to happen
   await Promise.race([
