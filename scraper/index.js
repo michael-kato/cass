@@ -59,6 +59,9 @@ export default {
 
       ctx.waitUntil(logStorage.run(streamWriter, async () => {
         try {
+          // Bypass browser buffering (send 1KB of whitespace)
+          await writer.write(encoder.encode(' '.repeat(1024) + '\n'));
+          
           console.log('--- Starting Global Streamed Test Scrape ---');
           const ids = await fetchIdsFromSite(env);
           if (ids.length === 0) {
@@ -70,12 +73,18 @@ export default {
         } catch (err) {
           console.log(`!!! FATAL ERROR: ${err.message}`);
         } finally {
-          writer.close();
+          await writer.close();
         }
       }));
 
       return new Response(readable, {
-        headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Access-Control-Allow-Origin': '*' }
+        headers: { 
+          'Content-Type': 'text/plain; charset=utf-8', 
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'X-Content-Type-Options': 'nosniff',
+          'Access-Control-Allow-Origin': '*' 
+        }
       });
     }
 
@@ -295,10 +304,22 @@ async function scrapeAllMatches(env) {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
     // Login
-    console.log('[Scraper] Logging in for batch process...');
+    console.log('[Scraper] Navigating to login...');
     await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
-    await page.type("#user-email", env.PS_USERNAME);
-    await page.type("#user-password", env.PS_PASSWORD);
+    
+    // Check for bot challenges
+    const title = await page.title();
+    console.log(`[Scraper] Login Page Title: ${title}`);
+    if (title.includes('Cloudflare') || title.includes('Challenge')) {
+      throw new Error(`Bot challenge detected: ${title}`);
+    }
+
+    console.log('[Scraper] Waiting for login form...');
+    await page.waitForSelector("#user-email", { timeout: 15000 });
+    
+    console.log('[Scraper] Submitting credentials...');
+    await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
+    await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle2' }),
       page.click('button[type="submit"]')
@@ -363,9 +384,18 @@ async function scrapeSingleId(env, matchId) {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
     await page.goto("https://practiscore.com/login", { waitUntil: "networkidle2" });
 
+    const title = await page.title();
+    console.log(`[Scraper] Login Page Title: ${title}`);
+    if (title.includes('Cloudflare') || title.includes('Challenge')) {
+      throw new Error(`Bot challenge detected: ${title}`);
+    }
+
+    console.log('[Scraper] Waiting for login form...');
+    await page.waitForSelector("#user-email", { timeout: 15000 });
+
     console.log('[Scraper] Submitting credentials...');
-    await page.type("#user-email", env.PS_USERNAME);
-    await page.type("#user-password", env.PS_PASSWORD);
+    await page.type("#user-email", env.PS_USERNAME, { delay: 50 });
+    await page.type("#user-password", env.PS_PASSWORD, { delay: 50 });
     await Promise.all([
       page.waitForNavigation({ waitUntil: 'networkidle2' }),
       page.click('button[type="submit"]')
