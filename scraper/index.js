@@ -21,6 +21,37 @@ console.warn = (...args) => {
   if (stream) stream(`⚠️ ${msg}`);
 };
 
+// Helper for real-time streaming logs in the browser
+async function streamedResponse(ctx, logStorage, action) {
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  const encoder = new TextEncoder();
+  const streamWriter = (msg) => writer.write(encoder.encode(msg + '\n'));
+
+  ctx.waitUntil(logStorage.run(streamWriter, async () => {
+    try {
+      // Bypass browser buffering (send 1KB of whitespace)
+      await writer.write(encoder.encode(' '.repeat(1024) + '\n'));
+      await action();
+    } catch (err) {
+      console.log(`\n!!! FATAL ERROR: ${err.message}`);
+      console.log(err.stack || '');
+    } finally {
+      await writer.close();
+    }
+  }));
+
+  return new Response(readable, {
+    headers: { 
+      'Content-Type': 'text/plain; charset=utf-8', 
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+      'X-Content-Type-Options': 'nosniff',
+      'Access-Control-Allow-Origin': '*' 
+    }
+  });
+}
+
 export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(scrapeAllMatches(env));
@@ -44,46 +75,23 @@ export default {
       const matchId = url.searchParams.get('id');
       if (!matchId) return new Response('Missing ?id=', { status: 400 });
 
-      const result = await scrapeSingleId(env, matchId);
-      return new Response(JSON.stringify(result, null, 2), {
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      return streamedResponse(ctx, logStorage, async () => {
+        console.log(`--- Live Scrape: ${matchId} ---`);
+        const result = await scrapeSingleId(env, matchId);
+        console.log(`\nSuccess! Status: ${result.status} | Raw: ${result.raw}`);
       });
     }
 
     // GET /test (Scrape only the FIRST match found in the TOML)
     if (url.pathname === '/test') {
-      const { readable, writable } = new TransformStream();
-      const writer = writable.getWriter();
-      const encoder = new TextEncoder();
-      const streamWriter = (msg) => writer.write(encoder.encode(msg + '\n'));
-
-      ctx.waitUntil(logStorage.run(streamWriter, async () => {
-        try {
-          // Bypass browser buffering (send 1KB of whitespace)
-          await writer.write(encoder.encode(' '.repeat(1024) + '\n'));
-          
-          console.log('--- Starting Global Streamed Test Scrape ---');
-          const ids = await fetchIdsFromSite(env);
-          if (ids.length === 0) {
-            console.warn('No IDs found in events.toml');
-          } else {
-            await scrapeSingleId(env, ids[0]);
-            console.log('--- Scrape Finished ---');
-          }
-        } catch (err) {
-          console.log(`!!! FATAL ERROR: ${err.message}`);
-        } finally {
-          await writer.close();
-        }
-      }));
-
-      return new Response(readable, {
-        headers: { 
-          'Content-Type': 'text/plain; charset=utf-8', 
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-          'X-Content-Type-Options': 'nosniff',
-          'Access-Control-Allow-Origin': '*' 
+      return streamedResponse(ctx, logStorage, async () => {
+        console.log('--- Starting Global Streamed Test Scrape ---');
+        const ids = await fetchIdsFromSite(env);
+        if (ids.length === 0) {
+          console.warn('No IDs found in events.toml');
+        } else {
+          await scrapeSingleId(env, ids[0]);
+          console.log('\n--- Test Run Complete ---');
         }
       });
     }
@@ -106,30 +114,25 @@ export default {
     }
 
     if (url.pathname === '/debug-browser') {
-      try {
-        console.log('[Debug] Diagnostic Start');
-        console.log('--- Binding Status ---');
-        console.log('BROWSER exists:', !!env.MYBROWSER);
-        console.log('BROWSER type:', typeof env.MYBROWSER);
-
-        console.log('[Debug] Attempting Launch (60s timeout)...');
+      return streamedResponse(ctx, logStorage, async () => {
+        console.log('--- Browser Diagnostic Start ---');
+        console.log(`Binding (MYBROWSER) type: ${typeof env.MYBROWSER}`);
+        console.log('Attempting launch...');
+        
         const b = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
-
-        console.log('[Debug] Browser Acquired. ID:', b.connected ? 'Connected' : 'Disconnected');
-        const p = await b.newPage();
-        await p.goto('https://example.com');
-        const title = await p.title();
+        console.log(`Browser acquired: ${b.connected}`);
+        
+        const page = await b.newPage();
+        await applyStealth(page);
+        console.log('Stealth applied. Navigating to example.com...');
+        
+        await page.goto('https://example.com');
+        const title = await page.title();
+        console.log(`Success! Page title: ${title}`);
+        
         await b.close();
-
-        return new Response(`Success: ${title}`, { status: 200 });
-      } catch (err) {
-        const fullError = JSON.stringify(err, Object.getOwnPropertyNames(err), 2);
-        console.error(`[Debug] FATAL LAUNCH ERROR:\n${fullError}`);
-        return new Response(`Debug Failed: ${err.message}\n\nCheck logs for full trace.`, {
-          status: 500,
-          headers: { 'Content-Type': 'text/plain' }
-        });
-      }
+        console.log('--- Diagnostic Complete ---');
+      });
     }
 
     if (url.pathname === '/history') {
@@ -148,7 +151,8 @@ export default {
         return new Response('Missing PRINTIFY_API_KEY or PRINTIFY_SHOP_ID in scraper secrets.', { status: 500 });
       }
 
-      try {
+      return streamedResponse(ctx, logStorage, async () => {
+        console.log('--- Printify Sync Start ---');
         const res = await fetch(`https://api.printify.com/v1/shops/${env.PRINTIFY_SHOP_ID}/products.json?limit=100`, {
           headers: { 'Authorization': `Bearer ${env.PRINTIFY_API_KEY}` }
         });
@@ -156,8 +160,6 @@ export default {
         const data = await res.json();
 
         let tomlOutput = "# PRINTIFY VARIANT MAPPING (Copy-paste these sections into merch.toml)\n\n";
-
-        // Use the actual 'data' property in Printify's response
         const products = data.data || [];
 
         products.forEach(p => {
@@ -166,19 +168,16 @@ export default {
           tomlOutput += `printifyBlueprintId = ${p.blueprint_id}\n`;
           tomlOutput += `printifyPrintProviderId = ${p.print_provider_id}\n\n`;
           tomlOutput += `[products.variants]\n`;
-
           p.variants.forEach(v => {
-            // Convert "Color / Size" to "Color-Size"
             const cleanTitle = v.title.replace(/\s*\/\s*/g, '-');
             tomlOutput += `"${cleanTitle}" = ${v.id}\n`;
           });
           tomlOutput += "\n";
         });
 
-        return new Response(tomlOutput, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
-      } catch (err) {
-        return new Response(`Sync Failed: ${err.message}`, { status: 500 });
-      }
+        console.log(tomlOutput);
+        console.log('\n--- Sync Complete ---');
+      });
     }
 
     // GET /debug-view
@@ -337,7 +336,8 @@ async function clearDeadSessions(env) {
 async function captureDebug(env, page, name, debugList) {
   try {
     console.log(`[Debug] Capturing state: ${name}...`);
-    const screenshot = await page.screenshot({ encoding: 'base64' });
+    // Full page screenshot for context
+    const screenshot = await page.screenshot({ encoding: 'base64', fullPage: true });
     const html = await page.content();
     const url = page.url();
     debugList.push({ name, url, screenshot, html, time: new Date().toISOString() });
@@ -361,14 +361,16 @@ async function applyStealth(page) {
     // Delete the webdriver property
     Object.defineProperty(navigator, 'webdriver', { get: () => false });
 
-    // Mock languages
+    // Mock traits
     Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
-
-    // Mock plugins
     Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
-
-    // Mock chrome property
+    Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
+    
+    // Conceal vendor/renderer
     window.chrome = { runtime: {} };
+    
+    // Mask name
+    window.name = '';
 
     // Mock permissions
     const originalQuery = window.navigator.permissions.query;
@@ -388,8 +390,24 @@ async function performLogin(page, env, debugList) {
   
   const userField = await page.$('input[name="username"]');
   if (!userField) {
+    const buttons = await page.evaluate(() => 
+      Array.from(document.querySelectorAll('button, a.btn')).map(b => `${b.tagName}: ${b.innerText.trim()}`).join(' | ')
+    );
+    console.warn(`[Scraper] Form not found. Available buttons: ${buttons}`);
     throw new Error(`Login form not found. Title: ${await page.title()}`);
   }
+
+  // Diagnostic: Log all likely submit buttons
+  const submitDetails = await page.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll('button, input[type="submit"]'));
+    return btns.map(b => ({
+      tag: b.tagName,
+      type: b.getAttribute('type'),
+      text: b.innerText || b.getAttribute('value'),
+      classes: b.className
+    }));
+  });
+  console.log('[Scraper] Potential submit buttons:', JSON.stringify(submitDetails));
 
   await page.type('input[name="username"]', env.PS_USERNAME || '', { delay: 50 });
   await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
@@ -523,7 +541,7 @@ async function scrapeSingleId(env, matchId) {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
     const page = await browser.newPage();
     await applyStealth(page);
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
 
     const url = buildUrl(matchId);
     console.log(`[Scraper] Navigating to: ${url}`);
