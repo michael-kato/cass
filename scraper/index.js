@@ -306,6 +306,39 @@ async function clearDeadSessions(env) {
   }
 }
 
+async function applyStealth(page) {
+  // Use a modern, consistent viewport
+  await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
+  
+  // Set extra headers
+  await page.setExtraHTTPHeaders({
+    'Accept-Language': 'en-US,en;q=0.9',
+  });
+
+  // Inject stealth script
+  await page.evaluateOnNewDocument(() => {
+    // Delete the webdriver property
+    Object.defineProperty(navigator, 'webdriver', { get: () => false });
+
+    // Mock languages
+    Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+
+    // Mock plugins
+    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+
+    // Mock chrome property
+    window.chrome = { runtime: {} };
+
+    // Mock permissions
+    const originalQuery = window.navigator.permissions.query;
+    window.navigator.permissions.query = (parameters) => (
+      parameters.name === 'notifications' ?
+        Promise.resolve({ state: Notification.permission }) :
+        originalQuery(parameters)
+    );
+  });
+}
+
 async function performLogin(page, env) {
   console.log('[Scraper] Login page detected. Submitting credentials...');
   
@@ -340,6 +373,7 @@ async function scrapeAllMatches(env) {
   try {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
     const page = await browser.newPage();
+    await applyStealth(page);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
     for (const id of ids) {
@@ -407,6 +441,7 @@ async function scrapeSingleId(env, matchId) {
   try {
     browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
     const page = await browser.newPage();
+    await applyStealth(page);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
     const url = buildUrl(matchId);
