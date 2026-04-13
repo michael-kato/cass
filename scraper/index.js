@@ -351,11 +351,22 @@ async function performLogin(page, env) {
   await page.type('input[name="password"]', env.PS_PASSWORD, { delay: 50 });
   
   console.log('[Scraper] Submitting form via Enter...');
-  await Promise.all([
-    page.waitForNavigation({ waitUntil: 'networkidle2' }),
-    page.keyboard.press('Enter')
+  await page.focus('input[name="password"]');
+  await page.keyboard.press('Enter');
+
+  // Wait for the form to disappear or navigation to happen
+  await Promise.race([
+    page.waitForNavigation({ waitUntil: 'load', timeout: 15000 }).catch(() => {}),
+    page.waitForSelector('input[name="username"]', { hidden: true, timeout: 15000 }).catch(() => {})
   ]);
-  console.log('[Scraper] Login successful.');
+
+  const afterTitle = await page.title();
+  console.log(`[Scraper] Post-Submission Title: ${afterTitle}`);
+  if (afterTitle.includes('Cloudflare') || afterTitle.includes('Challenge') || afterTitle.includes('Just a moment')) {
+    throw new Error(`Cloudflare/Bot challenge encountered after login: ${afterTitle}`);
+  }
+
+  console.log('[Scraper] Login step finished (form cleared).');
 }
 
 function buildUrl(matchId) {
