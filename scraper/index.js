@@ -8,17 +8,21 @@ const originalLog = console.log;
 const originalWarn = console.warn;
 
 console.log = (...args) => {
+  const ts = new Date().toISOString().split('T')[1].split('.')[0];
   const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
-  originalLog(msg);
+  const finalMsg = `[${ts}] ${msg}`;
+  originalLog(finalMsg);
   const stream = logStorage.getStore();
-  if (stream) stream(msg);
+  if (stream) stream(finalMsg);
 };
 
 console.warn = (...args) => {
+  const ts = new Date().toISOString().split('T')[1].split('.')[0];
   const msg = args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
-  originalWarn(`[WARN] ${msg}`);
+  const finalMsg = `[${ts}] ⚠️ ${msg}`;
+  originalWarn(finalMsg);
   const stream = logStorage.getStore();
-  if (stream) stream(`⚠️ ${msg}`);
+  if (stream) stream(finalMsg);
 };
 
 // Helper for real-time streaming logs in the browser
@@ -413,6 +417,8 @@ async function performLogin(page, env, debugList) {
   await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
   
   await page.focus('input[name="password"]');
+  await captureDebug(env, page, 'Form Filled', debugList || []);
+  
   console.log('[Scraper] Submitting form via JS click...');
   
   // Nuclear Click: Only if we are actually still on a login/sign-in page
@@ -430,6 +436,8 @@ async function performLogin(page, env, debugList) {
     page.waitForSelector('input[name="username"]', { hidden: true, timeout: 15000 }).catch(() => {})
   ]);
 
+  // Small delay to let the results page paint
+  await new Promise(r => setTimeout(r, 1000));
   await captureDebug(env, page, 'After Submission', debugList || []);
 
   const afterTitle = await page.title();
