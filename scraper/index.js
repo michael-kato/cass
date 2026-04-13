@@ -463,11 +463,25 @@ async function performLogin(page, env, debugList) {
   await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
   
   await page.focus('input[name="password"]');
-  await captureDebug(env, page, 'Form Filled', debugList || []);
 
-  // Deliberate human-like pause for Turnstile to react to typing
-  console.log('[Scraper] Pausing for 2s (human-like behavior)...');
-  await new Promise(r => setTimeout(r, 2000));
+  // 1. Manually Inject CSRF Token (since PractiScore scripts seem to be ghosting us)
+  console.log('[Scraper] Manually injecting CSRF token from metadata...');
+  await page.evaluate(() => {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    if (token) {
+      const form = document.querySelector('.omb_loginForm');
+      if (form && !form.querySelector('input[name="_token"]')) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_token';
+        input.value = token;
+        form.appendChild(input);
+        console.log('[Page] CSRF Token Injected Successfully');
+      }
+    }
+  });
+
+  await captureDebug(env, page, 'Form Filled', debugList || []);
   
   // Continuously unlock the button in the background
   const unlocker = setInterval(() => {
@@ -481,15 +495,17 @@ async function performLogin(page, env, debugList) {
     }).catch(() => {});
   }, 500);
 
-  console.log('[Scraper] Waiting for Turnstile token...');
+  console.log('[Scraper] Waiting for Turnstile token to appear...');
   try {
     await page.waitForFunction(() => {
-      const token = document.querySelector('input[name="cf-turnstile-response"]')?.value;
-      return token && token.length > 30;
+      // Look for the response input ANYWHERE in the form or body
+      const token = document.querySelector('[name="cf-turnstile-response"]')?.value || 
+                    document.querySelector('.cf-turnstile input')?.value;
+      return token && token.length > 20;
     }, { timeout: 20000 });
     console.log('[Scraper] Turnstile solved!');
   } catch (e) {
-    console.warn('[Scraper] Turnstile wait expired - attempting submission anyway.');
+    console.warn('[Scraper] Turnstile token not found (attempting final manual submission)');
   }
 
   clearInterval(unlocker);
