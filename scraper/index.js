@@ -98,12 +98,12 @@ export default {
 
     if (url.pathname === '/debug-browser') {
       try {
-        const browser = await puppeteer.launch(env.MYBROWSER);
+        const browser = await puppeteer.launch(env.BROWSER);
         const page = await browser.newPage();
         await page.goto("https://example.com");
         const metrics = await page.metrics();
         await browser.close();
-        return new Response(JSON.stringify(metrics, null, 2), { headers: { 'Content-Type': 'application/json' } });
+        return new Response.json(metrics);
       } catch (err) {
         return new Response(`Debug Failed: ${err.message}`, { status: 500 });
       }
