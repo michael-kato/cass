@@ -395,8 +395,13 @@ async function performLogin(page, env, debugList) {
   await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
   
   await page.focus('input[name="password"]');
-  console.log('[Scraper] Submitting form via Enter...');
-  await page.keyboard.press('Enter');
+  console.log('[Scraper] Submitting form via JS click...');
+  
+  // Nuclear Click: Bypasses visibility/obstruction checks
+  await page.evaluate(() => {
+    const btn = document.querySelector('button[type="submit"]') || document.querySelector('.btn-primary');
+    if (btn) btn.click();
+  });
 
   // Wait for the form to disappear or navigation to happen
   await Promise.race([
