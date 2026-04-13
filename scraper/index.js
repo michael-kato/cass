@@ -103,7 +103,7 @@ export default {
         await page.goto("https://example.com");
         const metrics = await page.metrics();
         await browser.close();
-        return new Response.json(metrics);
+        return new Response(JSON.stringify(metrics, null, 2), { headers: { 'Content-Type': 'application/json' } });
       } catch (err) {
         return new Response(`Debug Failed: ${err.message}`, { status: 500 });
       }
