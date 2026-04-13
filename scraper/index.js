@@ -393,10 +393,11 @@ async function scrapeAllMatches(env) {
         const url = buildUrl(id);
         console.log(`[Scraper] Navigating to: ${url}`);
         await page.goto(url, { waitUntil: "networkidle2" });
+        await page.waitForSelector('.alert-info, .alert-warning, .alert-danger', { timeout: 5000 }).catch(() => {});
 
         let content = await page.content();
         if (content.includes('requires a free account')) {
-          console.log('[Scraper] Auth required. Logging in...');
+          console.log('[Scraper] Registration requires login. Authenticating...');
           await performLogin(page, env);
           console.log(`[Scraper] Returning to match: ${url}`);
           await page.goto(url, { waitUntil: "networkidle2" });
@@ -404,12 +405,15 @@ async function scrapeAllMatches(env) {
         }
 
         const data = await page.evaluate(() => {
-          const alerts = Array.from(document.querySelectorAll('.alert-info'));
+          const alerts = Array.from(document.querySelectorAll('.alert-info, .alert-warning, .alert-danger'));
+          const alertTexts = alerts.map(a => a.innerText.trim());
+          console.log('[Scraper] Found alerts:', alertTexts);
+          
           const target = alerts.find(a =>
             /spot|remain|full|waitlist|registration opens|requires a free account/i.test(a.innerText)
           );
 
-          if (!target) return null;
+          if (!target) return { status: 'missing', found: alertTexts };
           const text = target.innerText.replace(/×/g, '').trim();
           const lower = text.toLowerCase();
 
@@ -421,7 +425,7 @@ async function scrapeAllMatches(env) {
           return { status: 'open', remaining: match ? parseInt(match[1], 10) : null, raw: text };
         });
 
-        if (!data || data.status === 'error') {
+        if (!data || data.status === 'error' || data.status === 'missing') {
           console.warn(`[Scraper] Data skip for ${id}: ${data?.status || 'no info'}`);
           continue;
         }
@@ -468,17 +472,21 @@ async function scrapeSingleId(env, matchId) {
       content = await page.content();
     }
 
+    console.log('[Scraper] Looking for registration alerts...');
     const data = await page.evaluate(() => {
-      const alerts = Array.from(document.querySelectorAll('.alert-info'));
+      const alerts = Array.from(document.querySelectorAll('.alert-info, .alert-warning, .alert-danger'));
+      const textLog = alerts.map(a => a.innerText.trim());
+      
       const target = alerts.find(a =>
         /spot|remain|full|waitlist|registration opens|requires a free account/i.test(a.innerText)
       );
 
-      if (!target) return null;
+      if (!target) return { status: 'missing', found: textLog };
+      
       const text = target.innerText.replace(/×/g, '').trim();
       const lower = text.toLowerCase();
 
-      if (text.includes('requires a free account')) return { status: 'error' };
+      if (text.includes('requires a free account')) return { status: 'error', found: textLog };
       if (lower.includes('full') || lower.includes('wait list')) return { status: 'full', remaining: 0, raw: text };
       if (lower.includes('registration opens')) return { status: 'upcoming', remaining: null, raw: text };
 
@@ -486,7 +494,10 @@ async function scrapeSingleId(env, matchId) {
       return { status: 'open', remaining: match ? parseInt(match[1], 10) : null, raw: text };
     });
 
-    if (!data || data.status === 'error') throw new Error('Data not found or login failed');
+    if (!data || data.status === 'error' || data.status === 'missing') {
+      if (data?.found) console.log(`[Debug] Alerts found on page: ${JSON.stringify(data.found)}`);
+      throw new Error(data?.status === 'error' ? 'Login failed (session invalid)' : 'No registration alert box found');
+    }
 
     const res = {
       id: matchId,
