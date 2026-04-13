@@ -353,34 +353,6 @@ async function captureDebug(env, page, name, debugList) {
   }
 }
 
-async function solveTurnstile(env, siteKey, pageUrl) {
-  if (!env.TWOCAPTCHA_API_KEY) return null;
-  console.log('[2Captcha] Requesting solve for Turnstile...');
-  try {
-    const res = await fetch(`https://2captcha.com/in.php?key=${env.TWOCAPTCHA_API_KEY}&method=turnstile&sitekey=${siteKey}&pageurl=${pageUrl}&json=1`);
-    const data = await res.json();
-    if (data.status !== 1) throw new Error(`2Captcha Init Error: ${data.request}`);
-    
-    const requestId = data.request;
-    // Poll for result
-    for (let i = 0; i < 20; i++) {
-       await new Promise(r => setTimeout(r, 5000));
-       const check = await fetch(`https://2captcha.com/res.php?key=${env.TWOCAPTCHA_API_KEY}&action=get&id=${requestId}&json=1`);
-       const result = await check.json();
-       if (result.status === 1) {
-         console.log('[2Captcha] Turnstile Solve Success!');
-         return result.request;
-       }
-       if (result.request !== 'CAPCHA_NOT_READY') throw new Error(`2Captcha Poll Error: ${result.request}`);
-       console.log(`[2Captcha] Still waiting... (${i+1}/20)`);
-    }
-    throw new Error('2Captcha Timeout');
-  } catch (err) {
-    console.warn(`[2Captcha] Failed: ${err.message}`);
-    return null;
-  }
-}
-
 async function applyStealth(page) {
   // Use a modern, consistent viewport
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
@@ -476,92 +448,24 @@ async function performLogin(page, env, debugList) {
     throw new Error(`Login form not found. Title: ${await page.title()}`);
   }
 
-  // 1. Kill the USCCA trap/popup immediately
-  await page.evaluate(() => {
-    const trap = document.querySelector('#popupForm') || document.querySelector('.modal');
-    if (trap) trap.remove();
-  });
-
-  console.log('[Scraper] Waiting for Turnstile iframe to load...');
-  await page.waitForSelector('iframe[src*="challenges.cloudflare.com"]', { timeout: 5000 }).catch(() => {
-    console.warn('[Scraper] Turnstile iframe not found (might be internal or delayed)');
-  });
-
   await page.type('input[name="username"]', env.PS_USERNAME || '', { delay: 50 });
   await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
   
-  await page.focus('input[name="password"]');
-
-  // 1. Manually Inject CSRF Token (since PractiScore scripts seem to be ghosting us)
-  console.log('[Scraper] Manually injecting CSRF token from metadata...');
-  await page.evaluate(() => {
-    const token = document.querySelector('meta[name="csrf-token"]')?.content;
-    if (token) {
-      const form = document.querySelector('.omb_loginForm');
-      if (form && !form.querySelector('input[name="_token"]')) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = '_token';
-        input.value = token;
-        form.appendChild(input);
-        console.log('[Page] CSRF Token Injected Successfully');
-      }
-    }
-  });
-
   await captureDebug(env, page, 'Form Filled', debugList || []);
   
-  // Continuously unlock the button in the background
-  const unlocker = setInterval(() => {
-    page.evaluate(() => {
-      const btn = document.querySelector('button.btn-primary.btn-block.top3') || document.querySelector('.omb_loginForm button[type="submit"]');
-      if (btn) {
-        btn.removeAttribute('disabled');
-        btn.style.pointerEvents = 'auto';
-        btn.style.opacity = '1';
-      }
-    }).catch(() => {});
-  }, 500);
-
-  console.log('[Scraper] Waiting for Turnstile token to appear...');
-  let gToken = null;
+  console.log('[Scraper] Waiting for Turnstile solving (native only)...');
   try {
     await page.waitForFunction(() => {
       const token = document.querySelector('[name="cf-turnstile-response"]')?.value || 
                     document.querySelector('.cf-turnstile input')?.value;
-      return token && token.length > 20;
-    }, { timeout: 15000 });
+      return (token && token.length > 20);
+    }, { timeout: 30000 });
     console.log('[Scraper] Turnstile solved natively!');
   } catch (e) {
-    console.warn('[Scraper] Native Turnstile timeout. Falling back to 2Captcha API...');
-    
-    if (env.TWOCAPTCHA_API_KEY) {
-      const siteKey = '0x4AAAAAACA-xyf0Ck7rjuze'; // Hardcoded from site source
-      const pageUrl = page.url();
-      gToken = await solveTurnstile(env, siteKey, pageUrl);
-      
-      if (gToken) {
-        await page.evaluate((tok) => {
-          const inputs = document.querySelectorAll('[name="cf-turnstile-response"]');
-          inputs.forEach(i => i.value = tok);
-          console.log('[Page] 2Captcha Token Injected');
-        }, gToken);
-      }
-    } else {
-      console.warn('[Scraper] No 2Captcha key found. Attempting final blind submission...');
-    }
+    console.warn('[Scraper] Turnstile not solved natively (timeout).');
   }
 
-  clearInterval(unlocker);
-
-  // Final Diagnostic: What does the form actually look like now?
-  const formHtml = await page.evaluate(() => {
-    const form = document.querySelector('.omb_loginForm');
-    return form ? form.outerHTML : 'Form not found';
-  });
-  console.log('[Scraper] Form state before click (check for tokens):', formHtml.substring(0, 1000));
-
-  console.log('[Scraper] Submitting form via native click...');
+  console.log('[Scraper] Submitting form natively...');
   await page.click('button.btn-primary.btn-block.top3');
 
   // Wait for the form to disappear or navigation to happen
