@@ -98,15 +98,13 @@ export default {
 
     if (url.pathname === '/debug-browser') {
       try {
-        console.log('[Debug] Launching browser...');
-        const b = await puppeteer.launch(env.BROWSER, { protocolTimeout: 60000 });
-        const p = await b.newPage();
-        await p.goto('https://example.com', { waitUntil: 'networkidle2' });
-        const title = await p.title();
-        await b.close();
-        return new Response(`Success: ${title}`, { status: 200 });
+        const browser = await puppeteer.launch(env.MYBROWSER);
+        const page = await browser.newPage();
+        await page.goto("https://example.com");
+        const metrics = await page.metrics();
+        await browser.close();
+        return new Response.json(metrics);
       } catch (err) {
-        console.error(`[Debug] Failed: ${err.message}`);
         return new Response(`Debug Failed: ${err.message}`, { status: 500 });
       }
     }

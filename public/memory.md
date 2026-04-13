@@ -133,6 +133,7 @@ Important note:
 - Stripe uses `POST /api/stripe-webhook` for fulfillment to handle async payments.
 - Local Worker secrets should be supplied through `.dev.vars` during `wrangler dev`
 - **TODO:** Implement Cloudflare D1 for unified order history and reconciliation.
+- **Financial Flow**: Customer pays via Shopify/Stripe (funds held ~1 week before payout). Printify charges the bank account immediately for fulfillment. Refunds are deducted from bank account or pending Shopify balance.
 - Added Stripe Webhook endpoints handling `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_failed`, and `account.external_account.created`.
 
 ## Search & Navigation
@@ -142,7 +143,7 @@ Important note:
 - Results dynamically extract associated hero images (`data-bg-image`) or standard `<img>` tags for visual layout.
 - Search result links to Events pass a `?highlight=ID` URL parameter.
 - `events.html` reads the parameter, triggers a smooth scrolling action, and animates a spotlight brightness and dark-border ping to highlight the event card.
-- User accounts are currently shelved (no "Account" header icon).
+- User accounts are currently in development (see NEXT STEPS).
 
 ## Error Logging & Observability
 - Uses Cloudflare D1 SQLite Database (`cass-db`) and `migrations/0001_initial_logs.sql` for error logging.
@@ -271,6 +272,7 @@ Note: `registerUrl` field was removed. URL is derived from `id`.
 - [x] Fix Printify fulfillment logic to handle multi-dash product and color names.
 
 ### NEXT STEPS (Tomorrow):
+- [ ] **Customer Accounts**: Re-enable "Account" header icon and build D1-backed profile/order history page.
 - [ ] **Printify ID Mapping**: Add `printifyBlueprintId` and `printifyPrintProviderId` to each product in `merch.toml`.
 - [ ] **Variant Logic**: Map specific `variant_id` values for color/size combinations in `merch.toml` to automate order creation.
 - [ ] **D1 Order Ledger**: Create a dedicated `orders` table in D1 (beyond the current diagnostic `cass_logs`).
