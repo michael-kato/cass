@@ -394,9 +394,12 @@ async function applyStealth(page) {
 
 async function performLogin(page, env, debugList) {
   console.log(`[Scraper] Starting login attempt for: ${env.PS_USERNAME?.substring(0, 3)}... (length: ${env.PS_USERNAME?.length || 0})`);
+  
+  // Force navigate to the actual login page to ensure all auth scripts load correctly
+  console.log('[Scraper] Navigating to official login page...');
+  await page.goto('https://practiscore.com/login', { waitUntil: 'networkidle0', timeout: 30000 });
+  
   await captureDebug(env, page, 'Before Login Form', debugList || []);
-
-  console.log('[Scraper] Login page detected. Submitting credentials...');
 
   const userField = await page.$('input[name="username"]');
   if (!userField) {
