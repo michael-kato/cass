@@ -46,12 +46,12 @@ async function streamedResponse(ctx, logStorage, action) {
   }));
 
   return new Response(readable, {
-    headers: { 
-      'Content-Type': 'text/plain; charset=utf-8', 
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
       'X-Content-Type-Options': 'nosniff',
-      'Access-Control-Allow-Origin': '*' 
+      'Access-Control-Allow-Origin': '*'
     }
   });
 }
@@ -122,18 +122,18 @@ export default {
         console.log('--- Browser Diagnostic Start ---');
         console.log(`Binding (MYBROWSER) type: ${typeof env.MYBROWSER}`);
         console.log('Attempting launch...');
-        
+
         const b = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
         console.log(`Browser acquired: ${b.connected}`);
-        
+
         const page = await b.newPage();
         await applyStealth(page);
         console.log('Stealth applied. Navigating to example.com...');
-        
+
         await page.goto('https://example.com');
         const title = await page.title();
         console.log(`Success! Page title: ${title}`);
-        
+
         await b.close();
         console.log('--- Diagnostic Complete ---');
       });
@@ -188,7 +188,7 @@ export default {
     if (url.pathname === '/debug-view') {
       const debugData = await env.MATCH_DATA.get('DEBUG_LAST_RUN', { type: 'json' });
       if (!debugData) return new Response('No debug data found. Run /test first.', { status: 404 });
-      
+
       let html = `<html><head><title>Visual Debugger</title><style>
         body { font-family: sans-serif; background: #1a1a1a; color: #eee; padding: 2rem; }
         .step { background: #2a2a2a; padding: 1rem; margin-bottom: 2rem; border-radius: 8px; border: 1px solid #444; }
@@ -196,7 +196,7 @@ export default {
         pre { background: #000; padding: 1rem; overflow: auto; max-height: 300px; font-size: 12px; }
         h2 { color: #4ade80; }
       </style></head><body><h1>Latest Scrape Diagnostics</h1>`;
-      
+
       for (const step of debugData) {
         html += `<div class="step">
           <h2>Step: ${step.name}</h2>
@@ -206,7 +206,7 @@ export default {
           <pre>${step.html.substring(0, 5000).replace(/</g, '&lt;')}</pre>
         </div>`;
       }
-      
+
       html += '</body></html>';
       return new Response(html, { headers: { 'Content-Type': 'text/html' } });
     }
@@ -215,12 +215,12 @@ export default {
     if (url.pathname === '/view-html') {
       const targetUrl = url.searchParams.get('url');
       if (!targetUrl) return new Response('Missing ?url=', { status: 400 });
-      
+
       let browser;
       try {
         browser = await puppeteer.launch(env.MYBROWSER, { protocolTimeout: 60000 });
         const page = await browser.newPage();
-        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36');
         await page.goto(targetUrl, { waitUntil: 'networkidle2' });
         const content = await page.content();
         await browser.close();
@@ -354,7 +354,7 @@ async function captureDebug(env, page, name, debugList) {
 async function applyStealth(page) {
   // Use a modern, consistent viewport
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
-  
+
   // Set extra headers
   await page.setExtraHTTPHeaders({
     'Accept-Language': 'en-US,en;q=0.9',
@@ -369,10 +369,10 @@ async function applyStealth(page) {
     Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
     Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
     Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
-    
+
     // Conceal vendor/renderer
     window.chrome = { runtime: {} };
-    
+
     // Mask name
     window.name = '';
 
@@ -389,12 +389,12 @@ async function applyStealth(page) {
 async function performLogin(page, env, debugList) {
   console.log(`[Scraper] Starting login attempt for: ${env.PS_USERNAME?.substring(0, 3)}... (length: ${env.PS_USERNAME?.length || 0})`);
   await captureDebug(env, page, 'Before Login Form', debugList || []);
-  
+
   console.log('[Scraper] Login page detected. Submitting credentials...');
-  
+
   const userField = await page.$('input[name="username"]');
   if (!userField) {
-    const buttons = await page.evaluate(() => 
+    const buttons = await page.evaluate(() =>
       Array.from(document.querySelectorAll('button, a.btn')).map(b => `${b.tagName}: ${b.innerText.trim()}`).join(' | ')
     );
     console.warn(`[Scraper] Form not found. Available buttons: ${buttons}`);
@@ -415,25 +415,25 @@ async function performLogin(page, env, debugList) {
 
   await page.type('input[name="username"]', env.PS_USERNAME || '', { delay: 50 });
   await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
-  
+
   await page.focus('input[name="password"]');
   await captureDebug(env, page, 'Form Filled', debugList || []);
-  
+
   console.log('[Scraper] Submitting form via JS click...');
-  
+
   // Nuclear Click: Only if we are actually still on a login/sign-in page
   await page.evaluate(() => {
     const isAuthPage = window.location.href.includes('login') || window.location.href.includes('sign_in');
     if (!isAuthPage) return;
-    
+
     const btn = document.querySelector('button[type="submit"]') || document.querySelector('.btn-primary');
     if (btn) btn.click();
   });
 
   // Wait for the form to disappear or navigation to happen
   await Promise.race([
-    page.waitForNavigation({ waitUntil: 'load', timeout: 15000 }).catch(() => {}),
-    page.waitForSelector('input[name="username"]', { hidden: true, timeout: 15000 }).catch(() => {})
+    page.waitForNavigation({ waitUntil: 'load', timeout: 15000 }).catch(() => { }),
+    page.waitForSelector('input[name="username"]', { hidden: true, timeout: 15000 }).catch(() => { })
   ]);
 
   // Small delay to let the results page paint
@@ -443,7 +443,7 @@ async function performLogin(page, env, debugList) {
   const afterTitle = await page.title();
   const afterContent = await page.content();
   console.log(`[Scraper] Post-Submission Title: ${afterTitle}`);
-  
+
   if (afterContent.includes('Invalid') || afterContent.includes('failed')) {
     throw new Error('Login failed: Invalid email or password detected on results page.');
   }
@@ -455,7 +455,7 @@ async function performLogin(page, env, debugList) {
   // Brief wait for cookies to settle in the warm pool
   console.log('[Scraper] Waiting for session to settle...');
   await new Promise(r => setTimeout(r, 2000));
-  
+
   await captureDebug(env, page, 'Session Settled', debugList || []);
   console.log('[Scraper] Login step finished.');
 }
@@ -484,7 +484,7 @@ async function scrapeAllMatches(env) {
         const url = buildUrl(id);
         console.log(`[Scraper] Navigating to: ${url}`);
         await page.goto(url, { waitUntil: "networkidle2" });
-        await page.waitForSelector('.alert-info, .alert-warning, .alert-danger', { timeout: 5000 }).catch(() => {});
+        await page.waitForSelector('.alert-info, .alert-warning, .alert-danger', { timeout: 5000 }).catch(() => { });
 
         let content = await page.content();
         if (content.includes('requires a free account')) {
@@ -499,7 +499,7 @@ async function scrapeAllMatches(env) {
           const alerts = Array.from(document.querySelectorAll('.alert-info, .alert-warning, .alert-danger'));
           const alertTexts = alerts.map(a => a.innerText.trim());
           console.log('[Scraper] Found alerts:', alertTexts);
-          
+
           const target = alerts.find(a =>
             /spot|remain|full|waitlist|registration opens|requires a free account/i.test(a.innerText)
           );
@@ -570,13 +570,13 @@ async function scrapeSingleId(env, matchId) {
     const data = await page.evaluate(() => {
       const alerts = Array.from(document.querySelectorAll('.alert-info, .alert-warning, .alert-danger'));
       const textLog = alerts.map(a => a.innerText.trim());
-      
+
       const target = alerts.find(a =>
         /spot|remain|full|waitlist|registration opens|requires a free account/i.test(a.innerText)
       );
 
       if (!target) return { status: 'missing', found: textLog };
-      
+
       const text = target.innerText.replace(/×/g, '').trim();
       const lower = text.toLowerCase();
 
