@@ -399,6 +399,17 @@ async function performLogin(page, env, debugList) {
   console.log('[Scraper] Navigating to official login page...');
   await page.goto('https://practiscore.com/login', { waitUntil: 'networkidle0', timeout: 30000 });
   
+  // Human-like signals to wake up Turnstile
+  console.log('[Scraper] Sending randomized human-like signals...');
+  const randX = () => Math.floor(Math.random() * 600) + 100;
+  const randY = () => Math.floor(Math.random() * 600) + 100;
+  
+  await page.mouse.move(randX(), randY());
+  await page.mouse.move(randX(), randY(), { steps: 15 });
+  await page.evaluate((depth) => window.scrollBy(0, depth), Math.floor(Math.random() * 300) + 200);
+  await new Promise(r => setTimeout(r, Math.floor(Math.random() * 800) + 400));
+  await page.evaluate(() => window.scrollTo(0, 0));
+
   await captureDebug(env, page, 'Before Login Form', debugList || []);
 
   const userField = await page.$('input[name="username"]');
@@ -583,6 +594,14 @@ async function scrapeSingleId(env, matchId) {
     const page = await browser.newPage();
     await applyStealth(page);
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36');
+    
+    // Console forwarding for deeper diagnostics
+    page.on('console', msg => {
+      const txt = msg.text();
+      // Ignore noisy analytics/ads
+      if (txt.includes('google') || txt.includes('bugsnag') || txt.includes('Facebook')) return;
+      console.log(`[Page Console] ${txt}`);
+    });
 
     const url = buildUrl(matchId);
     console.log(`[Scraper] Navigating to: ${url}`);
