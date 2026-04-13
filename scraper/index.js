@@ -340,6 +340,7 @@ async function applyStealth(page) {
 }
 
 async function performLogin(page, env) {
+  console.log(`[Scraper] Starting login attempt for: ${env.PS_USERNAME?.substring(0, 3)}... (length: ${env.PS_USERNAME?.length || 0})`);
   console.log('[Scraper] Login page detected. Submitting credentials...');
   
   const userField = await page.$('input[name="username"]');
@@ -347,11 +348,11 @@ async function performLogin(page, env) {
     throw new Error(`Login form not found. Title: ${await page.title()}`);
   }
 
-  await page.type('input[name="username"]', env.PS_USERNAME, { delay: 50 });
-  await page.type('input[name="password"]', env.PS_PASSWORD, { delay: 50 });
+  await page.type('input[name="username"]', env.PS_USERNAME || '', { delay: 50 });
+  await page.type('input[name="password"]', env.PS_PASSWORD || '', { delay: 50 });
   
-  console.log('[Scraper] Submitting form via Enter...');
   await page.focus('input[name="password"]');
+  console.log('[Scraper] Submitting form via Enter...');
   await page.keyboard.press('Enter');
 
   // Wait for the form to disappear or navigation to happen
@@ -361,12 +362,22 @@ async function performLogin(page, env) {
   ]);
 
   const afterTitle = await page.title();
+  const afterContent = await page.content();
   console.log(`[Scraper] Post-Submission Title: ${afterTitle}`);
+  
+  if (afterContent.includes('Invalid') || afterContent.includes('failed')) {
+    throw new Error('Login failed: Invalid email or password detected on results page.');
+  }
+
   if (afterTitle.includes('Cloudflare') || afterTitle.includes('Challenge') || afterTitle.includes('Just a moment')) {
     throw new Error(`Cloudflare/Bot challenge encountered after login: ${afterTitle}`);
   }
 
-  console.log('[Scraper] Login step finished (form cleared).');
+  // Brief wait for cookies to settle in the warm pool
+  console.log('[Scraper] Waiting for session to settle...');
+  await new Promise(r => setTimeout(r, 2000));
+  
+  console.log('[Scraper] Login step finished.');
 }
 
 function buildUrl(matchId) {
